@@ -364,6 +364,19 @@
 
 ---
 
+## Step 0：建立共用模組 `common/`
+
+- [x] **Step 0.1** — 建立 `common/es_client.py`
+  - `msearch()`、Grafana 連線設定、`parse_args()`、`resolve_time_range()`、`generated_now()`
+- [x] **Step 0.2** — 建立 `common/chart_helpers.py`
+  - `PALETTE`、`js_array()`、`js_labels()`、`js_values()`、`palette_array()`、`table_rows_ranked()`
+- [x] **Step 0.3** — 建立 `common/html_template.py`
+  - `html_start()`、`html_end()`、`kpi_card()`、`chart_card()`、`table_card()`、共用 CSS
+- [x] **Step 0.4** — 使用 `uv` 初始化專案
+  - `pyproject.toml`、`.python-version`、驗證 import 正常
+
+---
+
 ## 共用架構
 
 ### 程式架構
@@ -424,16 +437,11 @@ python3 <report>.py --output /tmp/report       # 自訂輸出目錄
 
 ---
 
-## 實作順序
+### Step 8：`run_all.py` 整合腳本
 
-| 順序 | 項目 | 說明 |
-|---|---|---|
-| 0 | 建立共用模組 `common/` | 抽取 ES client、HTML 模板、Chart 輔助函式 |
-| 1 | Dashboard 1 — 整體流量概覽（HTML + Grafana JSON） | P0 |
-| 2 | Dashboard 3 — 應徵轉換分析（HTML + Grafana JSON） | P0 |
-| 3 | Dashboard 2 — 搜尋行為分析（HTML + Grafana JSON） | P1 |
-| 4 | Dashboard 5 — 裝置與平台分析（HTML + Grafana JSON） | P1 |
-| 5 | Dashboard 7 — 頁面導航鏈路分析（HTML + Grafana JSON） | P1 |
-| 6 | Dashboard 4 — 功能互動分析（HTML + Grafana JSON） | P2 |
-| 7 | Dashboard 6 — 頁面流量排行（HTML + Grafana JSON） | P2 |
-| 8 | `run_all.py` 整合腳本 | 一鍵產生所有報告 |
+> **目的**：一鍵產生所有 HTML 報告  
+> **輸出**：`run_all.py`
+
+- [ ] **Step 8.1** — 實作 `run_all.py`
+  - 依序執行所有報告腳本，統一接受 `--days` / `--from` / `--to` 參數
+  - **為什麼**：提供一鍵執行的便利性
