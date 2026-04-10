@@ -97,23 +97,23 @@
 > **目的**：一眼掌握 jobbank-web 的整體運營狀態  
 > **輸出**：`traffic_overview_report.py` → `output/traffic-overview/index.html`
 
-- [ ] **Step 1.1** — KPI 指標卡
+- [x] **Step 1.1** — KPI 指標卡
   - 總事件數、View 數、Click 數、Apply 數
   - Unique Sessions 數
   - Click Rate（Click / 總量）、Apply Rate（Apply / Job Page View）
   - **為什麼**：提供即時的關鍵數字，快速判斷流量是否正常
 
-- [ ] **Step 1.2** — 每日流量趨勢（Stacked Area Chart）
+- [x] **Step 1.2** — 每日流量趨勢（Stacked Area Chart）
   - X 軸：日期，Y 軸：事件數
   - 三條線：view / click / apply（apply 用右側 Y 軸，因量級差異大）
   - 疊加 unique sessions 線
   - **為什麼**：觀察流量的日變化趨勢，識別異常波動
 
-- [ ] **Step 1.3** — 每小時流量分佈（Bar Chart）
+- [x] **Step 1.3** — 每小時流量分佈（Bar Chart）
   - X 軸：小時（0-23，台灣時區），Y 軸：平均事件數
   - **為什麼**：找出流量高峰時段，支援行銷排程與系統運維決策
 
-- [ ] **Step 1.4** — 裝置分佈（Doughnut + Table）
+- [x] **Step 1.4** — 裝置分佈（Doughnut + Table）
   - mobile vs desktop 佔比
   - OS 分佈（Android / iPhone / Windows / macOS / 其他）
   - 瀏覽器分佈 Top 10
