@@ -1,0 +1,35 @@
+name: Deploy Reports to GitHub Pages
+
+on:
+  workflow_dispatch:
+    inputs:
+      days:
+        description: '報告天數（預設 7）'
+        required: false
+        default: '7'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+
+      - name: 產生報告
+        env:
+          GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
+          GRAFANA_USER: ${{ secrets.GRAFANA_USER }}
+          GRAFANA_PASSWORD: ${{ secrets.GRAFANA_PASSWORD }}
+          GRAFANA_DS_UID: ${{ secrets.GRAFANA_DS_UID }}
+        run: uv run python run_all.py --days ${{ inputs.days }}
+
+      - name: 部署到 yaochangyu/job-report gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.DEPLOY_TOKEN }}
+          external_repository: yaochangyu/job-report
+          publish_branch: gh-pages
+          publish_dir: ./output
+          force_orphan: true
+          commit_message: "🚀 deploy: 更新分析報告"
