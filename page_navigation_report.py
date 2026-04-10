@@ -5,6 +5,9 @@ page_navigation_report.py
 Dashboard 7：頁面導航鏈路分析（Page Navigation Flow）
 從 Elasticsearch 查詢 jobbank-web 的頁面間導航數據，產生 HTML 圖表報告。
 
+注意：pageUrl / previousPageUrl 為 text 欄位（無 keyword sub-field），
+使用 ES runtime_mappings 從 _source 提取 URL 路徑作為 keyword 進行 aggregation。
+
 執行方式：
     uv run python page_navigation_report.py
     uv run python page_navigation_report.py --days 7
@@ -22,26 +25,60 @@ OUTPUT_DIR = Path(__file__).parent / "output" / "page-navigation"
 
 SYSTEM_FILTER = {"term": {"system": "jobbank-web"}}
 
+# runtime_mappings：從 URL 提取路徑（去除 query string）作為 keyword 使用
+_URL_PATH_SCRIPT = """
+    String url = params._source.get('{field}');
+    if (url == null || url == '') {{ emit('{default}'); return; }}
+    int start = url.indexOf('//');
+    if (start >= 0) url = url.substring(start + 2);
+    int slash = url.indexOf('/');
+    url = slash >= 0 ? url.substring(slash) : '/';
+    int qmark = url.indexOf('?');
+    if (qmark >= 0) url = url.substring(0, qmark);
+    if (url == '' || url == null) url = '/';
+    emit(url.length() > 80 ? url.substring(0, 80) : url);
+"""
+
+RUNTIME_MAPPINGS = {
+    "curr_page_kw": {
+        "type": "keyword",
+        "script": {
+            "source": _URL_PATH_SCRIPT.format(field="pageUrl", default="/"),
+            "lang": "painless",
+        },
+    },
+    "prev_page_kw": {
+        "type": "keyword",
+        "script": {
+            "source": _URL_PATH_SCRIPT.format(field="previousPageUrl", default="_entry_"),
+            "lang": "painless",
+        },
+    },
+}
+
+ENTRY_MARKER = "_entry_"
+
 
 # ── 查詢邏輯 ─────────────────────────────────────────────────────────────────
 
 def query_nav_pairs(time_from: str, time_to: str, size: int = 30) -> list[dict]:
-    """previousPageName → pageName 轉換路徑排行（過濾空 previousPageName）。"""
+    """previousPageUrl → pageUrl 路徑轉換排行（過濾直接進入）。"""
     body = {
         "size": 0,
+        "runtime_mappings": RUNTIME_MAPPINGS,
         "query": {"bool": {"must": [
             {"range": {"@timestamp": {"gte": time_from, "lte": time_to}}},
             SYSTEM_FILTER,
-            {"exists": {"field": "previousPageName"}},
-            {"bool": {"must_not": {"term": {"previousPageName": ""}}}},
         ]}},
         "aggs": {
             "by_prev": {
-                "terms": {"field": "previousPageName", "size": 20},
+                "terms": {
+                    "field": "prev_page_kw",
+                    "size": 20,
+                    "exclude": ENTRY_MARKER,
+                },
                 "aggs": {
-                    "by_curr": {
-                        "terms": {"field": "pageName", "size": 5}
-                    }
+                    "by_curr": {"terms": {"field": "curr_page_kw", "size": 5}},
                 },
             }
         },
@@ -58,31 +95,32 @@ def query_nav_pairs(time_from: str, time_to: str, size: int = 30) -> list[dict]:
                 "count": curr_b["doc_count"],
                 "label": f"{prev} → {curr}",
             })
-    # 按次數排序，取 Top size
     pairs.sort(key=lambda x: -x["count"])
     return pairs[:size]
 
 
 def query_entry_pages(time_from: str, time_to: str) -> list[dict]:
-    """初始進入頁面分佈（previousPageName 為空的事件）。"""
+    """初始進入頁面分佈（previousPageUrl 為空的事件）。"""
     body = {
         "size": 0,
+        "runtime_mappings": RUNTIME_MAPPINGS,
         "query": {"bool": {"must": [
             {"range": {"@timestamp": {"gte": time_from, "lte": time_to}}},
             SYSTEM_FILTER,
-            {"bool": {"should": [
-                {"bool": {"must_not": {"exists": {"field": "previousPageName"}}}},
-                {"term": {"previousPageName": ""}},
-            ]}},
         ]}},
         "aggs": {
-            "by_page": {"terms": {"field": "pageName", "size": 15}}
+            "entry_filter": {
+                "filter": {"term": {"prev_page_kw": ENTRY_MARKER}},
+                "aggs": {
+                    "by_curr": {"terms": {"field": "curr_page_kw", "size": 15}},
+                },
+            }
         },
     }
     r = msearch(body)
     return [
         {"name": b["key"], "count": b["doc_count"]}
-        for b in r["aggregations"]["by_page"]["buckets"]
+        for b in r["aggregations"]["entry_filter"]["by_curr"]["buckets"]
     ]
 
 
@@ -90,18 +128,24 @@ def query_page_sources(time_from: str, time_to: str) -> dict:
     """各頁面的 Top 來源（從哪來）。"""
     body = {
         "size": 0,
+        "runtime_mappings": RUNTIME_MAPPINGS,
         "query": {"bool": {"must": [
             {"range": {"@timestamp": {"gte": time_from, "lte": time_to}}},
             SYSTEM_FILTER,
-            {"exists": {"field": "previousPageName"}},
-            {"bool": {"must_not": {"term": {"previousPageName": ""}}}},
         ]}},
         "aggs": {
             "by_page": {
-                "terms": {"field": "pageName", "size": 10},
+                "terms": {
+                    "field": "curr_page_kw",
+                    "size": 10,
+                },
                 "aggs": {
                     "top_sources": {
-                        "terms": {"field": "previousPageName", "size": 5}
+                        "terms": {
+                            "field": "prev_page_kw",
+                            "size": 5,
+                            "exclude": ENTRY_MARKER,
+                        }
                     }
                 },
             }
@@ -110,10 +154,11 @@ def query_page_sources(time_from: str, time_to: str) -> dict:
     r = msearch(body)
     result = {}
     for b in r["aggregations"]["by_page"]["buckets"]:
-        result[b["key"]] = [
-            {"name": s["key"], "count": s["doc_count"]}
-            for s in b["top_sources"]["buckets"]
-        ]
+        sources = b["top_sources"]["buckets"]
+        if sources:
+            result[b["key"]] = [
+                {"name": s["key"], "count": s["doc_count"]} for s in sources
+            ]
     return result
 
 
@@ -121,18 +166,21 @@ def query_page_destinations(time_from: str, time_to: str) -> dict:
     """各頁面的 Top 目標（往哪去）。"""
     body = {
         "size": 0,
+        "runtime_mappings": RUNTIME_MAPPINGS,
         "query": {"bool": {"must": [
             {"range": {"@timestamp": {"gte": time_from, "lte": time_to}}},
             SYSTEM_FILTER,
-            {"exists": {"field": "previousPageName"}},
-            {"bool": {"must_not": {"term": {"previousPageName": ""}}}},
         ]}},
         "aggs": {
             "by_prev": {
-                "terms": {"field": "previousPageName", "size": 10},
+                "terms": {
+                    "field": "prev_page_kw",
+                    "size": 10,
+                    "exclude": ENTRY_MARKER,
+                },
                 "aggs": {
                     "top_dests": {
-                        "terms": {"field": "pageName", "size": 5}
+                        "terms": {"field": "curr_page_kw", "size": 5}
                     }
                 },
             }
