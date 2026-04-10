@@ -126,26 +126,26 @@
 > **目的**：了解使用者的搜尋模式與 AI 搜尋的採用率  
 > **輸出**：`search_behavior_report.py` → `output/search-behavior/index.html`
 
-- [ ] **Step 2.1** — 搜尋功能總覽（Horizontal Bar Chart）
+- [x] **Step 2.1** — 搜尋功能總覽（Horizontal Bar Chart）
   - 比較各搜尋類型的使用量
   - 分類：搜尋結果頁（view）/ 一般搜尋互動（click）/ AI 搜尋互動（click）/ 快速篩選（click）
   - **為什麼**：衡量搜尋功能的整體使用狀況
 
-- [ ] **Step 2.2** — AI 搜尋 vs 一般搜尋每日趨勢（Time Series）
+- [x] **Step 2.2** — AI 搜尋 vs 一般搜尋每日趨勢（Time Series）
   - 每日 `search-general-*` vs `search-ai-*` 的 click 數
   - 計算 AI 搜尋佔比趨勢（AI / (AI + General)）
   - **為什麼**：追蹤 AI 搜尋功能是否持續成長
 
-- [ ] **Step 2.3** — 搜尋結果頁分佈（Doughnut）
+- [x] **Step 2.3** — 搜尋結果頁分佈（Doughnut）
   - `search-job-page`(正職) / `search-corp-page`(企業) / `search-gig-page`(兼差) / `search-intern-page`(實習) 的佔比
   - **為什麼**：了解使用者主要搜尋的職缺類型
 
-- [ ] **Step 2.4** — AI 搜尋互動方式（Doughnut + Trend）
+- [x] **Step 2.4** — AI 搜尋互動方式（Doughnut + Trend）
   - keyword(12K) / submit(1K) / voice-input(401) / chat-mode(269) / general(617) 的佔比
   - 每日趨勢
   - **為什麼**：了解使用者偏好哪種 AI 互動方式
 
-- [ ] **Step 2.5** — 快速篩選使用（Bar）
+- [x] **Step 2.5** — 快速篩選使用（Bar）
   - `T-job-location`(26K) vs `T-job-category`(17K) 的使用量與每日趨勢
   - **為什麼**：了解地區 vs 職類篩選的使用偏好
 
@@ -156,34 +156,34 @@
 > **目的**：追蹤應徵行為與轉換漏斗  
 > **輸出**：`apply_conversion_report.py` → `output/apply-conversion/index.html`
 
-- [ ] **Step 3.1** — 應徵 KPI
+- [x] **Step 3.1** — 應徵 KPI
   - 總應徵數、每日平均應徵數
   - 應徵轉換率（apply / job-page view）
   - 應徵來源分佈（metadata.source: job-detail 59% / search 28% / corp 13%）
   - **為什麼**：核心業務指標
 
-- [ ] **Step 3.2** — 應徵每日趨勢（Dual Y-Axis Time Series）
+- [x] **Step 3.2** — 應徵每日趨勢（Dual Y-Axis Time Series）
   - 左 Y 軸：`job-page` view 數
   - 右 Y 軸：`apply-job` 數
   - 折線：每日轉換率
   - **為什麼**：追蹤應徵量與轉換率的健康度
 
-- [ ] **Step 3.3** — 轉換漏斗（Funnel Chart）
+- [x] **Step 3.3** — 轉換漏斗（Funnel Chart）
   - `home-page`(316K) → `search-job-page`(614K) → `job-page`(1,811K) → `apply-job`(112K)
   - 各階段數量與階段間的轉換率
   - **為什麼**：找出使用者在哪個環節流失最多（注意：非 session-based，為整體事件數）
 
-- [ ] **Step 3.4** — 應徵來源分佈（Doughnut + Table）
+- [x] **Step 3.4** — 應徵來源分佈（Doughnut + Table）
   - metadata.source: `job-detail`(65K) / `search`(32K) / `corp`(14K) / `job-pair`(533) / `welcome`(29)
   - **為什麼**：了解使用者從哪個入口應徵最多
 
-- [ ] **Step 3.5** — 應徵裝置/OS 分佈（Grouped Bar）
+- [x] **Step 3.5** — 應徵裝置/OS 分佈（Grouped Bar）
   - mobile(72K) vs desktop(39K) 應徵量
   - 各裝置的「應徵/職缺瀏覽」轉換率
   - OS 分佈：Android(48K) / Windows(34K) / iPhone(25K) / macOS(1.5K) / ...
   - **為什麼**：確認行動端的應徵體驗是否順暢
 
-- [ ] **Step 3.6** — 應徵時段分佈（Bar Chart）
+- [x] **Step 3.6** — 應徵時段分佈（Bar Chart）
   - 每小時 `apply-job` 數量
   - **為什麼**：了解應徵高峰時段
 
@@ -194,33 +194,33 @@
 > **目的**：深入各功能模組的使用狀況  
 > **輸出**：`feature_engagement_report.py` → `output/feature-engagement/index.html`
 
-- [ ] **Step 4.1** — 探索職缺分析
+- [x] **Step 4.1** — 探索職缺分析
   - organic vs corp 的 categoryTab 分佈（沿用既有邏輯）
   - identityType 分佈：Default(5.8K) / Student(100) / OfficeWorker(75) / Reenter(60) / ...
   - 每日趨勢
   - **為什麼**：追蹤「探索職缺」的 Tab 偏好與 AI 推薦佔比
 
-- [ ] **Step 4.2** — 探索企業分析
+- [x] **Step 4.2** — 探索企業分析
   - featureId 分佈：corp / job1 / job2 / job-more / manufacturing / service
   - industryTab 分佈：一般傳統製造(218) / 批發╱零售(172) / 醫療照護(154) / 餐飲(150) / ...
   - **為什麼**：衡量企業探索功能的使用深度與熱門產業
 
-- [ ] **Step 4.3** — 身份辨識分析（Pie + Bar）
+- [x] **Step 4.3** — 身份辨識分析（Pie + Bar）
   - 主要身份分佈：returning(1.9K) / student(1K) / worker(1K) / professional(957) / senior(622) / fresh(613) / personal(408)
   - 各身份的 tab 互動深度（tab-1/2/3 的點擊比例）
   - **為什麼**：了解使用者群體組成與互動深度
 
-- [ ] **Step 4.4** — 產業點擊分佈（Horizontal Bar）
+- [x] **Step 4.4** — 產業點擊分佈（Horizontal Bar）
   - 各產業分類的點擊次數
   - **為什麼**：了解熱門產業需求
 
-- [ ] **Step 4.5** — 新聞互動分析（Table）
+- [x] **Step 4.5** — 新聞互動分析（Table）
   - news-card 位置效果：card-1(30) / card-2(30) / card-3(24) / card-4(25)
   - 新聞分類：CareerProspects(44) / JobHunting(36) / TrendAnalysis(26)
   - 閱讀者身份：Default(88) / Senior(18)
   - **為什麼**：衡量新聞內容的點擊效果
 
-- [ ] **Step 4.6** — 企業選職缺（company-select-job）分析
+- [x] **Step 4.6** — 企業選職缺（company-select-job）分析
   - 使用量趨勢
   - 來源分佈（metadata.source）
   - **為什麼**：了解企業端的互動行為
@@ -232,25 +232,25 @@
 > **目的**：深入分析不同裝置/平台的使用行為差異  
 > **輸出**：`device_platform_report.py` → `output/device-platform/index.html`
 
-- [ ] **Step 5.1** — 裝置類型每日趨勢（Stacked Area）
+- [x] **Step 5.1** — 裝置類型每日趨勢（Stacked Area）
   - mobile vs desktop 的每日事件數
   - mobile 佔比趨勢線
   - **為什麼**：追蹤行動端的成長趨勢
 
-- [ ] **Step 5.2** — OS 分佈（Doughnut + Table）
+- [x] **Step 5.2** — OS 分佈（Doughnut + Table）
   - Android(1,141K) / iPhone(851K) / Windows(804K) / macOS(45K) / iPad(15K) / Linux(24K) / 其他
   - **為什麼**：指引跨平台測試的優先級
 
-- [ ] **Step 5.3** — 瀏覽器分佈（Horizontal Bar）
+- [x] **Step 5.3** — 瀏覽器分佈（Horizontal Bar）
   - Chromium(1,813K) / Netscape(1,059K) / Google Chrome(169K) / Samsung Internet(7.7K) / Edge(7.1K) / ...
   - **為什麼**：確認瀏覽器相容性的測試覆蓋範圍
 
-- [ ] **Step 5.4** — 裝置 × 行為交叉分析（Grouped Bar + Table）
+- [x] **Step 5.4** — 裝置 × 行為交叉分析（Grouped Bar + Table）
   - 各裝置（mobile/desktop）的 view / click / apply 數量與佔比
   - 各裝置的 apply 轉換率比較
   - **為什麼**：找出不同裝置的行為差異
 
-- [ ] **Step 5.5** — OS × 行為交叉分析（Table）
+- [x] **Step 5.5** — OS × 行為交叉分析（Table）
   - 各 OS 的 view / click / apply 數量
   - **為什麼**：識別特定 OS 上的體驗問題
 
@@ -261,12 +261,12 @@
 > **目的**：掌握各頁面的流量與互動排名  
 > **輸出**：`page_ranking_report.py` → `output/page-ranking/index.html`
 
-- [ ] **Step 6.1** — Top 功能排行（Table + Bar）
+- [x] **Step 6.1** — Top 功能排行（Table + Bar）
   - 按 `featureId` 排序的 view / click 數量
   - 包含 click-through rate（CTR）
   - **為什麼**：快速識別高流量功能與低互動功能
 
-- [ ] **Step 6.2** — 功能類別佔比（Treemap）
+- [x] **Step 6.2** — 功能類別佔比（Treemap）
   - 將 featureId 歸類為：頁面瀏覽、搜尋、應徵、探索、身份辨識、其他
   - 以 Treemap 或分層 Bar 呈現
   - **為什麼**：以視覺化方式呈現功能使用的全局分佈
@@ -279,27 +279,27 @@
 > **輸出**：`page_navigation_report.py` → `output/page-navigation/index.html`  
 > **關鍵欄位**：`pageName`、`previousPageName`、`pageUrl`、`previousPageUrl`（皆可 aggregation）
 
-- [ ] **Step 7.1** — 頁面導航 Sankey 圖
+- [x] **Step 7.1** — 頁面導航 Sankey 圖
   - `previousPageName` → `pageName` 的流量轉移
   - 過濾掉 `previousPageName` 為空的初始進入事件
   - **為什麼**：一眼看出使用者在各頁面間的主要流動路徑
 
-- [ ] **Step 7.2** — 各頁面的 Top 來源（從哪來）
+- [x] **Step 7.2** — 各頁面的 Top 來源（從哪來）
   - 以 `pageName` 分組，列出 Top 5 `previousPageName`
   - 包含次數與佔比
   - **為什麼**：找出每個頁面最主要的流量入口
 
-- [ ] **Step 7.3** — 各頁面的 Top 目標（往哪去）
+- [x] **Step 7.3** — 各頁面的 Top 目標（往哪去）
   - 以 `previousPageName` 分組，列出 Top 5 `pageName`（下一頁）
   - 包含次數與佔比
   - **為什麼**：了解使用者離開特定頁面後最常去哪裡
 
-- [ ] **Step 7.4** — 完整鏈路排行（Table）
+- [x] **Step 7.4** — 完整鏈路排行（Table）
   - `previousPageName` → `pageName` 組合的轉換次數排行 Top 20
   - 包含裝置分佈（mobile / desktop）
   - **為什麼**：精確掌握最頻繁的頁面轉換路徑
 
-- [ ] **Step 7.5** — 初始進入頁面分佈（Bar Chart）
+- [x] **Step 7.5** — 初始進入頁面分佈（Bar Chart）
   - `previousPageName` 為空的事件，統計 `pageName` 分佈
   - **為什麼**：了解使用者最常從哪個頁面開始瀏覽
 
@@ -442,6 +442,6 @@ python3 <report>.py --output /tmp/report       # 自訂輸出目錄
 > **目的**：一鍵產生所有 HTML 報告  
 > **輸出**：`run_all.py`
 
-- [ ] **Step 8.1** — 實作 `run_all.py`
+- [x] **Step 8.1** — 實作 `run_all.py`
   - 依序執行所有報告腳本，統一接受 `--days` / `--from` / `--to` 參數
   - **為什麼**：提供一鍵執行的便利性
