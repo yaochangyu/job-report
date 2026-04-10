@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>功能互動分析 — Feature Engagement</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
+      background: #f0f2f5; color: #1a1a2e; min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+      color: #fff; padding: 36px 48px 28px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    header h1 { font-size: 1.8rem; font-weight: 700; }
+    header p  { margin-top: 6px; font-size: 0.9rem; opacity: 0.65; }
+    .badge {
+      display: inline-block; margin-top: 12px;
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px; padding: 4px 14px; font-size: 0.8rem;
+    }
+    main { max-width: 1200px; margin: 0 auto; padding: 36px 24px 60px; }
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px; margin-bottom: 36px;
+    }
+    .kpi-card {
+      background: #fff; border-radius: 14px; padding: 24px 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07); border-top: 4px solid var(--accent);
+    }
+    .kpi-card .label { font-size: 0.78rem; color: #888; text-transform: uppercase; letter-spacing: 0.8px; }
+    .kpi-card .value { font-size: 2rem; font-weight: 800; color: var(--accent); margin-top: 6px; }
+    .kpi-card .sub   { font-size: 0.8rem; color: #aaa; margin-top: 4px; }
+    .chart-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+      gap: 24px; margin-bottom: 28px;
+    }
+    .card {
+      background: #fff; border-radius: 14px; padding: 28px 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+    .card h2 { font-size: 1rem; font-weight: 700; color: #333; margin-bottom: 4px; }
+    .card .subtitle { font-size: 0.8rem; color: #999; margin-bottom: 20px; }
+    .chart-wrap { position: relative; height: 320px; }
+    .chart-wrap-tall { position: relative; height: 380px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead th {
+      background: #f7f8fa; padding: 10px 14px; text-align: left;
+      font-weight: 600; color: #555; border-bottom: 2px solid #e8e8e8;
+    }
+    tbody tr:nth-child(odd) { background: #fafafa; }
+    tbody tr:hover { background: #f0f4ff; }
+    tbody td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; }
+    .rank { color: #bbb; font-weight: 700; font-size: 0.85rem; }
+    .bar-cell { width: 160px; }
+    .bar-bg { background: #eef0f4; border-radius: 4px; height: 8px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #4361ee, #7209b7); }
+    .pct { color: #4361ee; font-weight: 700; }
+    footer { text-align: center; font-size: 0.78rem; color: #bbb; padding: 24px 0 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>功能互動分析 — Feature Engagement</h1>
+  <p>資料來源：operation-logs（Elasticsearch） · 查詢區間：now-7d ～ now</p>
+  <span class="badge">產生時間：2026-04-10 20:09:50 +08:00</span>
+</header>
+<main>
+  <div class="kpi-grid">
+    <div class="kpi-card" style="--accent:#4361ee">
+      <div class="label">探索職缺</div>
+      <div class="value">6,224</div>
+      <div class="sub">organic + corp</div>
+    </div>
+    <div class="kpi-card" style="--accent:#7209b7">
+      <div class="label">探索企業</div>
+      <div class="value">1,687</div>
+      <div class="sub">各企業探索入口</div>
+    </div>
+    <div class="kpi-card" style="--accent:#f72585">
+      <div class="label">身份辨識</div>
+      <div class="value">6,747</div>
+      <div class="sub">7 種身份類型</div>
+    </div>
+    <div class="kpi-card" style="--accent:#06d6a0">
+      <div class="label">新聞互動</div>
+      <div class="value">113</div>
+      <div class="sub">news-card 點擊</div>
+    </div>  </div>  <div class="chart-grid">
+  <div class="card">
+    <h2>探索職缺 — categoryTab 分佈</h2>
+    <div class="subtitle">各 Tab 點擊分佈</div>
+    <div class="chart-wrap"><canvas id="expJobCatTab"></canvas></div>
+  </div>
+  <div class="card">
+    <h2>探索職缺 — identityType 分佈</h2>
+    <div class="subtitle">使用者身份分佈</div>
+    <div class="chart-wrap"><canvas id="expJobIdentity"></canvas></div>
+  </div>  </div>  <div class="chart-grid">
+  <div class="card">
+    <h2>探索職缺每日趨勢</h2>
+    <div class="subtitle">organic vs corp-organic</div>
+    <div class="chart-wrap"><canvas id="expJobDaily"></canvas></div>
+  </div>
+  <div class="card">
+    <h2>探索企業 — featureId 分佈</h2>
+    <div class="subtitle">各企業探索入口使用量</div>
+    <div class="chart-wrap"><canvas id="expCorpFeature"></canvas></div>
+  </div>  </div>  <div class="chart-grid">
+  <div class="card">
+    <h2>探索企業 — industryTab 分佈</h2>
+    <div class="subtitle">各產業 Tab 點擊</div>
+    <div class="chart-wrap"><canvas id="expCorpIndustry"></canvas></div>
+  </div>
+  <div class="card">
+    <h2>身份辨識 — 主身份分佈</h2>
+    <div class="subtitle">各身份入口點擊數</div>
+    <div class="chart-wrap"><canvas id="identityMain"></canvas></div>
+  </div>  </div>  <div class="chart-grid">
+  <div class="card">
+    <h2>新聞卡片點擊</h2>
+    <div class="subtitle">各位置點擊量</div>
+    <div class="chart-wrap"><canvas id="newsFeature"></canvas></div>
+  </div>
+  <div class="card">
+    <h2>新聞分類分佈</h2>
+    <div class="subtitle">各新聞類別點擊數</div>
+    <div class="chart-wrap"><canvas id="newsCat"></canvas></div>
+  </div>  </div>
+  <div class="card" style="margin-bottom:24px">
+    <h2>身份辨識詳細數據</h2>
+    <div class="subtitle">共 6,747 筆</div>
+    <table>
+      <thead><tr><th>#</th><th>身份</th><th>事件數</th><th>視覺</th><th>佔比</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="rank">1</td>
+          <td>returning</td>
+          <td>1,991</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:29.5%"></div></div>
+          </td>
+          <td class="pct">29.5%</td>
+        </tr>
+        <tr>
+          <td class="rank">2</td>
+          <td>worker</td>
+          <td>1,071</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:15.9%"></div></div>
+          </td>
+          <td class="pct">15.9%</td>
+        </tr>
+        <tr>
+          <td class="rank">3</td>
+          <td>student</td>
+          <td>1,048</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:15.5%"></div></div>
+          </td>
+          <td class="pct">15.5%</td>
+        </tr>
+        <tr>
+          <td class="rank">4</td>
+          <td>professional</td>
+          <td>957</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:14.2%"></div></div>
+          </td>
+          <td class="pct">14.2%</td>
+        </tr>
+        <tr>
+          <td class="rank">5</td>
+          <td>senior</td>
+          <td>636</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:9.4%"></div></div>
+          </td>
+          <td class="pct">9.4%</td>
+        </tr>
+        <tr>
+          <td class="rank">6</td>
+          <td>fresh</td>
+          <td>628</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:9.3%"></div></div>
+          </td>
+          <td class="pct">9.3%</td>
+        </tr>
+        <tr>
+          <td class="rank">7</td>
+          <td>personal</td>
+          <td>416</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:6.2%"></div></div>
+          </td>
+          <td class="pct">6.2%</td>
+        </tr></tbody>
+    </table>
+  </div>
+  <div class="card" style="margin-bottom:24px">
+    <h2>新聞互動詳細數據</h2>
+    <div class="subtitle">共 113 筆</div>
+    <table>
+      <thead><tr><th>#</th><th>featureId</th><th>點擊數</th><th>視覺</th><th>佔比</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="rank">1</td>
+          <td>news-card-2</td>
+          <td>30</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:26.5%"></div></div>
+          </td>
+          <td class="pct">26.5%</td>
+        </tr>
+        <tr>
+          <td class="rank">2</td>
+          <td>news-card-1</td>
+          <td>29</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:25.7%"></div></div>
+          </td>
+          <td class="pct">25.7%</td>
+        </tr>
+        <tr>
+          <td class="rank">3</td>
+          <td>news-card-4</td>
+          <td>25</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:22.1%"></div></div>
+          </td>
+          <td class="pct">22.1%</td>
+        </tr>
+        <tr>
+          <td class="rank">4</td>
+          <td>news-card-3</td>
+          <td>24</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:21.2%"></div></div>
+          </td>
+          <td class="pct">21.2%</td>
+        </tr>
+        <tr>
+          <td class="rank">5</td>
+          <td>news-workplace</td>
+          <td>3</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:2.7%"></div></div>
+          </td>
+          <td class="pct">2.7%</td>
+        </tr>
+        <tr>
+          <td class="rank">6</td>
+          <td>news-industry</td>
+          <td>2</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:1.8%"></div></div>
+          </td>
+          <td class="pct">1.8%</td>
+        </tr></tbody>
+    </table>
+  </div>
+<script>
+  // ── 探索職缺 categoryTab Doughnut
+  new Chart(document.getElementById('expJobCatTab'), {
+    type: 'doughnut',
+    data: {
+      labels: ["unknown"],
+      datasets: [{
+        data: [6224],
+        backgroundColor: ["#4361ee"],
+        borderWidth: 2, borderColor: '#fff'
+      }]
+    },
+    options: {
+      cutout: '55%',
+      plugins: {
+        legend: { position: 'right', labels: { font: { size: 12 }, padding: 8 } },
+        tooltip: { callbacks: {
+          label: ctx => {
+            const t = 6224;
+            return ` ${ctx.label}：${ctx.parsed.toLocaleString()}（${(ctx.parsed/t*100).toFixed(1)}%）`;
+          }
+        } }
+      }
+    }
+  });
+
+  // ── 探索職缺 identityType
+  new Chart(document.getElementById('expJobIdentity'), {
+    type: 'doughnut',
+    data: {
+      labels: ["unknown"],
+      datasets: [{
+        data: [6224],
+        backgroundColor: ["#4361ee"],
+        borderWidth: 2, borderColor: '#fff'
+      }]
+    },
+    options: {
+      cutout: '55%',
+      plugins: {
+        legend: { position: 'right', labels: { font: { size: 12 }, padding: 8 } },
+        tooltip: { callbacks: {
+          label: ctx => {
+            const t = 6224;
+            return ` ${ctx.label}：${ctx.parsed.toLocaleString()}（${(ctx.parsed/t*100).toFixed(1)}%）`;
+          }
+        } }
+      }
+    }
+  });
+
+  // ── 探索職缺每日趨勢
+  new Chart(document.getElementById('expJobDaily'), {
+    type: 'line',
+    data: {
+      labels: ["2026-04-08", "2026-04-09", "2026-04-10"],
+      datasets: [
+        {
+          label: 'explore-jobs-organic',
+          data: [719, 2153, 2300],
+          borderColor: '#4361ee', backgroundColor: 'rgba(67,97,238,0.1)',
+          fill: true, tension: 0.3
+        },
+        {
+          label: 'explore-jobs-organic-corp',
+          data: [165, 524, 363],
+          borderColor: '#f72585', backgroundColor: 'rgba(247,37,133,0.08)',
+          fill: true, tension: 0.3
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: { y: { title: { display: true, text: 'Click 數' } } },
+      plugins: { legend: { position: 'bottom' } }
+    }
+  });
+
+  // ── 探索企業 featureId Bar
+  new Chart(document.getElementById('expCorpFeature'), {
+    type: 'bar',
+    data: {
+      labels: ["corp", "job1", "job2", "job-more", "manufacturing", "service", "next"],
+      datasets: [{
+        label: '事件數',
+        data: [509, 494, 362, 155, 95, 71, 1],
+        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff"],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { title: { display: true, text: '事件數' } }
+      }
+    }
+  });
+
+  // ── 探索企業 industryTab
+  new Chart(document.getElementById('expCorpIndustry'), {
+    type: 'bar',
+    data: {
+      labels: ["unknown"],
+      datasets: [{
+        label: '點擊數',
+        data: [1687],
+        backgroundColor: ["#4361ee"],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { title: { display: true, text: '點擊數' } },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+
+  // ── 身份辨識 Bar
+  new Chart(document.getElementById('identityMain'), {
+    type: 'bar',
+    data: {
+      labels: ["returning", "worker", "student", "professional", "senior", "fresh", "personal"],
+      datasets: [{
+        label: '點擊數',
+        data: [1991, 1071, 1048, 957, 636, 628, 416],
+        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff"],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { title: { display: true, text: '點擊數' } }
+      }
+    }
+  });
+
+  // ── 新聞卡片 Bar
+  new Chart(document.getElementById('newsFeature'), {
+    type: 'bar',
+    data: {
+      labels: ["news-card-2", "news-card-1", "news-card-4", "news-card-3", "news-workplace", "news-industry"],
+      datasets: [{
+        label: '點擊數',
+        data: [30, 29, 25, 24, 3, 2],
+        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2"],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { title: { display: true, text: '點擊數' } }
+      }
+    }
+  });
+
+  // ── 新聞分類 Doughnut
+  new Chart(document.getElementById('newsCat'), {
+    type: 'doughnut',
+    data: {
+      labels: ["unknown"],
+      datasets: [{
+        data: [113],
+        backgroundColor: ["#4361ee"],
+        borderWidth: 2, borderColor: '#fff'
+      }]
+    },
+    options: {
+      cutout: '55%',
+      plugins: {
+        legend: { position: 'right', labels: { font: { size: 13 }, padding: 10 } }
+      }
+    }
+  });
+</script>
+
+</main>
+<footer>Generated 2026-04-10 20:09:50 +08:00 · operation-logs</footer>
+</body>
+</html>
