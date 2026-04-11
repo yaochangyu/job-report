@@ -61,7 +61,7 @@ ETL（Python）
   - 當單頁查詢可運作後，再收斂 `run_all.py` 與 `output/*/index.html` 的舊路徑，避免未來維護兩套報表流程。
   - 這一步放後面做，能避免在新頁面尚未穩定前就失去舊輸出能力。
 
-- [ ] Step 9：更新文件與專案結構說明
+- [x] Step 9：更新文件與專案結構說明
   - 需要同步更新 README、tree.md 與部署說明，否則之後很難看出專案已從 SQLite 靜態報表切到 DuckDB 單頁模式。
   - 文件更新也是交接的一部分，尤其資料來源與部署方式都已改變。
 
@@ -246,6 +246,14 @@ dataset/
 - `deploy.sh`
   - 部署前先執行 `extract_events.py`
   - 以 Parquet dataset + 單頁網站作為新的 GitHub Pages 輸出
+
+## Step 9 產出
+
+- `README.md`
+  - 改寫為 Parquet + DuckDB-WASM 單頁架構說明
+  - 補上 `extract_events.py`、`run_all.py`、`deploy.sh` 的新流程
+- `tree.md`
+  - 反映 frontend、Parquet schema、單頁輸出與新部署流程
 
 ## 執行方式
 - 目前僅建立新計畫書，不實作程式。

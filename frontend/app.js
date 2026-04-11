@@ -2,11 +2,15 @@ import * as duckdb from "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.30.0
 import { executeViewQueries } from "./query-definitions.js";
 import { renderDashboard, resetDashboard } from "./dashboard-renderers.js";
 
-const datasetRoot = new URL("../dataset/", import.meta.url);
+const datasetRootCandidates = [
+  new URL("../dataset/", import.meta.url),
+  new URL("./dataset/", import.meta.url),
+];
 const runtime = {
   db: null,
   conn: null,
   hasEventsView: false,
+  datasetRoot: null,
 };
 
 const defaultState = {
@@ -107,11 +111,14 @@ function bindQueryForm(state) {
 }
 
 async function loadManifest() {
-  const response = await fetch(new URL("manifest.json", datasetRoot));
-  if (!response.ok) {
-    throw new Error(`manifest 載入失敗：${response.status}`);
+  for (const candidate of datasetRootCandidates) {
+    const response = await fetch(new URL("manifest.json", candidate));
+    if (response.ok) {
+      runtime.datasetRoot = candidate;
+      return response.json();
+    }
   }
-  return response.json();
+  throw new Error("manifest 載入失敗：404");
 }
 
 async function initDuckDB() {
@@ -138,7 +145,7 @@ async function registerParquetFiles(db, manifest) {
 
   for (const entry of entries) {
     const alias = `events_${entry.date.replaceAll("-", "_")}.parquet`;
-    const sourceUrl = new URL(entry.meta.path, datasetRoot).href;
+    const sourceUrl = new URL(entry.meta.path, runtime.datasetRoot).href;
     await db.registerFileURL(alias, sourceUrl, duckdb.DuckDBDataProtocol.HTTP, false);
     entry.alias = alias;
   }
