@@ -4,7 +4,8 @@
 job-report-1/
 ├── common/
 │   ├── __init__.py
-│   ├── es_client.py                    # Grafana _msearch 共用封裝
+│   ├── es_client.py                    # Grafana _msearch 共用封裝（含 --from-store flag）
+│   ├── store.py                        # SQLite 雙層儲存（interval + daily）
 │   ├── html_template.py                # HTML header/footer/style 共用模板
 │   └── chart_helpers.py               # Chart.js 輔助函式
 ├── output/
@@ -28,8 +29,17 @@ job-report-1/
 ├── click_heatmap_report.py            # Dashboard 8：頁面點擊熱點分析
 ├── click_heatmap_discover.py          # 輔助：自動探索頁面可點擊元素
 ├── click_heatmap_config.json          # 頁面 URL + featureId → 元素位置 對應表
+├── extract_all.py                     # ETL 腳本：從 ES 擷取聚合結果存入 store.db
+│                                      #   --mode interval（即時層，每 10~60 分鐘）
+│                                      #   --mode daily（日報層，每日整天精確值）
+├── store.db                           # SQLite 資料庫（git ignore）
+│                                      #   snapshots_interval：time_from+time_to+report+query_name
+│                                      #   snapshots_daily：date+report+query_name
+│                                      #   meta：key-value（last_interval_run 等）
 ├── deploy.sh                          # 一鍵產生報告並部署到 GitHub Pages
 ├── run_all.py                         # 一鍵執行所有報告 + 產生導覽頁
+│                                      #   --from-store 讓所有子腳本從 store.db 讀取
+├── snapshot-refactor.plan.md          # ETL 雙層儲存架構實作計畫（含備忘方案 A~E）
 ├── grafana-dashboard.plan.md          # Dashboard 實作計畫（Grafana JSON 匯出待完成）
 ├── archive/
 │   └── page-click-analysis.plan.md   # ✅ 已完成：Dashboard 8 實作計畫
