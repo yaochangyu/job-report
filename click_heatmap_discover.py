@@ -20,7 +20,12 @@ CONFIG_PATH = Path(__file__).parent / "click_heatmap_config.json"
 OUTPUT_DIR = Path(__file__).parent / "output" / "click-heatmap"
 
 
-def discover_page(page, page_config: dict) -> list[dict]:
+def _make_fingerprint(el: dict) -> str:
+    """產生元素的 fingerprint，供 featureId 配對使用。"""
+    return f"{el['tag']}|{el['text'][:30]}|{el['href'][:40]}|{el['id']}"
+
+
+def discover_page(page, page_config: dict, existing_elements: list[dict]) -> list[dict]:
     """掃描頁面上所有可點擊元素，回傳位置與文字資訊。"""
     url = page_config["url"]
     vp = page_config.get("viewport", {"width": 1440, "height": 900})
@@ -28,15 +33,18 @@ def discover_page(page, page_config: dict) -> list[dict]:
     page.goto(url, wait_until="networkidle", timeout=30000)
     page.wait_for_timeout(2000)
 
-    # 嘗試關閉常見的彈窗 / cookie consent
-    for selector in [
+    # 關閉常見彈窗（與 report 腳本保持一致）
+    close_selectors = [
         "button:has-text('稍後再說')",
         "button:has-text('關閉')",
         "button:has-text('我知道了')",
-        ".cookie-consent button",
+        "button:has-text('×')",
+        "button:has-text('✕')",
+        "[class*='close']",
         "[aria-label='close']",
-        "[aria-label='Close']",
-    ]:
+        "[aria-label='關閉']",
+    ]
+    for selector in close_selectors:
         try:
             btn = page.locator(selector).first
             if btn.is_visible(timeout=500):
@@ -45,12 +53,39 @@ def discover_page(page, page_config: dict) -> list[dict]:
         except Exception:
             pass
 
+    # 移除蓋板廣告（與 report 腳本保持一致）
+    page.evaluate("""() => {
+        const vw = window.innerWidth, vh = window.innerHeight;
+        const minArea = vw * vh * 0.5;
+        for (const el of document.querySelectorAll('*')) {
+            const style = window.getComputedStyle(el);
+            if (style.position !== 'fixed') continue;
+            if (style.display === 'none' || style.visibility === 'hidden') continue;
+            const zIndex = parseInt(style.zIndex) || 0;
+            if (zIndex < 100) continue;
+            const rect = el.getBoundingClientRect();
+            if (rect.width * rect.height >= minArea) {
+                const closeBtn = el.querySelector(
+                    'button, [role="button"], [class*="close"], [aria-label="close"]'
+                );
+                if (closeBtn) { closeBtn.click(); } else { el.remove(); }
+            }
+        }
+    }""")
+    page.wait_for_timeout(500)
+
+    # 展開 viewport 至整頁高度（與 report 腳本保持一致）
+    img_width = vp["width"]
+    img_height = page.evaluate("() => document.documentElement.scrollHeight")
+    page.set_viewport_size({"width": img_width, "height": img_height})
+    page.wait_for_timeout(300)
+
     # 截圖供參考
     screenshots_dir = OUTPUT_DIR / "screenshots"
     screenshots_dir.mkdir(parents=True, exist_ok=True)
     safe_name = page_config["page_path"].strip("/").replace("/", "_") or "home"
     screenshot_path = screenshots_dir / f"{safe_name}.png"
-    page.screenshot(path=str(screenshot_path), full_page=page_config.get("full_page", True))
+    page.screenshot(path=str(screenshot_path), full_page=False)
     print(f"  截圖：{screenshot_path}")
 
     # 掃描所有可點擊元素
@@ -60,7 +95,6 @@ def discover_page(page, page_config: dict) -> list[dict]:
         const results = [];
         els.forEach((el, idx) => {
             const rect = el.getBoundingClientRect();
-            // 跳過不可見或太小的元素
             if (rect.width < 10 || rect.height < 10) return;
             if (rect.top < 0 || rect.left < 0) return;
 
@@ -83,6 +117,16 @@ def discover_page(page, page_config: dict) -> list[dict]:
         return results;
     }""")
 
+    # 用 fingerprint 還原舊的 featureId
+    old_map = {_make_fingerprint(e): e["feature_id"] for e in existing_elements if e.get("feature_id")}
+    restored = 0
+    for el in elements:
+        fp = _make_fingerprint(el)
+        if fp in old_map:
+            el["feature_id"] = old_map[fp]
+            restored += 1
+    print(f"  還原 featureId：{restored}/{len([e for e in existing_elements if e.get('feature_id')])} 個")
+
     return elements
 
 
@@ -101,7 +145,7 @@ def main() -> None:
             page_name = page_config["page_name"]
             print(f"\n[INFO] 探索頁面：{page_name} ({page_config['url']})")
 
-            elements = discover_page(page, page_config)
+            elements = discover_page(page, page_config, page_config.get("elements", []))
             page_config["elements"] = elements
             print(f"  找到 {len(elements)} 個可點擊元素")
 
