@@ -96,7 +96,7 @@ REPORTS = [
 ]
 
 
-def build_nav_html(results: list[dict], time_from: str, time_to: str, gen_at: str) -> str:
+def build_nav_html(results: list[dict], time_from: str, time_to: str, gen_at: str, from_store: bool = False) -> str:
     """產生 output/index.html 導覽頁面。"""
     cards_html = ""
     for r in results:
@@ -178,7 +178,7 @@ def build_nav_html(results: list[dict], time_from: str, time_to: str, gen_at: st
 <body>
 <header>
   <h1>📈 jobbank-web 數據報告</h1>
-  <div class="meta">資料來源：operation-logs（Elasticsearch）· 查詢區間：{time_from} ～ {time_to}</div>
+  <div class="meta">資料來源：{"store.db" if from_store else "operation-logs（Elasticsearch）"} · 查詢區間：{time_from} ～ {time_to}</div>
   <div class="badge-row">
     <span class="pill">共 {total} 份報告</span>
     <span class="pill">✓ {ok_count} 份完成</span>
@@ -210,6 +210,8 @@ def main() -> None:
 
     # 組合傳遞給子腳本的額外參數
     extra_args: list[str] = []
+    if args.from_store:
+        extra_args.append("--from-store")
     if args.time_from:
         extra_args += ["--from", args.time_from]
         if args.time_to:
@@ -217,6 +219,8 @@ def main() -> None:
     elif args.days:
         extra_args += ["--days", str(args.days)]
 
+    source = "store.db" if args.from_store else "Elasticsearch"
+    print(f"[INFO] 資料來源：{source}")
     print(f"[INFO] 查詢區間：{time_from} ～ {time_to}")
     print(f"[INFO] 開始執行 {len(REPORTS)} 份報告...\n")
 
@@ -239,7 +243,7 @@ def main() -> None:
 
     # 產生導覽頁面
     gen_at = generated_now()
-    nav_html = build_nav_html(results, time_from, time_to, gen_at)
+    nav_html = build_nav_html(results, time_from, time_to, gen_at, from_store=args.from_store)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     nav_file = OUTPUT_DIR / "index.html"
     nav_file.write_text(nav_html, encoding="utf-8")
