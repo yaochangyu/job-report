@@ -45,7 +45,7 @@ ETL（Python）
   - 需要先有唯一入口頁，包含查詢條件區、摘要 KPI 區、圖表區與表格區，才能承接後續查詢結果。
   - 這一步會同時決定前端元件配置，避免之後各區塊輸出格式不一致。
 
-- [ ] Step 5：接入 DuckDB-WASM 與 Parquet 載入流程
+- [x] Step 5：接入 DuckDB-WASM 與 Parquet 載入流程
   - 前端必須先能初始化 DuckDB-WASM、載入 Parquet 檔、建立可重複執行的查詢入口，後續所有功能才有基礎。
   - 這一步是技術可行性的關鍵，若這裡不穩，後面圖表再完整也無法運作。
 
@@ -208,6 +208,17 @@ dataset/
   - 圖表區
   - 表格區
 - `app.js` 先處理預設日期與基本狀態顯示，Step 5 再接上 DuckDB 與 manifest
+
+## Step 5 產出
+
+- `frontend/app.js`
+  - 接入 DuckDB-WASM CDN bundle
+  - 啟動 `AsyncDuckDB`
+  - 載入 `dataset/manifest.json`
+  - 依 manifest 註冊 Parquet 檔案 URL
+  - 建立 `events` view 作為後續 SQL 查詢入口
+- `frontend/index.html`
+  - 新增已載入日期與資料列數狀態欄位
 
 ## 執行方式
 - 目前僅建立新計畫書，不實作程式。
