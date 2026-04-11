@@ -22,6 +22,7 @@ const defaultState = {
   queryResult: null,
   selectedViewMode: "overview",
   theme: "light",
+  lastSuccessfulFilters: null,
 };
 
 const THEME_STORAGE_KEY = "job-report-theme";
@@ -154,6 +155,59 @@ function renderPrimaryTable(rows) {
     .join("");
 }
 
+function getQueryForm() {
+  return document.getElementById("query-form");
+}
+
+function collectFormFilters(form, viewMode) {
+  const formData = new FormData(form);
+  const payload = Object.fromEntries(formData.entries());
+  return {
+    dateFrom: payload.date_from,
+    dateTo: payload.date_to,
+    pagePath: payload.page_path?.trim() || "",
+    viewMode,
+  };
+}
+
+function applyFiltersToForm(filters) {
+  document.getElementById("date-from").value = filters.dateFrom;
+  document.getElementById("date-to").value = filters.dateTo;
+  document.getElementById("page-path").value = filters.pagePath;
+}
+
+async function runQuery(state, filters) {
+  if (!runtime.conn || !runtime.hasEventsView) {
+    state.lastQuery = "目前沒有 events view，可先執行 extract_events.py 匯出 Parquet";
+    state.queryResult = null;
+    renderPrimaryTable([]);
+    resetDashboard();
+    renderState(state);
+    return false;
+  }
+
+  try {
+    const result = await executeViewQueries(runtime.conn, filters);
+    state.lastQuery = result.summary;
+    state.queryResult = summarizeQueryResult(result.outputs);
+    state.lastSuccessfulFilters = {
+      dateFrom: filters.dateFrom,
+      dateTo: filters.dateTo,
+      pagePath: filters.pagePath,
+    };
+    renderPrimaryTable(renderDashboard(filters.viewMode, result.outputs));
+    renderState(state);
+    return true;
+  } catch (error) {
+    state.lastQuery = error instanceof Error ? error.message : String(error);
+    state.queryResult = null;
+    renderPrimaryTable([]);
+    resetDashboard();
+    renderState(state);
+    return false;
+  }
+}
+
 function hydrateDefaultDates() {
   const today = new Date();
   const from = new Date(today);
@@ -171,42 +225,31 @@ function bindThemeToggle(state) {
 
 function bindSidebar(state) {
   document.querySelectorAll("[data-view-mode]").forEach((button) => {
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
       state.selectedViewMode = button.dataset.viewMode;
       renderViewMeta(state);
-      state.lastQuery = `已切換到 ${VIEW_META[state.selectedViewMode].title}，請按「執行查詢」更新結果`;
-      renderState(state);
+      const form = getQueryForm();
+
+      if (state.lastSuccessfulFilters) {
+        const filters = {
+          ...state.lastSuccessfulFilters,
+          viewMode: state.selectedViewMode,
+        };
+        applyFiltersToForm(filters);
+        await runQuery(state, filters);
+        return;
+      }
+
+      await runQuery(state, collectFormFilters(form, state.selectedViewMode));
     });
   });
 }
 
 function bindQueryForm(state) {
-  const form = document.getElementById("query-form");
+  const form = getQueryForm();
   form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    const formData = new FormData(form);
-    const payload = Object.fromEntries(formData.entries());
-    const filters = {
-      dateFrom: payload.date_from,
-      dateTo: payload.date_to,
-      viewMode: state.selectedViewMode,
-      pagePath: payload.page_path?.trim() || "",
-    };
-
-    if (!runtime.conn || !runtime.hasEventsView) {
-      state.lastQuery = "目前沒有 events view，可先執行 extract_events.py 匯出 Parquet";
-      state.queryResult = null;
-      renderPrimaryTable([]);
-      resetDashboard();
-      renderState(state);
-      return;
-    }
-
-    const result = await executeViewQueries(runtime.conn, filters);
-    state.lastQuery = result.summary;
-    state.queryResult = summarizeQueryResult(result.outputs);
-    renderPrimaryTable(renderDashboard(filters.viewMode, result.outputs));
-    renderState(state);
+    await runQuery(state, collectFormFilters(form, state.selectedViewMode));
   });
 }
 
