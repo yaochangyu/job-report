@@ -11,15 +11,13 @@ job-report-1/
 │   ├── html_template.py                # HTML header/footer/style 共用模板
 │   └── chart_helpers.py               # Chart.js 輔助函式
 ├── output/
-│   ├── index.html                      # 導覽頁面（由 run_all.py 產生）
-│   ├── traffic-overview/index.html     # Dashboard 1 報告產出
-│   ├── search-behavior/index.html      # Dashboard 2 報告產出
-│   ├── apply-conversion/index.html     # Dashboard 3 報告產出
-│   ├── feature-engagement/index.html   # Dashboard 4 報告產出
-│   ├── device-platform/index.html      # Dashboard 5 報告產出
-│   ├── page-ranking/index.html         # Dashboard 6 報告產出
-│   ├── page-navigation/index.html      # Dashboard 7 報告產出
-│   └── click-heatmap/index.html        # Dashboard 8 報告產出
+│   ├── index.html                      # DuckDB 單頁報表輸出（由 run_all.py 組裝）
+│   ├── app.css                         # 單頁報表樣式
+│   ├── app.js                          # 單頁報表前端邏輯
+│   ├── dashboard-renderers.js         # 單頁 KPI / 圖表 renderer
+│   ├── query-definitions.js           # 單頁 DuckDB SQL 定義
+│   ├── dataset/                        # Parquet dataset 與 manifest
+│   └── site-manifest.json              # 部署輸出資訊
 ├── frontend/
 │   ├── index.html                      # DuckDB 單頁報表入口
 │   ├── app.css                         # DuckDB 單頁報表樣式
@@ -45,9 +43,8 @@ job-report-1/
 │                                      #   snapshots_interval：time_from+time_to+report+query_name
 │                                      #   snapshots_daily：date+report+query_name
 │                                      #   meta：key-value（last_interval_run 等）
-├── deploy.sh                          # 一鍵產生報告並部署到 GitHub Pages
-├── run_all.py                         # 一鍵執行所有報告 + 產生導覽頁
-│                                      #   --from-store 讓所有子腳本從 store.db 讀取
+├── deploy.sh                          # 匯出 Parquet + 組裝單頁網站 + 部署到 GitHub Pages
+├── run_all.py                         # 組裝 frontend/ 與 dataset/ 成 output/
 ├── snapshot-refactor.plan.md          # ETL 雙層儲存架構實作計畫（含備忘方案 A~E）
 ├── duckdb-single-page.plan.md         # 單一頁面 + DuckDB-WASM + Parquet 實作計畫
 ├── grafana-dashboard.plan.md          # Dashboard 實作計畫（Grafana JSON 匯出待完成）

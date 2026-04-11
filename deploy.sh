@@ -5,9 +5,14 @@ DAYS=${1:-7}
 REPO_URL="https://github.com/yaochangyu/job-report.git"
 OUTPUT_DIR="$(dirname "$0")/output"
 TMP_DIR=$(mktemp -d)
+TO_DATE=$(date +%F)
+FROM_DATE=$(date -d "$((DAYS - 1)) days ago" +%F)
 
-echo "▶ 產生報告（近 ${DAYS} 天）..."
-uv run python "$(dirname "$0")/run_all.py" --days "$DAYS"
+echo "▶ 匯出 Parquet dataset（${FROM_DATE} ~ ${TO_DATE}）..."
+uv run python "$(dirname "$0")/extract_events.py" --from "$FROM_DATE" --to "$TO_DATE"
+
+echo "▶ 組裝單頁網站..."
+uv run python "$(dirname "$0")/run_all.py"
 
 echo "▶ 部署到 GitHub Pages..."
 git init "$TMP_DIR"
