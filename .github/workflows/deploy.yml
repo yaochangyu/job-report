@@ -16,6 +16,9 @@ jobs:
 
       - uses: astral-sh/setup-uv@v5
 
+      - name: 安裝 Playwright Chromium
+        run: uv run playwright install --with-deps chromium
+
       - name: 產生報告
         env:
           GRAFANA_URL: ${{ secrets.GRAFANA_URL }}
