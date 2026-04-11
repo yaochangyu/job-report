@@ -52,13 +52,13 @@ DOM 上**沒有** `data-feature-id` 屬性 → 無法自動對應 featureId 到 
     ```
   - **為什麼**：Playwright 需要知道要截圖哪個 URL
 
-- [ ] **Step 1.2** — 用 Playwright 自動探索可點擊元素，產生對應表範本
+- [x] **Step 1.2** — 用 Playwright 自動探索可點擊元素，產生對應表範本
   - 掃描頁面上所有 `<a>`、`<button>`、`[role="button"]` 等元素
   - 匯出每個元素的：bounding box (x, y, width, height)、文字內容、href
   - 輸出成 JSON 範本，供使用者填入 featureId
   - **為什麼**：減少手動量測座標的工作，使用者只需對照 featureId 填入即可
 
-- [ ] **Step 1.3** — 手動補完 featureId → 元素對應
+- [x] **Step 1.3** — 手動補完 featureId → 元素對應
   - 使用者根據 Step 1.2 產生的範本，將 ES 中的 featureId 對應到正確的元素位置
   - 格式範例：
     ```json
