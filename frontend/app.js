@@ -20,6 +20,53 @@ const defaultState = {
   registeredDates: [],
   rowCount: null,
   queryResult: null,
+  selectedViewMode: "overview",
+  theme: "light",
+};
+
+const THEME_STORAGE_KEY = "job-report-theme";
+
+const VIEW_META = {
+  overview: {
+    title: "整體概覽",
+    subtitle: "Traffic Overview",
+    desc: "觀察整體 KPI、趨勢與主要流量分佈。",
+  },
+  search: {
+    title: "搜尋行為",
+    subtitle: "Search Behavior",
+    desc: "聚焦搜尋入口、AI 搜尋與快速篩選互動。",
+  },
+  apply: {
+    title: "應徵轉換",
+    subtitle: "Apply Conversion",
+    desc: "檢視應徵量、來源與每日轉換趨勢。",
+  },
+  feature: {
+    title: "功能互動",
+    subtitle: "Feature Engagement",
+    desc: "查看探索職缺、探索企業、身份辨識與新聞互動。",
+  },
+  device: {
+    title: "裝置平台",
+    subtitle: "Device & Platform",
+    desc: "分析裝置、OS、browser 與行為差異。",
+  },
+  ranking: {
+    title: "頁面排行",
+    subtitle: "Page Ranking",
+    desc: "觀察熱門 feature 與主要流量排行。",
+  },
+  navigation: {
+    title: "頁面導航",
+    subtitle: "Page Navigation",
+    desc: "分析來源頁、目標頁與流向排行。",
+  },
+  heatmap: {
+    title: "點擊熱點",
+    subtitle: "Page Click Heatmap",
+    desc: "從點擊量視角觀察熱門互動區塊。",
+  },
 };
 
 function setText(id, value) {
@@ -35,6 +82,26 @@ function safeJson(value) {
     (_, current) => (typeof current === "bigint" ? Number(current) : current),
     2,
   );
+}
+
+function applyTheme(theme, state) {
+  document.documentElement.dataset.theme = theme;
+  state.theme = theme;
+  localStorage.setItem(THEME_STORAGE_KEY, theme);
+  setText("theme-toggle", theme === "light" ? "切換暗黑版" : "切換光亮版");
+}
+
+function renderViewMeta(state) {
+  const meta = VIEW_META[state.selectedViewMode] || VIEW_META.overview;
+  setText("current-view-title", meta.title);
+  setText("current-view-subtitle", meta.subtitle);
+  setText("current-view-desc", meta.desc);
+
+  document.querySelectorAll("[data-view-mode]").forEach((button) => {
+    const active = button.dataset.viewMode === state.selectedViewMode;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-current", active ? "page" : "false");
+  });
 }
 
 function summarizeQueryResult(outputs) {
@@ -96,6 +163,23 @@ function hydrateDefaultDates() {
   document.getElementById("date-to").value = today.toISOString().slice(0, 10);
 }
 
+function bindThemeToggle(state) {
+  document.getElementById("theme-toggle").addEventListener("click", () => {
+    applyTheme(state.theme === "light" ? "dark" : "light", state);
+  });
+}
+
+function bindSidebar(state) {
+  document.querySelectorAll("[data-view-mode]").forEach((button) => {
+    button.addEventListener("click", () => {
+      state.selectedViewMode = button.dataset.viewMode;
+      renderViewMeta(state);
+      state.lastQuery = `已切換到 ${VIEW_META[state.selectedViewMode].title}，請按「執行查詢」更新結果`;
+      renderState(state);
+    });
+  });
+}
+
 function bindQueryForm(state) {
   const form = document.getElementById("query-form");
   form.addEventListener("submit", async (event) => {
@@ -105,7 +189,7 @@ function bindQueryForm(state) {
     const filters = {
       dateFrom: payload.date_from,
       dateTo: payload.date_to,
-      viewMode: payload.view_mode,
+      viewMode: state.selectedViewMode,
       pagePath: payload.page_path?.trim() || "",
     };
 
@@ -182,8 +266,13 @@ async function buildEventsView(conn, registeredFiles) {
 
 async function bootstrap() {
   const state = { ...defaultState };
+  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+  applyTheme(savedTheme === "dark" ? "dark" : "light", state);
   hydrateDefaultDates();
+  bindThemeToggle(state);
+  bindSidebar(state);
   bindQueryForm(state);
+  renderViewMeta(state);
   renderPrimaryTable([]);
   resetDashboard();
   renderState(state);
