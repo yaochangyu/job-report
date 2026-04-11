@@ -27,8 +27,9 @@ DOM 上**沒有** `data-feature-id` 屬性 → 無法自動對應 featureId 到 
 
 ### Step 0 — 資料探索與驗證
 
-- [ ] **Step 0.1** — 查詢 ES 確認 `pageName` × `featureId` 在 click 事件中的資料分佈
-  - 確認各 `pageName` 對應到哪些 `featureId`，以及各自的點擊量
+- [x] **Step 0.1** — 查詢 ES 確認 `pageUrl` × `featureId` 在 click 事件中的資料分佈
+  - ~~pageName~~ click 事件中無 `pageName`，改用 `pageUrl`（text 欄位，需用 runtime_mappings 提取路徑）
+  - 結果：首頁 `/` 有 195K clicks、50 種 featureId；搜尋頁 `/search/job` 有 31K clicks
   - **為什麼**：確認有足夠資料產生有意義的熱點圖，並決定要涵蓋哪些頁面
 
 ---
