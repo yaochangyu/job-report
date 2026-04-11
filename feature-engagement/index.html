@@ -67,23 +67,23 @@
 <header>
   <h1>功能互動分析 — Feature Engagement</h1>
   <p>資料來源：operation-logs（Elasticsearch） · 查詢區間：now-7d ～ now</p>
-  <span class="badge">產生時間：2026-04-11 12:38:23 +08:00</span>
+  <span class="badge">產生時間：2026-04-11 12:51:03 +08:00</span>
 </header>
 <main>
   <div class="kpi-grid">
     <div class="kpi-card" style="--accent:#4361ee">
       <div class="label">探索職缺</div>
-      <div class="value">7,223</div>
+      <div class="value">7,244</div>
       <div class="sub">organic + corp</div>
     </div>
     <div class="kpi-card" style="--accent:#7209b7">
       <div class="label">探索企業</div>
-      <div class="value">2,030</div>
+      <div class="value">2,033</div>
       <div class="sub">各企業探索入口</div>
     </div>
     <div class="kpi-card" style="--accent:#f72585">
       <div class="label">身份辨識</div>
-      <div class="value">7,914</div>
+      <div class="value">7,934</div>
       <div class="sub">7 種身份類型</div>
     </div>
     <div class="kpi-card" style="--accent:#06d6a0">
@@ -133,23 +133,23 @@
   </div>  </div>
   <div class="card" style="margin-bottom:24px">
     <h2>身份辨識詳細數據</h2>
-    <div class="subtitle">共 7,914 筆</div>
+    <div class="subtitle">共 7,934 筆</div>
     <table>
       <thead><tr><th>#</th><th>身份</th><th>事件數</th><th>視覺</th><th>佔比</th></tr></thead>
       <tbody>
         <tr>
           <td class="rank">1</td>
           <td>returning</td>
-          <td>2,361</td>
+          <td>2,370</td>
           <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:29.8%"></div></div>
+            <div class="bar-bg"><div class="bar-fill" style="width:29.9%"></div></div>
           </td>
-          <td class="pct">29.8%</td>
+          <td class="pct">29.9%</td>
         </tr>
         <tr>
           <td class="rank">2</td>
           <td>worker</td>
-          <td>1,432</td>
+          <td>1,436</td>
           <td class="bar-cell">
             <div class="bar-bg"><div class="bar-fill" style="width:18.1%"></div></div>
           </td>
@@ -158,7 +158,7 @@
         <tr>
           <td class="rank">3</td>
           <td>student</td>
-          <td>1,221</td>
+          <td>1,225</td>
           <td class="bar-cell">
             <div class="bar-bg"><div class="bar-fill" style="width:15.4%"></div></div>
           </td>
@@ -185,7 +185,7 @@
         <tr>
           <td class="rank">6</td>
           <td>fresh</td>
-          <td>726</td>
+          <td>728</td>
           <td class="bar-cell">
             <div class="bar-bg"><div class="bar-fill" style="width:9.2%"></div></div>
           </td>
@@ -194,11 +194,11 @@
         <tr>
           <td class="rank">7</td>
           <td>personal</td>
-          <td>463</td>
+          <td>464</td>
           <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:5.9%"></div></div>
+            <div class="bar-bg"><div class="bar-fill" style="width:5.8%"></div></div>
           </td>
-          <td class="pct">5.9%</td>
+          <td class="pct">5.8%</td>
         </tr></tbody>
     </table>
   </div>
@@ -271,7 +271,7 @@
     data: {
       labels: ["unknown"],
       datasets: [{
-        data: [7223],
+        data: [7244],
         backgroundColor: ["#4361ee"],
         borderWidth: 2, borderColor: '#fff'
       }]
@@ -282,7 +282,7 @@
         legend: { position: 'right', labels: { font: { size: 12 }, padding: 8 } },
         tooltip: { callbacks: {
           label: ctx => {
-            const t = 7223;
+            const t = 7244;
             return ` ${ctx.label}：${ctx.parsed.toLocaleString()}（${(ctx.parsed/t*100).toFixed(1)}%）`;
           }
         } }
@@ -296,7 +296,7 @@
     data: {
       labels: ["unknown"],
       datasets: [{
-        data: [7223],
+        data: [7244],
         backgroundColor: ["#4361ee"],
         borderWidth: 2, borderColor: '#fff'
       }]
@@ -307,7 +307,7 @@
         legend: { position: 'right', labels: { font: { size: 12 }, padding: 8 } },
         tooltip: { callbacks: {
           label: ctx => {
-            const t = 7223;
+            const t = 7244;
             return ` ${ctx.label}：${ctx.parsed.toLocaleString()}（${(ctx.parsed/t*100).toFixed(1)}%）`;
           }
         } }
@@ -323,13 +323,13 @@
       datasets: [
         {
           label: 'explore-jobs-organic',
-          data: [719, 2153, 2606, 483],
+          data: [719, 2153, 2606, 500],
           borderColor: '#4361ee', backgroundColor: 'rgba(67,97,238,0.1)',
           fill: true, tension: 0.3
         },
         {
           label: 'explore-jobs-organic-corp',
-          data: [165, 524, 439, 134],
+          data: [165, 524, 439, 138],
           borderColor: '#f72585', backgroundColor: 'rgba(247,37,133,0.08)',
           fill: true, tension: 0.3
         }
@@ -350,7 +350,7 @@
       labels: ["job1", "corp", "job2", "job-more", "manufacturing", "service", "next"],
       datasets: [{
         label: '事件數',
-        data: [615, 567, 452, 191, 123, 81, 1],
+        data: [617, 568, 452, 191, 123, 81, 1],
         backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff"],
         borderRadius: 6
       }]
@@ -371,7 +371,7 @@
       labels: ["unknown"],
       datasets: [{
         label: '點擊數',
-        data: [2030],
+        data: [2033],
         backgroundColor: ["#4361ee"],
         borderRadius: 4
       }]
@@ -394,7 +394,7 @@
       labels: ["returning", "worker", "student", "professional", "senior", "fresh", "personal"],
       datasets: [{
         label: '點擊數',
-        data: [2361, 1432, 1221, 958, 753, 726, 463],
+        data: [2370, 1436, 1225, 958, 753, 728, 464],
         backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff"],
         borderRadius: 6
       }]
@@ -450,6 +450,6 @@
 </script>
 
 </main>
-<footer>Generated 2026-04-11 12:38:23 +08:00 · operation-logs</footer>
+<footer>Generated 2026-04-11 12:51:03 +08:00 · operation-logs</footer>
 </body>
 </html>
