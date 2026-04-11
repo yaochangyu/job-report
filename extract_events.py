@@ -14,11 +14,12 @@ from __future__ import annotations
 import argparse
 from datetime import date, datetime, timedelta
 
-from common.es_client import TW, es_search
+from common.es_client import TW, msearch
 from common.parquet_dataset import normalize_event, update_manifest, write_events_partition
 
 SOURCE_FIELDS = [
     "@timestamp",
+    "@timestamp_ms",
     "system",
     "eventType",
     "action",
@@ -83,14 +84,13 @@ def fetch_events_for_date(target_date: str, page_size: int) -> list[dict]:
                 }
             },
             "sort": [
-                {"@timestamp": "asc"},
-                {"_id": "asc"},
+                {"@timestamp_ms": "asc"},
             ],
         }
         if search_after is not None:
             body["search_after"] = search_after
 
-        response = es_search(body)
+        response = msearch(body)
         hits = response["hits"]["hits"]
         if not hits:
             break

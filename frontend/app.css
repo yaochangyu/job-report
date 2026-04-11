@@ -162,11 +162,18 @@ body {
 
 .chart-grid {
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  align-items: start;
+}
+
+.chart-canvas-wrap {
+  height: 320px;
+  padding: 16px 24px 24px;
 }
 
 .chart-panel canvas {
-  width: 100%;
-  padding: 16px 24px 24px;
+  display: block;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .status-list {
@@ -229,10 +236,12 @@ th {
 
 .query-log {
   min-height: 220px;
+  max-height: 360px;
   margin: 0;
   padding: 24px;
   color: #cbd5e1;
   white-space: pre-wrap;
+  overflow: auto;
 }
 
 @media (max-width: 960px) {

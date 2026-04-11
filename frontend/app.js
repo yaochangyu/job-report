@@ -29,20 +29,36 @@ function setText(id, value) {
   }
 }
 
+function safeJson(value) {
+  return JSON.stringify(
+    value,
+    (_, current) => (typeof current === "bigint" ? Number(current) : current),
+    2,
+  );
+}
+
+function summarizeQueryResult(outputs) {
+  return outputs.map((item) => ({
+    name: item.name,
+    rowCount: item.rows.length,
+    sample: item.rows.slice(0, 3),
+  }));
+}
+
 function renderState(state) {
   setText("manifest-status", state.manifestLoaded ? "已載入" : "尚未載入");
   setText("duckdb-status", state.duckdbReady ? "已初始化" : "尚未初始化");
   setText("query-summary", state.lastQuery || "尚未執行");
   setText("loaded-dates", String(state.registeredDates.length));
   setText("loaded-rows", state.rowCount == null ? "--" : String(state.rowCount));
-  setText("query-log", JSON.stringify({
+  setText("query-log", safeJson({
     manifestLoaded: state.manifestLoaded,
     duckdbReady: state.duckdbReady,
     registeredDates: state.registeredDates,
     rowCount: state.rowCount,
     lastQuery: state.lastQuery,
     queryResult: state.queryResult,
-  }, null, 2));
+  }));
 }
 
 function renderPrimaryTable(rows) {
@@ -62,9 +78,9 @@ function renderPrimaryTable(rows) {
       return `
         <tr>
           <td>${index + 1}</td>
-          <td>${firstKey}: ${firstValue ?? "-"}</td>
-          <td>${secondKey}: ${secondValue ?? "-"}</td>
-          <td>${thirdKey}: ${thirdValue ?? "-"}</td>
+          <td>${firstKey}: ${String(firstValue ?? "-")}</td>
+          <td>${secondKey}: ${String(secondValue ?? "-")}</td>
+          <td>${thirdKey}: ${String(thirdValue ?? "-")}</td>
         </tr>
       `;
     })
@@ -104,7 +120,7 @@ function bindQueryForm(state) {
 
     const result = await executeViewQueries(runtime.conn, filters);
     state.lastQuery = result.summary;
-    state.queryResult = result.outputs;
+    state.queryResult = summarizeQueryResult(result.outputs);
     renderPrimaryTable(renderDashboard(filters.viewMode, result.outputs));
     renderState(state);
   });
