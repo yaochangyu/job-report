@@ -7,6 +7,7 @@ job-report-1/
 │   ├── es_client.py                    # Grafana _msearch 共用封裝（含 --from-store flag）
 │   ├── store.py                        # SQLite 雙層儲存（interval + daily）
 │   ├── parquet_schema.py               # DuckDB 單頁方案的 Parquet schema / 輸出設定
+│   ├── parquet_dataset.py              # Parquet 寫入、欄位正規化與 manifest 維護
 │   ├── html_template.py                # HTML header/footer/style 共用模板
 │   └── chart_helpers.py               # Chart.js 輔助函式
 ├── output/
@@ -33,6 +34,7 @@ job-report-1/
 ├── extract_all.py                     # ETL 腳本：從 ES 擷取聚合結果存入 store.db
 │                                      #   --mode interval（即時層，每 10~60 分鐘）
 │                                      #   --mode daily（日報層，每日整天精確值）
+├── extract_events.py                  # ETL 腳本：從 ES 擷取原始事件輸出為 Parquet
 ├── store.db                           # SQLite 資料庫（git ignore）
 │                                      #   snapshots_interval：time_from+time_to+report+query_name
 │                                      #   snapshots_daily：date+report+query_name

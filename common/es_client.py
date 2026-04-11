@@ -9,8 +9,8 @@ import base64
 import json
 import ssl
 import sys
-import urllib.request
 import urllib.error
+import urllib.request
 from datetime import datetime, timezone, timedelta
 
 # ── Grafana / ES 設定 ────────────────────────────────────────────────────────
@@ -22,27 +22,24 @@ DATASOURCE_UID = "af55vm1ovng1sb"
 ES_INDEX = "operation-logs"
 
 TW = timezone(timedelta(hours=8))
+BASE_PROXY_URL = f"{GRAFANA_URL}/api/datasources/proxy/uid/{DATASOURCE_UID}"
 
 
 # ── msearch ──────────────────────────────────────────────────────────────────
 
-def msearch(body: dict, index: str = ES_INDEX) -> dict:
-    """透過 Grafana Datasource Proxy 發送 _msearch 請求，回傳第一個 response。"""
-    url = f"{GRAFANA_URL}/api/datasources/proxy/uid/{DATASOURCE_UID}/_msearch"
-    ndjson = (
-        json.dumps({"index": index}) + "\n" +
-        json.dumps(body) + "\n"
-    ).encode("utf-8")
+def _auth_token() -> str:
+    return base64.b64encode(f"{GRAFANA_USER}:{GRAFANA_PASSWORD}".encode()).decode()
 
+
+def _request_json(url: str, payload: bytes, content_type: str) -> dict:
     token = base64.b64encode(
         f"{GRAFANA_USER}:{GRAFANA_PASSWORD}".encode()
     ).decode()
-
     req = urllib.request.Request(
         url,
-        data=ndjson,
+        data=payload,
         headers={
-            "Content-Type": "application/x-ndjson",
+            "Content-Type": content_type,
             "Authorization": f"Basic {token}",
         },
         method="POST",
@@ -53,13 +50,33 @@ def msearch(body: dict, index: str = ES_INDEX) -> dict:
     ctx.verify_mode = ssl.CERT_NONE
 
     with urllib.request.urlopen(req, context=ctx, timeout=30) as resp:
-        data = json.loads(resp.read())
+        return json.loads(resp.read())
+
+
+def msearch(body: dict, index: str = ES_INDEX) -> dict:
+    """透過 Grafana Datasource Proxy 發送 _msearch 請求，回傳第一個 response。"""
+    url = f"{BASE_PROXY_URL}/_msearch"
+    ndjson = (
+        json.dumps({"index": index}) + "\n" +
+        json.dumps(body) + "\n"
+    ).encode("utf-8")
+    data = _request_json(url, ndjson, "application/x-ndjson")
 
     r = data["responses"][0]
     if "error" in r:
         print(f"[ERROR] ES 回傳錯誤：{r['error']['reason']}", file=sys.stderr)
         sys.exit(1)
     return r
+
+
+def es_search(body: dict, index: str = ES_INDEX) -> dict:
+    """透過 Grafana Datasource Proxy 發送 _search 請求。"""
+    url = f"{BASE_PROXY_URL}/{index}/_search"
+    data = _request_json(url, json.dumps(body).encode("utf-8"), "application/json")
+    if "error" in data:
+        print(f"[ERROR] ES 回傳錯誤：{data['error']['reason']}", file=sys.stderr)
+        sys.exit(1)
+    return data
 
 
 # ── CLI 參數 ─────────────────────────────────────────────────────────────────

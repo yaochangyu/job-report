@@ -37,7 +37,7 @@ ETL（Python）
   - 要先決定是輸出單一大檔、按日期切檔，或按主題切檔，這會直接影響前端載入速度與 GitHub Pages 部署方式。
   - 同時要明確定義欄位型別、時間欄位格式、必要維度與指標欄位，讓 DuckDB-WASM 查詢可以穩定運作。
 
-- [ ] Step 3：新增 ETL 輸出 Parquet 的腳本或模式
+- [x] Step 3：新增 ETL 輸出 Parquet 的腳本或模式
   - 這一步是資料來源切換的核心，必須讓 Python 端能穩定把 ES 資料轉成前端可讀的 Parquet。
   - 建議盡量沿用現有查詢邏輯，只把輸出層抽換掉，這樣可以減少一次改太多地方造成風險。
 
@@ -181,6 +181,19 @@ dataset/
 
 - 共用 schema 與輸出規則統一定義在 `common/parquet_schema.py`
 - Step 3 的 ETL 與後續前端 manifest 都必須沿用這份定義
+
+## Step 3 產出
+
+- 新增 `extract_events.py`
+  - 依日期或日期區間抓取 ES 原始事件
+  - 以 `search_after` 分頁抓取資料
+  - 每日輸出到 `dataset/events/date=YYYY-MM-DD/events.parquet`
+- 新增 `common/parquet_dataset.py`
+  - 處理欄位正規化、Parquet 寫入、manifest 更新
+- `common/es_client.py`
+  - 補上 `es_search()` 供原始事件 ETL 使用
+- `pyproject.toml`
+  - 加入 `pyarrow`
 
 ## 執行方式
 - 目前僅建立新計畫書，不實作程式。
