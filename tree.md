@@ -6,6 +6,7 @@ job-report-1/
 │   ├── __init__.py
 │   ├── es_client.py                    # Grafana _msearch 共用封裝（含 --from-store flag）
 │   ├── store.py                        # SQLite 雙層儲存（interval + daily）
+│   ├── parquet_schema.py               # DuckDB 單頁方案的 Parquet schema / 輸出設定
 │   ├── html_template.py                # HTML header/footer/style 共用模板
 │   └── chart_helpers.py               # Chart.js 輔助函式
 ├── output/

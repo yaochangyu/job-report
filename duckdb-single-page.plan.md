@@ -33,7 +33,7 @@ ETL（Python）
   - 先整理哪些資料欄位真的需要進前端查詢，避免把目前每份報表的所有聚合結果原封不動搬過去。
   - 這一步需要先做，因為 Parquet schema 與前端 SQL 設計都要以實際查詢需求為準，否則後面容易重工。
 
-- [ ] Step 2：定義 Parquet 輸出格式與檔案切分策略
+- [x] Step 2：定義 Parquet 輸出格式與檔案切分策略
   - 要先決定是輸出單一大檔、按日期切檔，或按主題切檔，這會直接影響前端載入速度與 GitHub Pages 部署方式。
   - 同時要明確定義欄位型別、時間欄位格式、必要維度與指標欄位，讓 DuckDB-WASM 查詢可以穩定運作。
 
@@ -123,6 +123,64 @@ ETL（Python）
 - 建議以「事件寬表」為主，至少涵蓋時間、裝置、頁面、功能與 metadata 維度。
 - 建議優先以 `date` 做切分，讓前端可以依日期區間載入需要的 Parquet 檔。
 - 若資料量偏大，再補每日預聚合表給 KPI 與熱門排行使用。
+
+## Step 2 決策
+
+### Dataset 目錄
+
+```text
+dataset/
+└── events/
+    └── date=YYYY-MM-DD/
+        └── events.parquet
+```
+
+- 主資料集固定為 `dataset/events`
+- 以 `date` 作為唯一 partition key
+- 同一天只保留單一 `events.parquet`，避免靜態部署下產生過多小檔
+
+### Schema 決策
+
+- 主表名稱：`events`
+- schema 版本：`v1`
+- 排序欄位：`date`、`occurred_at`、`feature_id`、`event_type`
+- 壓縮：`zstd`
+- row group：100,000 rows
+
+### 事件寬表欄位
+
+| 欄位 | 型別 | 說明 |
+|------|------|------|
+| `date` | date | 台灣時區日期 |
+| `hour` | tinyint | 台灣時區小時 |
+| `occurred_at` | timestamp | 原始事件時間 |
+| `system` | string | 系統名稱 |
+| `event_type` | string | view / click |
+| `action` | string | apply 等動作 |
+| `session_id` | string | session 去重 |
+| `feature_id` | string | featureId |
+| `page_path` | string | pageUrl 正規化後路徑 |
+| `previous_page_path` | string | previousPageUrl 正規化後路徑 |
+| `device_type` | string | mobile / desktop |
+| `os` | string | 作業系統 |
+| `browser` | string | 瀏覽器 |
+| `source` | string | metadata.source |
+| `category_tab` | string | metadata.categoryTab |
+| `identity_type` | string | metadata.identityType |
+| `industry_tab` | string | metadata.industryTab |
+
+### 延伸表策略
+
+- 先只實作 `events` 主表，確保單頁查詢可跑通
+- 預聚合表維持為可選擴充：
+  - `daily_kpi`
+  - `daily_feature`
+  - `daily_page_navigation`
+
+### 程式落點
+
+- 共用 schema 與輸出規則統一定義在 `common/parquet_schema.py`
+- Step 3 的 ETL 與後續前端 manifest 都必須沿用這份定義
 
 ## 執行方式
 - 目前僅建立新計畫書，不實作程式。
