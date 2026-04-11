@@ -28,6 +28,7 @@ job-report-1/
 ├── click_heatmap_report.py            # Dashboard 8：頁面點擊熱點分析
 ├── click_heatmap_discover.py          # 輔助：自動探索頁面可點擊元素
 ├── click_heatmap_config.json          # 頁面 URL + featureId → 元素位置 對應表
+├── deploy.sh                          # 一鍵產生報告並部署到 GitHub Pages
 ├── run_all.py                         # 一鍵執行所有報告 + 產生導覽頁
 ├── grafana-dashboard.plan.md          # Dashboard 實作計畫
 ├── page-click-analysis.plan.md        # Dashboard 8 實作計畫
