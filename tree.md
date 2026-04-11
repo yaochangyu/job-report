@@ -49,6 +49,7 @@ job-report-1/
 ├── duckdb-single-page.plan.md         # 單一頁面 + DuckDB-WASM + Parquet 實作計畫
 ├── frontend-theme-sidebar.plan.md     # 單頁前端主題切換與側邊導覽調整計畫
 ├── sidebar-auto-query.plan.md         # 側邊導覽切換時自動套用 / 觸發查詢的調整計畫
+├── layout-adjustment.plan.md          # 查詢列上移與側邊導覽可伸縮的版型調整計畫
 ├── grafana-dashboard.plan.md          # Dashboard 實作計畫（Grafana JSON 匯出待完成）
 ├── archive/
 │   └── page-click-analysis.plan.md   # ✅ 已完成：Dashboard 8 實作計畫

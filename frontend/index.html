@@ -22,11 +22,49 @@
     </div>
   </header>
 
-  <main class="page page-layout">
+  <section class="page page--top">
+    <section class="panel filter-panel filter-panel--top">
+      <div class="panel__header">
+        <h2>查詢條件</h2>
+        <p>所有分析視角共用同一組日期與頁面條件。</p>
+      </div>
+
+      <form id="query-form" class="filters">
+        <label>
+          <span>起始日期</span>
+          <input id="date-from" name="date_from" type="date" />
+        </label>
+        <label>
+          <span>結束日期</span>
+          <input id="date-to" name="date_to" type="date" />
+        </label>
+        <label>
+          <span>頁面路徑（選填）</span>
+          <input id="page-path" name="page_path" type="text" placeholder="/job/123" />
+        </label>
+        <div class="filter-actions">
+          <button id="run-query" type="submit">執行查詢</button>
+        </div>
+      </form>
+    </section>
+  </section>
+
+  <main id="page-layout" class="page page-layout">
     <aside class="sidebar panel">
       <div class="sidebar__header">
-        <h2>分析角度</h2>
-        <p>改用左側導覽切換報表視角</p>
+        <div>
+          <h2>分析角度</h2>
+          <p>左側導覽切換報表視角</p>
+        </div>
+        <button
+          id="sidebar-toggle"
+          class="sidebar__toggle"
+          type="button"
+          aria-expanded="true"
+          aria-label="收合側邊導覽"
+        >
+          <span id="sidebar-toggle-icon">◀</span>
+        </button>
       </div>
 
       <nav class="sidebar__nav" aria-label="分析角度導覽">
@@ -101,31 +139,6 @@
           </div>
           <p id="current-view-desc">觀察整體 KPI、趨勢與主要流量分佈。</p>
         </div>
-      </section>
-
-      <section class="panel filter-panel">
-        <div class="panel__header">
-          <h2>查詢條件</h2>
-          <p>分析角度由左側切換；這裡只保留日期與頁面條件。</p>
-        </div>
-
-        <form id="query-form" class="filters">
-          <label>
-            <span>起始日期</span>
-            <input id="date-from" name="date_from" type="date" />
-          </label>
-          <label>
-            <span>結束日期</span>
-            <input id="date-to" name="date_to" type="date" />
-          </label>
-          <label>
-            <span>頁面路徑（選填）</span>
-            <input id="page-path" name="page_path" type="text" placeholder="/job/123" />
-          </label>
-          <div class="filter-actions">
-            <button id="run-query" type="submit">執行查詢</button>
-          </div>
-        </form>
       </section>
 
       <section class="status-grid">

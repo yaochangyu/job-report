@@ -23,9 +23,11 @@ const defaultState = {
   selectedViewMode: "overview",
   theme: "light",
   lastSuccessfulFilters: null,
+  sidebarCollapsed: false,
 };
 
 const THEME_STORAGE_KEY = "job-report-theme";
+const SIDEBAR_STORAGE_KEY = "job-report-sidebar-collapsed";
 
 const VIEW_META = {
   overview: {
@@ -90,6 +92,16 @@ function applyTheme(theme, state) {
   state.theme = theme;
   localStorage.setItem(THEME_STORAGE_KEY, theme);
   setText("theme-toggle", theme === "light" ? "切換暗黑版" : "切換光亮版");
+}
+
+function applySidebarState(collapsed, state) {
+  const pageLayout = document.getElementById("page-layout");
+  pageLayout.classList.toggle("is-sidebar-collapsed", collapsed);
+  state.sidebarCollapsed = collapsed;
+  localStorage.setItem(SIDEBAR_STORAGE_KEY, collapsed ? "true" : "false");
+  document.getElementById("sidebar-toggle").setAttribute("aria-expanded", collapsed ? "false" : "true");
+  document.getElementById("sidebar-toggle").setAttribute("aria-label", collapsed ? "展開側邊導覽" : "收合側邊導覽");
+  setText("sidebar-toggle-icon", collapsed ? "▶" : "◀");
 }
 
 function renderViewMeta(state) {
@@ -223,6 +235,12 @@ function bindThemeToggle(state) {
   });
 }
 
+function bindSidebarToggle(state) {
+  document.getElementById("sidebar-toggle").addEventListener("click", () => {
+    applySidebarState(!state.sidebarCollapsed, state);
+  });
+}
+
 function bindSidebar(state) {
   document.querySelectorAll("[data-view-mode]").forEach((button) => {
     button.addEventListener("click", async () => {
@@ -310,9 +328,12 @@ async function buildEventsView(conn, registeredFiles) {
 async function bootstrap() {
   const state = { ...defaultState };
   const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+  const savedSidebarState = localStorage.getItem(SIDEBAR_STORAGE_KEY);
   applyTheme(savedTheme === "dark" ? "dark" : "light", state);
+  applySidebarState(savedSidebarState === "true", state);
   hydrateDefaultDates();
   bindThemeToggle(state);
+  bindSidebarToggle(state);
   bindSidebar(state);
   bindQueryForm(state);
   renderViewMeta(state);

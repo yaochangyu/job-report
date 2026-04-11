@@ -29,6 +29,7 @@ Thumbs.db
 
 # Output (generated reports)
 output/
+dataset/
 
 # SQLite store
 store.db
