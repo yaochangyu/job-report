@@ -36,7 +36,7 @@ DOM 上**沒有** `data-feature-id` 屬性 → 無法自動對應 featureId 到 
 
 ### Step 1 — 頁面對應配置（`click_heatmap_config.json`）
 
-- [ ] **Step 1.1** — 建立 pageName → URL 對應表
+- [x] **Step 1.1** — 建立 pageName → URL 對應表
   - 定義每個 pageName 對應的實際 URL，用於 Playwright 截圖
   - 格式範例：
     ```json

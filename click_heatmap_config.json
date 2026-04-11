@@ -1,0 +1,20 @@
+{
+  "pages": [
+    {
+      "page_name": "首頁",
+      "page_path": "/",
+      "url": "https://www.1111.com.tw",
+      "viewport": { "width": 1440, "height": 900 },
+      "full_page": true,
+      "elements": []
+    },
+    {
+      "page_name": "搜尋結果頁",
+      "page_path": "/search/job",
+      "url": "https://www.1111.com.tw/search/job?ks=工程師",
+      "viewport": { "width": 1440, "height": 900 },
+      "full_page": true,
+      "elements": []
+    }
+  ]
+}
