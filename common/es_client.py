@@ -72,6 +72,12 @@ def parse_args(description: str = "產生分析報告") -> argparse.Namespace:
     group.add_argument("--from", dest="time_from", default=None, help="起始時間，例如 2026-04-01")
     parser.add_argument("--to", dest="time_to", default=None, help="結束時間，例如 2026-04-10")
     parser.add_argument("--output", default=None, help="自訂輸出目錄")
+    parser.add_argument(
+        "--from-store",
+        action="store_true",
+        default=False,
+        help="從 store.db 讀取資料（不查詢 ES）",
+    )
     return parser.parse_args()
 
 

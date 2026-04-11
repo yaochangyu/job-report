@@ -10,9 +10,11 @@ Dashboard 1：整體流量概覽（Traffic Overview）
     uv run python traffic_overview_report.py --days 7
     uv run python traffic_overview_report.py --from 2026-04-01 --to 2026-04-10
     uv run python traffic_overview_report.py --output /tmp/report
+    uv run python traffic_overview_report.py --from 2026-04-01 --to 2026-04-10 --from-store
 """
 
 import json
+from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
 from common.es_client import (
@@ -21,6 +23,7 @@ from common.es_client import (
     parse_args,
     resolve_time_range,
     generated_now,
+    TW,
 )
 from common.chart_helpers import (
     PALETTE,
@@ -35,8 +38,10 @@ from common.html_template import (
     chart_card,
     table_card,
 )
+from common.store import init_db, load_daily_range
 
 OUTPUT_DIR = Path(__file__).parent / "output" / "traffic-overview"
+REPORT = "traffic-overview"
 
 SYSTEM_FILTER = {"term": {"system": "jobbank-web"}}
 
@@ -217,6 +222,65 @@ def query_device_distribution(time_from: str, time_to: str) -> dict:
     }
 
 
+# ── Store 讀取與合併 ──────────────────────────────────────────────────────────
+
+def _date_range(time_from: str, time_to: str) -> tuple[str, str]:
+    """從時間字串取出 YYYY-MM-DD 日期區間。"""
+    d_from = time_from[:10]
+    d_to = time_to[:10] if time_to.lower() != "now" else datetime.now(TW).strftime("%Y-%m-%d")
+    return d_from, d_to
+
+
+def _load_kpi(date_from: str, date_to: str) -> dict:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_kpi")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_kpi [{date_from}～{date_to}]")
+    total   = sum(r["data"]["total"]   for r in rows)
+    views   = sum(r["data"]["views"]   for r in rows)
+    clicks  = sum(r["data"]["clicks"]  for r in rows)
+    applies = sum(r["data"]["applies"] for r in rows)
+    sessions = sum(r["data"]["sessions"] for r in rows)
+    return {
+        "total": total, "views": views, "clicks": clicks, "applies": applies,
+        "sessions": sessions,
+        "sessions_approx": len(rows) > 1,
+        "click_rate": clicks / total * 100 if total else 0,
+        "apply_rate": applies / views * 100 if views else 0,
+    }
+
+
+def _load_daily_trend(date_from: str, date_to: str) -> list[dict]:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_daily_trend")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_daily_trend")
+    result = []
+    for r in rows:
+        result.extend(r["data"])
+    return sorted(result, key=lambda x: x["date"])
+
+
+def _load_hourly(date_from: str, date_to: str) -> list[dict]:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_hourly_distribution")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_hourly_distribution")
+    totals = [0] * 24
+    for r in rows:
+        for item in r["data"]:
+            totals[item["hour"]] += item["count"]
+    return [{"hour": h, "count": c} for h, c in enumerate(totals)]
+
+
+def _load_device(date_from: str, date_to: str) -> dict:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_device_distribution")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_device_distribution")
+    result: dict = {}
+    for r in rows:
+        for k, v in r["data"].items():
+            result[k] = result.get(k, 0) + v
+    return result
+
+
 # ── HTML 產生 ─────────────────────────────────────────────────────────────────
 
 def generate_html(
@@ -239,7 +303,7 @@ def generate_html(
     parts.append(kpi_card("View", f"{kpi['views']:,}", f"佔 {kpi['views']/kpi['total']*100:.1f}%" if kpi['total'] else "0%", "#118ab2"))
     parts.append(kpi_card("Click", f"{kpi['clicks']:,}", f"佔 {kpi['clicks']/kpi['total']*100:.1f}%" if kpi['total'] else "0%", "#7209b7"))
     parts.append(kpi_card("Apply", f"{kpi['applies']:,}", f"轉換率 {kpi['apply_rate']:.2f}%（Apply / Job Page View）", "#f72585"))
-    parts.append(kpi_card("Unique Sessions", f"{kpi['sessions']:,}", "依 sessionId 去重", "#06d6a0"))
+    parts.append(kpi_card("Unique Sessions", f"{kpi['sessions']:,}", "依 sessionId 去重 ＊" if kpi.get("sessions_approx") else "依 sessionId 去重", "#06d6a0"))
     parts.append(kpi_card("Click Rate", f"{kpi['click_rate']:.2f}%", "Click / 總事件數", "#fb8500"))
     parts.append(kpi_card("Apply Rate", f"{kpi['apply_rate']:.2f}%", "Apply / 總事件數中的 View", "#e63946"))
     parts.append('  </div>')
@@ -431,20 +495,31 @@ def main() -> None:
 
     print(f"[INFO] 查詢區間：{time_from} ～ {time_to}")
     print(f"[INFO] 輸出目錄：{output_dir}")
+    source = "store.db" if args.from_store else "ES"
+    print(f"[INFO] 資料來源：{source}")
 
-    print("[INFO] 查詢 KPI...")
-    kpi = query_kpi(time_from, time_to)
+    if args.from_store:
+        init_db()
+        date_from, date_to = _date_range(time_from, time_to)
+        print("[INFO] 讀取 KPI...")
+        kpi = _load_kpi(date_from, date_to)
+        print("[INFO] 讀取每日趨勢...")
+        daily = _load_daily_trend(date_from, date_to)
+        print("[INFO] 讀取每小時分佈...")
+        hourly = _load_hourly(date_from, date_to)
+        print("[INFO] 讀取裝置分佈...")
+        device = _load_device(date_from, date_to)
+    else:
+        print("[INFO] 查詢 KPI...")
+        kpi = query_kpi(time_from, time_to)
+        print("[INFO] 查詢每日趨勢...")
+        daily = query_daily_trend(time_from, time_to)
+        print("[INFO] 查詢每小時分佈...")
+        hourly = query_hourly_distribution(time_from, time_to)
+        print("[INFO] 查詢裝置分佈...")
+        device = query_device_distribution(time_from, time_to)
+
     print(f"  總事件 {kpi['total']:,} / View {kpi['views']:,} / Click {kpi['clicks']:,} / Apply {kpi['applies']:,} / Sessions {kpi['sessions']:,}")
-
-    print("[INFO] 查詢每日趨勢...")
-    daily = query_daily_trend(time_from, time_to)
-    print(f"  共 {len(daily)} 天")
-
-    print("[INFO] 查詢每小時分佈...")
-    hourly = query_hourly_distribution(time_from, time_to)
-
-    print("[INFO] 查詢裝置分佈...")
-    device = query_device_distribution(time_from, time_to)
 
     gen_at = generated_now()
     html = generate_html(kpi, daily, hourly, device, time_from, time_to, gen_at)
@@ -456,3 +531,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
