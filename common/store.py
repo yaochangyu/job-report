@@ -5,6 +5,7 @@ SQLite 雙層儲存：即時層（snapshots_interval）＋ 日報層（snapshots
 """
 
 import json
+import re
 import sqlite3
 from contextlib import contextmanager
 from datetime import datetime, timezone, timedelta
@@ -13,6 +14,28 @@ from pathlib import Path
 DB_PATH = Path(__file__).parent.parent / "store.db"
 
 TW = timezone(timedelta(hours=8))
+
+
+def parse_date_range(time_from: str, time_to: str) -> tuple[str, str]:
+    """將 time_from / time_to 轉換為 YYYY-MM-DD 字串。
+
+    支援：
+    - Grafana 相對時間：now-Nd → 今天減 N 天
+    - "now" → 今天
+    - ISO 8601 datetime → 取前 10 字元
+    - YYYY-MM-DD → 直接使用
+    """
+    def _to_date(s: str) -> str:
+        if s.lower() == "now":
+            return datetime.now(TW).strftime("%Y-%m-%d")
+        m = re.match(r"now-(\d+)([dhm])$", s, re.IGNORECASE)
+        if m:
+            n, unit = int(m.group(1)), m.group(2).lower()
+            delta = timedelta(days=n) if unit == "d" else timedelta(hours=n) if unit == "h" else timedelta(minutes=n)
+            return (datetime.now(TW) - delta).strftime("%Y-%m-%d")
+        return s[:10]
+
+    return _to_date(time_from), _to_date(time_to)
 
 
 # ── 初始化 ───────────────────────────────────────────────────────────────────

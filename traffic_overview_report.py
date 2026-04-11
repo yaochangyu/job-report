@@ -38,7 +38,7 @@ from common.html_template import (
     chart_card,
     table_card,
 )
-from common.store import init_db, load_daily_range
+from common.store import init_db, load_daily_range, parse_date_range
 
 OUTPUT_DIR = Path(__file__).parent / "output" / "traffic-overview"
 REPORT = "traffic-overview"
@@ -266,19 +266,23 @@ def _load_hourly(date_from: str, date_to: str) -> list[dict]:
     totals = [0] * 24
     for r in rows:
         for item in r["data"]:
-            totals[item["hour"]] += item["count"]
-    return [{"hour": h, "count": c} for h, c in enumerate(totals)]
+            totals[item["hour"]] += item["avg"]
+    return [{"hour": h, "avg": c} for h, c in enumerate(totals)]
 
 
 def _load_device(date_from: str, date_to: str) -> dict:
     rows = load_daily_range(date_from, date_to, REPORT, "query_device_distribution")
     if not rows:
         raise RuntimeError(f"store.db 無資料：{REPORT}/query_device_distribution")
-    result: dict = {}
+    merged: dict[str, dict[str, int]] = {}
     for r in rows:
-        for k, v in r["data"].items():
-            result[k] = result.get(k, 0) + v
-    return result
+        for k, lst in r["data"].items():
+            if k not in merged:
+                merged[k] = {}
+            for item in lst:
+                merged[k][item["name"]] = merged[k].get(item["name"], 0) + item["count"]
+    return {k: sorted([{"name": n, "count": c} for n, c in v.items()], key=lambda x: -x["count"])
+            for k, v in merged.items()}
 
 
 # ── HTML 產生 ─────────────────────────────────────────────────────────────────
@@ -500,7 +504,7 @@ def main() -> None:
 
     if args.from_store:
         init_db()
-        date_from, date_to = _date_range(time_from, time_to)
+        date_from, date_to = parse_date_range(time_from, time_to)
         print("[INFO] 讀取 KPI...")
         kpi = _load_kpi(date_from, date_to)
         print("[INFO] 讀取每日趨勢...")
