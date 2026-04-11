@@ -107,7 +107,7 @@ DOM 上**沒有** `data-feature-id` 屬性 → 無法自動對應 featureId 到 
 
 ### Step 3 — 整合與測試
 
-- [ ] **Step 3.1** — 更新 `run_all.py`
+- [x] **Step 3.1** — 更新 `run_all.py`
   - 加入 Dashboard 8 的執行
   - 更新導覽頁 `output/index.html`
   - **為什麼**：確保一鍵執行能涵蓋新報表

@@ -84,6 +84,15 @@ REPORTS = [
         "icon": "🔀",
         "color": "#8338ec",
     },
+    {
+        "script": "click_heatmap_report.py",
+        "title": "頁面點擊熱點",
+        "subtitle": "Page Click Heatmap",
+        "desc": "Clarity 風格截圖疊加，呈現各頁面按鈕/連結的點擊次數",
+        "path": "click-heatmap/index.html",
+        "icon": "🔥",
+        "color": "#e63946",
+    },
 ]
 
 
