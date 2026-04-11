@@ -30,8 +30,9 @@ job-report-1/
 ├── click_heatmap_config.json          # 頁面 URL + featureId → 元素位置 對應表
 ├── deploy.sh                          # 一鍵產生報告並部署到 GitHub Pages
 ├── run_all.py                         # 一鍵執行所有報告 + 產生導覽頁
-├── grafana-dashboard.plan.md          # Dashboard 實作計畫
-├── page-click-analysis.plan.md        # Dashboard 8 實作計畫
+├── grafana-dashboard.plan.md          # Dashboard 實作計畫（Grafana JSON 匯出待完成）
+├── archive/
+│   └── page-click-analysis.plan.md   # ✅ 已完成：Dashboard 8 實作計畫
 ├── pyproject.toml                     # uv 專案設定
 ├── .python-version                    # Python 版本
 └── tree.md                            # 本檔案
