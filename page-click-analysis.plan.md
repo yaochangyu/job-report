@@ -74,18 +74,18 @@ DOM 上**沒有** `data-feature-id` 屬性 → 無法自動對應 featureId 到 
 
 ### Step 2 — 報表產生腳本（`click_heatmap_report.py`）
 
-- [ ] **Step 2.1** — 截圖功能
+- [x] **Step 2.1** — 截圖功能
   - 用 Playwright（Python）載入每個頁面 URL
   - 截取全頁截圖（full page screenshot），存為 PNG
   - 處理彈窗關閉、Cookie consent 等干擾元素
   - **為什麼**：截圖是疊加 badge 的底圖基礎
 
-- [ ] **Step 2.2** — ES 查詢：各頁面的 featureId 點擊數
+- [x] **Step 2.2** — ES 查詢：各頁面的 featureId 點擊數
   - 篩選 `eventType=click` + `system=jobbank-web`
   - 以 `pageName` → `featureId` 雙層 aggregation 取得點擊數
   - **為什麼**：取得要顯示在 badge 上的數字
 
-- [ ] **Step 2.3** — HTML 疊加產生
+- [x] **Step 2.3** — HTML 疊加產生
   - 截圖作為 `<img>` 底圖
   - 外層用 `position: relative` 容器包裹
   - 每個 featureId 用 `position: absolute` 的 badge 定位
@@ -93,12 +93,12 @@ DOM 上**沒有** `data-feature-id` 屬性 → 無法自動對應 featureId 到 
   - Hover tooltip 顯示 featureId 名稱與詳細點擊數
   - **為什麼**：這是 Clarity 風格熱點圖的核心呈現方式
 
-- [ ] **Step 2.4** — 頁面切換機制
+- [x] **Step 2.4** — 頁面切換機制
   - 如果有多個頁面，用 Tab 或下拉選單切換不同頁面的熱點圖
   - 每個頁面獨立的截圖 + badge 疊加
   - **為什麼**：單一 HTML 檔案涵蓋所有頁面，方便瀏覽
 
-- [ ] **Step 2.5** — 未對應 featureId 的備援表格
+- [x] **Step 2.5** — 未對應 featureId 的備援表格
   - 若某些 featureId 在 config 中沒有位置對應，以表格形式列在底部
   - 顯示 featureId、點擊數、佔比
   - **為什麼**：確保所有點擊數據都有呈現，不會因為缺少對應而遺漏
