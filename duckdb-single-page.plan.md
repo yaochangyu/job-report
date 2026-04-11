@@ -41,7 +41,7 @@ ETL（Python）
   - 這一步是資料來源切換的核心，必須讓 Python 端能穩定把 ES 資料轉成前端可讀的 Parquet。
   - 建議盡量沿用現有查詢邏輯，只把輸出層抽換掉，這樣可以減少一次改太多地方造成風險。
 
-- [ ] Step 4：建立單一頁面的基本骨架
+- [x] Step 4：建立單一頁面的基本骨架
   - 需要先有唯一入口頁，包含查詢條件區、摘要 KPI 區、圖表區與表格區，才能承接後續查詢結果。
   - 這一步會同時決定前端元件配置，避免之後各區塊輸出格式不一致。
 
@@ -194,6 +194,20 @@ dataset/
   - 補上 `es_search()` 供原始事件 ETL 使用
 - `pyproject.toml`
   - 加入 `pyarrow`
+
+## Step 4 產出
+
+- 建立 `frontend/` 靜態單頁骨架
+  - `frontend/index.html`
+  - `frontend/app.css`
+  - `frontend/app.js`
+- 畫面已先放入：
+  - 查詢條件區
+  - 資料集 / DuckDB 狀態區
+  - KPI 區
+  - 圖表區
+  - 表格區
+- `app.js` 先處理預設日期與基本狀態顯示，Step 5 再接上 DuckDB 與 manifest
 
 ## 執行方式
 - 目前僅建立新計畫書，不實作程式。

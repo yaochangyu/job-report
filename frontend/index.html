@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>jobbank-web 單頁報表</title>
+  <link rel="stylesheet" href="./app.css" />
+</head>
+<body>
+  <header class="hero">
+    <div class="hero__content">
+      <p class="hero__eyebrow">DuckDB-WASM Single Page Report</p>
+      <h1>jobbank-web 單頁分析報表</h1>
+      <p class="hero__desc">
+        單一頁面載入 Parquet dataset，依查詢條件即時更新 KPI、圖表與表格。
+      </p>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="panel filter-panel">
+      <div class="panel__header">
+        <h2>查詢條件</h2>
+        <p>Step 4 建立頁面骨架；Step 5 後開始接資料集與 DuckDB 查詢。</p>
+      </div>
+
+      <form id="query-form" class="filters">
+        <label>
+          <span>起始日期</span>
+          <input id="date-from" name="date_from" type="date" />
+        </label>
+        <label>
+          <span>結束日期</span>
+          <input id="date-to" name="date_to" type="date" />
+        </label>
+        <label>
+          <span>分析視角</span>
+          <select id="view-mode" name="view_mode">
+            <option value="overview">整體概覽</option>
+            <option value="search">搜尋行為</option>
+            <option value="apply">應徵轉換</option>
+            <option value="feature">功能互動</option>
+            <option value="device">裝置平台</option>
+            <option value="ranking">頁面排行</option>
+            <option value="navigation">頁面導航</option>
+            <option value="heatmap">點擊熱點</option>
+          </select>
+        </label>
+        <label>
+          <span>頁面路徑（選填）</span>
+          <input id="page-path" name="page_path" type="text" placeholder="/job/123" />
+        </label>
+        <div class="filter-actions">
+          <button id="run-query" type="submit">執行查詢</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="status-grid">
+      <article class="panel status-panel">
+        <div class="panel__header">
+          <h2>資料集狀態</h2>
+        </div>
+        <dl class="status-list">
+          <div>
+            <dt>Manifest</dt>
+            <dd id="manifest-status">尚未載入</dd>
+          </div>
+          <div>
+            <dt>DuckDB</dt>
+            <dd id="duckdb-status">尚未初始化</dd>
+          </div>
+          <div>
+            <dt>目前查詢</dt>
+            <dd id="query-summary">尚未執行</dd>
+          </div>
+        </dl>
+      </article>
+
+      <article class="panel note-panel">
+        <div class="panel__header">
+          <h2>保留限制</h2>
+        </div>
+        <ul class="note-list">
+          <li>跨日 unique session 仍是近似值，之後會在畫面標示。</li>
+          <li>點擊熱點仍需搭配設定檔元素座標，不只靠 Parquet。</li>
+          <li>目前先保留舊報表流程，待單頁功能完整後再收斂。</li>
+        </ul>
+      </article>
+    </section>
+
+    <section class="kpi-grid" id="kpi-grid">
+      <article class="kpi-card"><span>總事件</span><strong id="kpi-total">--</strong></article>
+      <article class="kpi-card"><span>View</span><strong id="kpi-views">--</strong></article>
+      <article class="kpi-card"><span>Click</span><strong id="kpi-clicks">--</strong></article>
+      <article class="kpi-card"><span>Apply</span><strong id="kpi-applies">--</strong></article>
+      <article class="kpi-card"><span>Sessions</span><strong id="kpi-sessions">--</strong></article>
+      <article class="kpi-card"><span>CTR</span><strong id="kpi-ctr">--</strong></article>
+      <article class="kpi-card"><span>Apply Rate</span><strong id="kpi-apply-rate">--</strong></article>
+      <article class="kpi-card"><span>Mobile %</span><strong id="kpi-mobile-rate">--</strong></article>
+    </section>
+
+    <section class="chart-grid">
+      <article class="panel chart-panel">
+        <div class="panel__header">
+          <h2>趨勢圖</h2>
+          <p>每日 / 每小時 / AI vs 一般搜尋 / 應徵趨勢</p>
+        </div>
+        <canvas id="trend-chart" height="120"></canvas>
+      </article>
+
+      <article class="panel chart-panel">
+        <div class="panel__header">
+          <h2>分佈圖</h2>
+          <p>裝置、來源、功能類別、搜尋結果頁</p>
+        </div>
+        <canvas id="distribution-chart" height="120"></canvas>
+      </article>
+
+      <article class="panel chart-panel">
+        <div class="panel__header">
+          <h2>排行圖</h2>
+          <p>Top feature、來源頁 / 目標頁、熱門互動</p>
+        </div>
+        <canvas id="ranking-chart" height="120"></canvas>
+      </article>
+    </section>
+
+    <section class="table-grid">
+      <article class="panel table-panel">
+        <div class="panel__header">
+          <h2>排行表</h2>
+          <p>功能、來源、目標與熱門互動明細</p>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>名稱</th>
+                <th>數值</th>
+                <th>補充</th>
+              </tr>
+            </thead>
+            <tbody id="primary-table-body">
+              <tr>
+                <td colspan="4" class="empty-cell">尚未載入資料</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+
+      <article class="panel table-panel">
+        <div class="panel__header">
+          <h2>查詢記錄</h2>
+          <p>目前以畫面狀態顯示，後續接上 SQL 與資料摘要。</p>
+        </div>
+        <pre id="query-log" class="query-log">尚未執行查詢。</pre>
+      </article>
+    </section>
+  </main>
+
+  <script src="./app.js" type="module"></script>
+</body>
+</html>

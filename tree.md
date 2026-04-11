@@ -20,6 +20,10 @@ job-report-1/
 │   ├── page-ranking/index.html         # Dashboard 6 報告產出
 │   ├── page-navigation/index.html      # Dashboard 7 報告產出
 │   └── click-heatmap/index.html        # Dashboard 8 報告產出
+├── frontend/
+│   ├── index.html                      # DuckDB 單頁報表入口
+│   ├── app.css                         # DuckDB 單頁報表樣式
+│   └── app.js                          # DuckDB 單頁報表前端邏輯
 ├── category_tab_report.py             # 既有報告（保留）
 ├── traffic_overview_report.py         # Dashboard 1：整體流量概覽
 ├── search_behavior_report.py          # Dashboard 2：搜尋行為分析
