@@ -445,3 +445,13 @@ python3 <report>.py --output /tmp/report       # 自訂輸出目錄
 - [x] **Step 8.1** — 實作 `run_all.py`
   - 依序執行所有報告腳本，統一接受 `--days` / `--from` / `--to` 參數
   - **為什麼**：提供一鍵執行的便利性
+
+---
+
+### Dashboard 8：頁面點擊熱點分析（Page Click Heatmap）— P2
+
+> **目的**：在實際頁面截圖上疊加點擊次數 badge，呈現 Clarity 風格的點擊熱點圖  
+> **輸出**：`click_heatmap_report.py` → `output/click-heatmap/index.html`  
+> **詳細計畫**：見 `page-click-analysis.plan.md`
+
+- [x] 實作完成：截圖 + badge 疊加 + Tab 切換 + 未對應表格

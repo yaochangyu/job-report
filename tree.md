@@ -15,7 +15,8 @@ job-report-1/
 │   ├── feature-engagement/index.html   # Dashboard 4 報告產出
 │   ├── device-platform/index.html      # Dashboard 5 報告產出
 │   ├── page-ranking/index.html         # Dashboard 6 報告產出
-│   └── page-navigation/index.html      # Dashboard 7 報告產出
+│   ├── page-navigation/index.html      # Dashboard 7 報告產出
+│   └── click-heatmap/index.html        # Dashboard 8 報告產出
 ├── category_tab_report.py             # 既有報告（保留）
 ├── traffic_overview_report.py         # Dashboard 1：整體流量概覽
 ├── search_behavior_report.py          # Dashboard 2：搜尋行為分析
@@ -24,8 +25,12 @@ job-report-1/
 ├── device_platform_report.py          # Dashboard 5：裝置與平台分析
 ├── page_ranking_report.py             # Dashboard 6：頁面流量排行
 ├── page_navigation_report.py          # Dashboard 7：頁面導航鏈路分析
+├── click_heatmap_report.py            # Dashboard 8：頁面點擊熱點分析
+├── click_heatmap_discover.py          # 輔助：自動探索頁面可點擊元素
+├── click_heatmap_config.json          # 頁面 URL + featureId → 元素位置 對應表
 ├── run_all.py                         # 一鍵執行所有報告 + 產生導覽頁
 ├── grafana-dashboard.plan.md          # Dashboard 實作計畫
+├── page-click-analysis.plan.md        # Dashboard 8 實作計畫
 ├── pyproject.toml                     # uv 專案設定
 ├── .python-version                    # Python 版本
 └── tree.md                            # 本檔案

@@ -112,7 +112,7 @@ DOM 上**沒有** `data-feature-id` 屬性 → 無法自動對應 featureId 到 
   - 更新導覽頁 `output/index.html`
   - **為什麼**：確保一鍵執行能涵蓋新報表
 
-- [ ] **Step 3.2** — 更新 `tree.md` 與 `grafana-dashboard.plan.md`
+- [x] **Step 3.2** — 更新 `tree.md` 與 `grafana-dashboard.plan.md`
   - 加入新檔案與計畫項目
   - **為什麼**：維護專案文件的完整性
 
