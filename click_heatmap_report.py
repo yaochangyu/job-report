@@ -118,14 +118,17 @@ def take_screenshot(page_config: dict, output_dir: Path) -> tuple[Path, int, int
         }""")
         page.wait_for_timeout(500)
 
+        # 取得整頁高度，展開 viewport 再截圖
+        # 避免 full_page=True 時 fixed 元素位置跑掉（header 跑到 hero 下方）
+        img_width = vp["width"]
+        img_height = page.evaluate("() => document.documentElement.scrollHeight")
+        page.set_viewport_size({"width": img_width, "height": img_height})
+        page.wait_for_timeout(300)
+
         page.screenshot(
             path=str(screenshot_path),
-            full_page=page_config.get("full_page", True),
+            full_page=False,
         )
-
-        # 取得截圖的實際尺寸
-        img_width = vp["width"]
-        img_height = page.evaluate("() => document.body.scrollHeight")
 
         browser.close()
 
