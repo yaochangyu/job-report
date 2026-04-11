@@ -69,12 +69,18 @@ def take_screenshot(page_config: dict, output_dir: Path) -> tuple[Path, int, int
         page.goto(page_config["url"], wait_until="networkidle", timeout=30000)
         page.wait_for_timeout(2000)
 
-        # 關閉常見彈窗
-        for selector in [
+        # 關閉常見彈窗（含蓋板廣告）
+        close_selectors = [
             "button:has-text('稍後再說')",
             "button:has-text('關閉')",
             "button:has-text('我知道了')",
-        ]:
+            "button:has-text('×')",
+            "button:has-text('✕')",
+            "[class*='close']",
+            "[aria-label='close']",
+            "[aria-label='關閉']",
+        ]
+        for selector in close_selectors:
             try:
                 btn = page.locator(selector).first
                 if btn.is_visible(timeout=500):
@@ -82,6 +88,32 @@ def take_screenshot(page_config: dict, output_dir: Path) -> tuple[Path, int, int
                     page.wait_for_timeout(300)
             except Exception:
                 pass
+
+        # 移除蓋板廣告（position:fixed 且面積 > 視窗 50% 的 overlay）
+        page.evaluate("""() => {
+            const vw = window.innerWidth;
+            const vh = window.innerHeight;
+            const minArea = vw * vh * 0.5;
+            const candidates = document.querySelectorAll('*');
+            for (const el of candidates) {
+                const style = window.getComputedStyle(el);
+                if (style.position !== 'fixed' && style.position !== 'absolute') continue;
+                if (style.display === 'none' || style.visibility === 'hidden') continue;
+                const rect = el.getBoundingClientRect();
+                if (rect.width * rect.height >= minArea) {
+                    // 先找內部關閉按鈕
+                    const closeBtn = el.querySelector(
+                        'button, [role="button"], [class*="close"], [aria-label="close"]'
+                    );
+                    if (closeBtn) {
+                        closeBtn.click();
+                    } else {
+                        el.remove();
+                    }
+                }
+            }
+        }""")
+        page.wait_for_timeout(500)
 
         page.screenshot(
             path=str(screenshot_path),
