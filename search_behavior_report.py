@@ -10,15 +10,19 @@ Dashboard 2：搜尋行為分析（Search Behavior）
     uv run python search_behavior_report.py --days 7
     uv run python search_behavior_report.py --from 2026-04-01 --to 2026-04-10
     uv run python search_behavior_report.py --output /tmp/report
+    uv run python search_behavior_report.py --from 2026-04-01 --to 2026-04-10 --from-store
 """
 
+from datetime import datetime
 from pathlib import Path
 
-from common.es_client import msearch, parse_args, resolve_time_range, generated_now
+from common.es_client import msearch, parse_args, resolve_time_range, generated_now, TW
 from common.chart_helpers import js_labels, js_values, palette_array, table_rows_ranked
 from common.html_template import html_start, html_end, kpi_card, chart_card, table_card
+from common.store import init_db, load_daily_range
 
 OUTPUT_DIR = Path(__file__).parent / "output" / "search-behavior"
+REPORT = "search-behavior"
 
 SYSTEM_FILTER = {"term": {"system": "jobbank-web"}}
 
@@ -199,6 +203,91 @@ def query_quick_filter(time_from: str, time_to: str) -> list[dict]:
             "location": bucket["location"]["doc_count"],
             "category": bucket["category"]["doc_count"],
         })
+    return overview, daily
+
+
+# ── Store 讀取與合併 ──────────────────────────────────────────────────────────
+
+def _date_range(time_from: str, time_to: str) -> tuple[str, str]:
+    """從時間字串取出 YYYY-MM-DD 日期區間。"""
+    d_from = time_from[:10]
+    d_to = time_to[:10] if time_to.lower() != "now" else datetime.now(TW).strftime("%Y-%m-%d")
+    return d_from, d_to
+
+
+def _load_search_overview(date_from: str, date_to: str) -> dict:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_search_overview")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_search_overview [{date_from}～{date_to}]")
+    counts: dict = {}
+    search_page_total = general_total = ai_total = quick_total = 0
+    for r in rows:
+        d = r["data"]
+        for k, v in d["counts"].items():
+            counts[k] = counts.get(k, 0) + v
+        search_page_total += d["search_page_total"]
+        general_total += d["general_total"]
+        ai_total += d["ai_total"]
+        quick_total += d["quick_total"]
+    return {
+        "counts": counts,
+        "search_page_total": search_page_total,
+        "general_total": general_total,
+        "ai_total": ai_total,
+        "quick_total": quick_total,
+    }
+
+
+def _load_daily_search_trend(date_from: str, date_to: str) -> list[dict]:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_daily_search_trend")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_daily_search_trend [{date_from}～{date_to}]")
+    result = []
+    for r in rows:
+        result.extend(r["data"])
+    return sorted(result, key=lambda x: x["date"])
+
+
+def _load_search_page_dist(date_from: str, date_to: str) -> list[dict]:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_search_page_dist")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_search_page_dist [{date_from}～{date_to}]")
+    totals: dict = {}
+    for r in rows:
+        for item in r["data"]:
+            k = item["name"]
+            totals[k] = totals.get(k, 0) + item["count"]
+    return sorted([{"name": k, "count": v} for k, v in totals.items()], key=lambda x: -x["count"])
+
+
+def _load_ai_interaction(date_from: str, date_to: str) -> list[dict]:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_ai_interaction")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_ai_interaction [{date_from}～{date_to}]")
+    totals: dict = {}
+    for r in rows:
+        for item in r["data"]:
+            k = item["name"]
+            totals[k] = totals.get(k, 0) + item["count"]
+    return sorted([{"name": k, "count": v} for k, v in totals.items()], key=lambda x: -x["count"])
+
+
+def _load_quick_filter(date_from: str, date_to: str) -> tuple[list[dict], list[dict]]:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_quick_filter")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_quick_filter [{date_from}～{date_to}]")
+    overview_totals: dict = {}
+    all_daily: list = []
+    for r in rows:
+        for item in r["data"][0]:
+            k = item["name"]
+            overview_totals[k] = overview_totals.get(k, 0) + item["count"]
+        all_daily.extend(r["data"][1])
+    overview = sorted(
+        [{"name": k, "count": v} for k, v in overview_totals.items()],
+        key=lambda x: -x["count"],
+    )
+    daily = sorted(all_daily, key=lambda x: x["date"])
     return overview, daily
 
 
@@ -462,21 +551,33 @@ def main() -> None:
 
     print(f"[INFO] 查詢區間：{time_from} ～ {time_to}")
     print(f"[INFO] 輸出目錄：{output_dir}")
+    source = "store.db" if args.from_store else "ES"
+    print(f"[INFO] 資料來源：{source}")
 
-    print("[INFO] 查詢搜尋功能總覽...")
-    overview = query_search_overview(time_from, time_to)
-
-    print("[INFO] 查詢 AI vs 一般搜尋每日趨勢...")
-    daily_trend = query_daily_search_trend(time_from, time_to)
-
-    print("[INFO] 查詢搜尋結果頁分佈...")
-    search_page_dist = query_search_page_dist(time_from, time_to)
-
-    print("[INFO] 查詢 AI 搜尋互動方式...")
-    ai_interaction = query_ai_interaction(time_from, time_to)
-
-    print("[INFO] 查詢快速篩選...")
-    quick_overview, quick_daily = query_quick_filter(time_from, time_to)
+    if args.from_store:
+        init_db()
+        date_from, date_to = _date_range(time_from, time_to)
+        print("[INFO] 讀取搜尋功能總覽...")
+        overview = _load_search_overview(date_from, date_to)
+        print("[INFO] 讀取 AI vs 一般搜尋每日趨勢...")
+        daily_trend = _load_daily_search_trend(date_from, date_to)
+        print("[INFO] 讀取搜尋結果頁分佈...")
+        search_page_dist = _load_search_page_dist(date_from, date_to)
+        print("[INFO] 讀取 AI 搜尋互動方式...")
+        ai_interaction = _load_ai_interaction(date_from, date_to)
+        print("[INFO] 讀取快速篩選...")
+        quick_overview, quick_daily = _load_quick_filter(date_from, date_to)
+    else:
+        print("[INFO] 查詢搜尋功能總覽...")
+        overview = query_search_overview(time_from, time_to)
+        print("[INFO] 查詢 AI vs 一般搜尋每日趨勢...")
+        daily_trend = query_daily_search_trend(time_from, time_to)
+        print("[INFO] 查詢搜尋結果頁分佈...")
+        search_page_dist = query_search_page_dist(time_from, time_to)
+        print("[INFO] 查詢 AI 搜尋互動方式...")
+        ai_interaction = query_ai_interaction(time_from, time_to)
+        print("[INFO] 查詢快速篩選...")
+        quick_overview, quick_daily = query_quick_filter(time_from, time_to)
 
     gen_at = generated_now()
     html = generate_html(

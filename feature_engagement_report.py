@@ -10,15 +10,19 @@ Dashboard 4：功能互動分析（Feature Engagement）
     uv run python feature_engagement_report.py --days 7
     uv run python feature_engagement_report.py --from 2026-04-01 --to 2026-04-10
     uv run python feature_engagement_report.py --output /tmp/report
+    uv run python feature_engagement_report.py --from 2026-04-01 --to 2026-04-10 --from-store
 """
 
+from datetime import datetime
 from pathlib import Path
 
-from common.es_client import msearch, parse_args, resolve_time_range, generated_now
+from common.es_client import msearch, parse_args, resolve_time_range, generated_now, TW
 from common.chart_helpers import js_labels, js_values, palette_array, table_rows_ranked
 from common.html_template import html_start, html_end, kpi_card, chart_card, table_card
+from common.store import init_db, load_daily_range
 
 OUTPUT_DIR = Path(__file__).parent / "output" / "feature-engagement"
+REPORT = "feature-engagement"
 
 SYSTEM_FILTER = {"term": {"system": "jobbank-web"}}
 
@@ -183,6 +187,70 @@ def query_news(time_from: str, time_to: str) -> list[dict]:
     return {
         "features": [{"name": b["key"], "count": b["doc_count"]} for b in agg["by_feature"]["buckets"]],
         "categories": [{"name": b["key"], "count": b["doc_count"]} for b in agg["by_category"]["buckets"]],
+    }
+
+
+# ── Store 讀取與合併 ──────────────────────────────────────────────────────────
+
+def _date_range(time_from: str, time_to: str) -> tuple[str, str]:
+    """從時間字串取出 YYYY-MM-DD 日期區間。"""
+    d_from = time_from[:10]
+    d_to = time_to[:10] if time_to.lower() != "now" else datetime.now(TW).strftime("%Y-%m-%d")
+    return d_from, d_to
+
+
+def _merge_list_by_name(rows: list[dict], sub_key: str) -> list[dict]:
+    """從每日 rows 中取出 data[sub_key]（list of {name, count}），跨天加總。"""
+    totals: dict = {}
+    for r in rows:
+        for item in r["data"][sub_key]:
+            k = item["name"]
+            totals[k] = totals.get(k, 0) + item["count"]
+    return sorted([{"name": k, "count": v} for k, v in totals.items()], key=lambda x: -x["count"])
+
+
+def _load_explore_jobs(date_from: str, date_to: str) -> dict:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_explore_jobs")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_explore_jobs [{date_from}～{date_to}]")
+    all_daily: list = []
+    for r in rows:
+        all_daily.extend(r["data"]["daily"])
+    return {
+        "features": _merge_list_by_name(rows, "features"),
+        "category_tabs": _merge_list_by_name(rows, "category_tabs"),
+        "identity_types": _merge_list_by_name(rows, "identity_types"),
+        "daily": sorted(all_daily, key=lambda x: x["date"]),
+    }
+
+
+def _load_explore_corp(date_from: str, date_to: str) -> dict:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_explore_corp")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_explore_corp [{date_from}～{date_to}]")
+    return {
+        "features": _merge_list_by_name(rows, "features"),
+        "industry_tabs": _merge_list_by_name(rows, "industry_tabs"),
+    }
+
+
+def _load_identity(date_from: str, date_to: str) -> dict:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_identity")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_identity [{date_from}～{date_to}]")
+    return {
+        "main": _merge_list_by_name(rows, "main"),
+        "all_buckets": _merge_list_by_name(rows, "all_buckets"),
+    }
+
+
+def _load_news(date_from: str, date_to: str) -> dict:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_news")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_news [{date_from}～{date_to}]")
+    return {
+        "features": _merge_list_by_name(rows, "features"),
+        "categories": _merge_list_by_name(rows, "categories"),
     }
 
 
@@ -480,18 +548,29 @@ def main() -> None:
 
     print(f"[INFO] 查詢區間：{time_from} ～ {time_to}")
     print(f"[INFO] 輸出目錄：{output_dir}")
+    source = "store.db" if args.from_store else "ES"
+    print(f"[INFO] 資料來源：{source}")
 
-    print("[INFO] 查詢探索職缺...")
-    explore_jobs = query_explore_jobs(time_from, time_to)
-
-    print("[INFO] 查詢探索企業...")
-    explore_corp = query_explore_corp(time_from, time_to)
-
-    print("[INFO] 查詢身份辨識...")
-    identity = query_identity(time_from, time_to)
-
-    print("[INFO] 查詢新聞互動...")
-    news = query_news(time_from, time_to)
+    if args.from_store:
+        init_db()
+        date_from, date_to = _date_range(time_from, time_to)
+        print("[INFO] 讀取探索職缺...")
+        explore_jobs = _load_explore_jobs(date_from, date_to)
+        print("[INFO] 讀取探索企業...")
+        explore_corp = _load_explore_corp(date_from, date_to)
+        print("[INFO] 讀取身份辨識...")
+        identity = _load_identity(date_from, date_to)
+        print("[INFO] 讀取新聞互動...")
+        news = _load_news(date_from, date_to)
+    else:
+        print("[INFO] 查詢探索職缺...")
+        explore_jobs = query_explore_jobs(time_from, time_to)
+        print("[INFO] 查詢探索企業...")
+        explore_corp = query_explore_corp(time_from, time_to)
+        print("[INFO] 查詢身份辨識...")
+        identity = query_identity(time_from, time_to)
+        print("[INFO] 查詢新聞互動...")
+        news = query_news(time_from, time_to)
 
     gen_at = generated_now()
     html = generate_html(explore_jobs, explore_corp, identity, news,

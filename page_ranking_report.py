@@ -10,15 +10,19 @@ Dashboard 6：頁面流量排行（Page Ranking）
     uv run python page_ranking_report.py --days 7
     uv run python page_ranking_report.py --from 2026-04-01 --to 2026-04-10
     uv run python page_ranking_report.py --output /tmp/report
+    uv run python page_ranking_report.py --from 2026-04-01 --to 2026-04-10 --from-store
 """
 
+from datetime import datetime
 from pathlib import Path
 
-from common.es_client import msearch, parse_args, resolve_time_range, generated_now
+from common.es_client import msearch, parse_args, resolve_time_range, generated_now, TW
 from common.chart_helpers import js_labels, js_values, palette_array, table_rows_ranked
 from common.html_template import html_start, html_end, kpi_card, chart_card, table_card
+from common.store import init_db, load_daily_range
 
 OUTPUT_DIR = Path(__file__).parent / "output" / "page-ranking"
+REPORT = "page-ranking"
 
 SYSTEM_FILTER = {"term": {"system": "jobbank-web"}}
 
@@ -134,6 +138,43 @@ def query_category_summary(features: list[dict]) -> list[dict]:
         [{"name": k, "count": v} for k, v in cat_totals.items()],
         key=lambda x: -x["count"],
     )
+
+
+# ── Store 讀取與合併 ──────────────────────────────────────────────────────────
+
+def _date_range(time_from: str, time_to: str) -> tuple[str, str]:
+    """從時間字串取出 YYYY-MM-DD 日期區間。"""
+    d_from = time_from[:10]
+    d_to = time_to[:10] if time_to.lower() != "now" else datetime.now(TW).strftime("%Y-%m-%d")
+    return d_from, d_to
+
+
+def _load_feature_ranking(date_from: str, date_to: str) -> list[dict]:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_feature_ranking")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_feature_ranking [{date_from}～{date_to}]")
+    merged: dict = {}
+    for r in rows:
+        for item in r["data"]:
+            fid = item["featureId"]
+            if fid not in merged:
+                merged[fid] = {"total": 0, "views": 0, "clicks": 0, "category": item["category"]}
+            merged[fid]["total"] += item["total"]
+            merged[fid]["views"] += item["views"]
+            merged[fid]["clicks"] += item["clicks"]
+    result = []
+    for fid, d in merged.items():
+        total = d["total"]
+        clicks = d["clicks"]
+        result.append({
+            "featureId": fid,
+            "total": total,
+            "views": d["views"],
+            "clicks": clicks,
+            "ctr": round(clicks / total * 100, 2) if total else 0,
+            "category": d["category"],
+        })
+    return sorted(result, key=lambda x: -x["total"])
 
 
 # ── HTML 產生 ─────────────────────────────────────────────────────────────────
@@ -258,9 +299,18 @@ def main() -> None:
 
     print(f"[INFO] 查詢區間：{time_from} ～ {time_to}")
     print(f"[INFO] 輸出目錄：{output_dir}")
+    source = "store.db" if args.from_store else "ES"
+    print(f"[INFO] 資料來源：{source}")
 
-    print("[INFO] 查詢功能排行...")
-    features = query_feature_ranking(time_from, time_to)
+    if args.from_store:
+        init_db()
+        date_from, date_to = _date_range(time_from, time_to)
+        print("[INFO] 讀取功能排行...")
+        features = _load_feature_ranking(date_from, date_to)
+    else:
+        print("[INFO] 查詢功能排行...")
+        features = query_feature_ranking(time_from, time_to)
+
     print(f"  共 {len(features)} 個 featureId")
 
     categories = query_category_summary(features)

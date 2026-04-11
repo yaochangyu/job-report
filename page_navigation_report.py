@@ -13,15 +13,19 @@ Dashboard 7：頁面導航鏈路分析（Page Navigation Flow）
     uv run python page_navigation_report.py --days 7
     uv run python page_navigation_report.py --from 2026-04-01 --to 2026-04-10
     uv run python page_navigation_report.py --output /tmp/report
+    uv run python page_navigation_report.py --from 2026-04-01 --to 2026-04-10 --from-store
 """
 
+from datetime import datetime
 from pathlib import Path
 
-from common.es_client import msearch, parse_args, resolve_time_range, generated_now
+from common.es_client import msearch, parse_args, resolve_time_range, generated_now, TW
 from common.chart_helpers import js_labels, js_values, palette_array, table_rows_ranked
 from common.html_template import html_start, html_end, kpi_card, chart_card, table_card
+from common.store import init_db, load_daily_range
 
 OUTPUT_DIR = Path(__file__).parent / "output" / "page-navigation"
+REPORT = "page-navigation"
 
 SYSTEM_FILTER = {"term": {"system": "jobbank-web"}}
 
@@ -196,6 +200,79 @@ def query_page_destinations(time_from: str, time_to: str) -> dict:
     return result
 
 
+# ── Store 讀取與合併 ──────────────────────────────────────────────────────────
+
+def _date_range(time_from: str, time_to: str) -> tuple[str, str]:
+    """從時間字串取出 YYYY-MM-DD 日期區間。"""
+    d_from = time_from[:10]
+    d_to = time_to[:10] if time_to.lower() != "now" else datetime.now(TW).strftime("%Y-%m-%d")
+    return d_from, d_to
+
+
+def _load_nav_pairs(date_from: str, date_to: str) -> list[dict]:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_nav_pairs")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_nav_pairs [{date_from}～{date_to}]")
+    pair_totals: dict = {}
+    for r in rows:
+        for item in r["data"]:
+            key = (item["from"], item["to"])
+            pair_totals[key] = pair_totals.get(key, 0) + item["count"]
+    pairs = [
+        {"from": k[0], "to": k[1], "count": v, "label": f"{k[0]} → {k[1]}"}
+        for k, v in pair_totals.items()
+    ]
+    return sorted(pairs, key=lambda x: -x["count"])[:30]
+
+
+def _load_entry_pages(date_from: str, date_to: str) -> list[dict]:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_entry_pages")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_entry_pages [{date_from}～{date_to}]")
+    totals: dict = {}
+    for r in rows:
+        for item in r["data"]:
+            k = item["name"]
+            totals[k] = totals.get(k, 0) + item["count"]
+    return sorted([{"name": k, "count": v} for k, v in totals.items()], key=lambda x: -x["count"])
+
+
+def _load_page_sources(date_from: str, date_to: str) -> dict:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_page_sources")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_page_sources [{date_from}～{date_to}]")
+    merged: dict = {}
+    for r in rows:
+        for page_path, sources in r["data"].items():
+            if page_path not in merged:
+                merged[page_path] = {}
+            for item in sources:
+                k = item["name"]
+                merged[page_path][k] = merged[page_path].get(k, 0) + item["count"]
+    return {
+        page: sorted([{"name": k, "count": v} for k, v in src_map.items()], key=lambda x: -x["count"])[:5]
+        for page, src_map in merged.items()
+    }
+
+
+def _load_page_destinations(date_from: str, date_to: str) -> dict:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_page_destinations")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_page_destinations [{date_from}～{date_to}]")
+    merged: dict = {}
+    for r in rows:
+        for page_path, dests in r["data"].items():
+            if page_path not in merged:
+                merged[page_path] = {}
+            for item in dests:
+                k = item["name"]
+                merged[page_path][k] = merged[page_path].get(k, 0) + item["count"]
+    return {
+        page: sorted([{"name": k, "count": v} for k, v in dst_map.items()], key=lambda x: -x["count"])[:5]
+        for page, dst_map in merged.items()
+    }
+
+
 # ── HTML 產生 ─────────────────────────────────────────────────────────────────
 
 def generate_html(
@@ -341,18 +418,29 @@ def main() -> None:
 
     print(f"[INFO] 查詢區間：{time_from} ～ {time_to}")
     print(f"[INFO] 輸出目錄：{output_dir}")
+    source = "store.db" if args.from_store else "ES"
+    print(f"[INFO] 資料來源：{source}")
 
-    print("[INFO] 查詢導航路徑排行...")
-    nav_pairs = query_nav_pairs(time_from, time_to)
-
-    print("[INFO] 查詢初始進入頁面...")
-    entry_pages = query_entry_pages(time_from, time_to)
-
-    print("[INFO] 查詢各頁面來源...")
-    page_sources = query_page_sources(time_from, time_to)
-
-    print("[INFO] 查詢各頁面目標...")
-    page_dests = query_page_destinations(time_from, time_to)
+    if args.from_store:
+        init_db()
+        date_from, date_to = _date_range(time_from, time_to)
+        print("[INFO] 讀取導航路徑排行...")
+        nav_pairs = _load_nav_pairs(date_from, date_to)
+        print("[INFO] 讀取初始進入頁面...")
+        entry_pages = _load_entry_pages(date_from, date_to)
+        print("[INFO] 讀取各頁面來源...")
+        page_sources = _load_page_sources(date_from, date_to)
+        print("[INFO] 讀取各頁面目標...")
+        page_dests = _load_page_destinations(date_from, date_to)
+    else:
+        print("[INFO] 查詢導航路徑排行...")
+        nav_pairs = query_nav_pairs(time_from, time_to)
+        print("[INFO] 查詢初始進入頁面...")
+        entry_pages = query_entry_pages(time_from, time_to)
+        print("[INFO] 查詢各頁面來源...")
+        page_sources = query_page_sources(time_from, time_to)
+        print("[INFO] 查詢各頁面目標...")
+        page_dests = query_page_destinations(time_from, time_to)
 
     gen_at = generated_now()
     html = generate_html(nav_pairs, entry_pages, page_sources, page_dests,

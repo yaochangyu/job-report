@@ -10,15 +10,19 @@ Dashboard 5：裝置與平台分析（Device & Platform）
     uv run python device_platform_report.py --days 7
     uv run python device_platform_report.py --from 2026-04-01 --to 2026-04-10
     uv run python device_platform_report.py --output /tmp/report
+    uv run python device_platform_report.py --from 2026-04-01 --to 2026-04-10 --from-store
 """
 
+from datetime import datetime
 from pathlib import Path
 
-from common.es_client import msearch, parse_args, resolve_time_range, generated_now
+from common.es_client import msearch, parse_args, resolve_time_range, generated_now, TW
 from common.chart_helpers import js_labels, js_values, palette_array, table_rows_ranked
 from common.html_template import html_start, html_end, kpi_card, chart_card, table_card
+from common.store import init_db, load_daily_range
 
 OUTPUT_DIR = Path(__file__).parent / "output" / "device-platform"
+REPORT = "device-platform"
 
 SYSTEM_FILTER = {"term": {"system": "jobbank-web"}}
 
@@ -157,6 +161,89 @@ def query_os_behavior(time_from: str, time_to: str) -> list[dict]:
             "applies": b["applies"]["doc_count"],
         })
     return result
+
+
+# ── Store 讀取與合併 ──────────────────────────────────────────────────────────
+
+def _date_range(time_from: str, time_to: str) -> tuple[str, str]:
+    """從時間字串取出 YYYY-MM-DD 日期區間。"""
+    d_from = time_from[:10]
+    d_to = time_to[:10] if time_to.lower() != "now" else datetime.now(TW).strftime("%Y-%m-%d")
+    return d_from, d_to
+
+
+def _load_device_daily(date_from: str, date_to: str) -> dict:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_device_daily")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_device_daily [{date_from}～{date_to}]")
+    total: dict = {}
+    all_daily: list = []
+    for r in rows:
+        d = r["data"]
+        for k, v in d["total"].items():
+            total[k] = total.get(k, 0) + v
+        all_daily.extend(d["daily"])
+    return {"total": total, "daily": sorted(all_daily, key=lambda x: x["date"])}
+
+
+def _load_os_browser(date_from: str, date_to: str) -> dict:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_os_browser")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_os_browser [{date_from}～{date_to}]")
+    os_totals: dict = {}
+    browser_totals: dict = {}
+    for r in rows:
+        for item in r["data"]["os"]:
+            k = item["name"]
+            os_totals[k] = os_totals.get(k, 0) + item["count"]
+        for item in r["data"]["browser"]:
+            k = item["name"]
+            browser_totals[k] = browser_totals.get(k, 0) + item["count"]
+    return {
+        "os": sorted([{"name": k, "count": v} for k, v in os_totals.items()], key=lambda x: -x["count"]),
+        "browser": sorted([{"name": k, "count": v} for k, v in browser_totals.items()], key=lambda x: -x["count"]),
+    }
+
+
+def _load_device_behavior(date_from: str, date_to: str) -> list[dict]:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_device_behavior")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_device_behavior [{date_from}～{date_to}]")
+    # 跨天各 device 的各行為加總
+    merged: dict = {}
+    for r in rows:
+        for item in r["data"]:
+            dev = item["device"]
+            if dev not in merged:
+                merged[dev] = {"total": 0, "views": 0, "clicks": 0, "applies": 0}
+            merged[dev]["total"] += item["total"]
+            merged[dev]["views"] += item["views"]
+            merged[dev]["clicks"] += item["clicks"]
+            merged[dev]["applies"] += item["applies"]
+    return [
+        {"device": dev, "apply_rate": 0, **vals}
+        for dev, vals in sorted(merged.items(), key=lambda x: -x[1]["total"])
+    ]
+
+
+def _load_os_behavior(date_from: str, date_to: str) -> list[dict]:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_os_behavior")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_os_behavior [{date_from}～{date_to}]")
+    merged: dict = {}
+    for r in rows:
+        for item in r["data"]:
+            os = item["os"]
+            if os not in merged:
+                merged[os] = {"total": 0, "views": 0, "clicks": 0, "applies": 0}
+            merged[os]["total"] += item["total"]
+            merged[os]["views"] += item["views"]
+            merged[os]["clicks"] += item["clicks"]
+            merged[os]["applies"] += item["applies"]
+    return [
+        {"os": os, **vals}
+        for os, vals in sorted(merged.items(), key=lambda x: -x[1]["total"])
+    ]
 
 
 # ── HTML 產生 ─────────────────────────────────────────────────────────────────
@@ -390,18 +477,29 @@ def main() -> None:
 
     print(f"[INFO] 查詢區間：{time_from} ～ {time_to}")
     print(f"[INFO] 輸出目錄：{output_dir}")
+    source = "store.db" if args.from_store else "ES"
+    print(f"[INFO] 資料來源：{source}")
 
-    print("[INFO] 查詢裝置每日趨勢...")
-    device_data = query_device_daily(time_from, time_to)
-
-    print("[INFO] 查詢 OS / 瀏覽器分佈...")
-    os_browser = query_os_browser(time_from, time_to)
-
-    print("[INFO] 查詢裝置行為交叉...")
-    device_behavior = query_device_behavior(time_from, time_to)
-
-    print("[INFO] 查詢 OS 行為交叉...")
-    os_behavior = query_os_behavior(time_from, time_to)
+    if args.from_store:
+        init_db()
+        date_from, date_to = _date_range(time_from, time_to)
+        print("[INFO] 讀取裝置每日趨勢...")
+        device_data = _load_device_daily(date_from, date_to)
+        print("[INFO] 讀取 OS / 瀏覽器分佈...")
+        os_browser = _load_os_browser(date_from, date_to)
+        print("[INFO] 讀取裝置行為交叉...")
+        device_behavior = _load_device_behavior(date_from, date_to)
+        print("[INFO] 讀取 OS 行為交叉...")
+        os_behavior = _load_os_behavior(date_from, date_to)
+    else:
+        print("[INFO] 查詢裝置每日趨勢...")
+        device_data = query_device_daily(time_from, time_to)
+        print("[INFO] 查詢 OS / 瀏覽器分佈...")
+        os_browser = query_os_browser(time_from, time_to)
+        print("[INFO] 查詢裝置行為交叉...")
+        device_behavior = query_device_behavior(time_from, time_to)
+        print("[INFO] 查詢 OS 行為交叉...")
+        os_behavior = query_os_behavior(time_from, time_to)
 
     gen_at = generated_now()
     html = generate_html(device_data, os_browser, device_behavior, os_behavior,

@@ -10,15 +10,19 @@ Dashboard 3：應徵轉換分析（Apply Conversion）
     uv run python apply_conversion_report.py --days 7
     uv run python apply_conversion_report.py --from 2026-04-01 --to 2026-04-10
     uv run python apply_conversion_report.py --output /tmp/report
+    uv run python apply_conversion_report.py --from 2026-04-01 --to 2026-04-10 --from-store
 """
 
+from datetime import datetime
 from pathlib import Path
 
-from common.es_client import msearch, parse_args, resolve_time_range, generated_now
+from common.es_client import msearch, parse_args, resolve_time_range, generated_now, TW
 from common.chart_helpers import js_labels, js_values, palette_array, table_rows_ranked
 from common.html_template import html_start, html_end, kpi_card, chart_card, table_card
+from common.store import init_db, load_daily_range
 
 OUTPUT_DIR = Path(__file__).parent / "output" / "apply-conversion"
+REPORT = "apply-conversion"
 
 SYSTEM_FILTER = {"term": {"system": "jobbank-web"}}
 
@@ -206,6 +210,94 @@ def query_apply_hourly(time_from: str, time_to: str) -> list[int]:
         hour_totals[h] += bucket["doc_count"]
         hour_days[h] += 1
     return [round(hour_totals[h] / hour_days[h]) if hour_days[h] else 0 for h in range(24)]
+
+
+# ── Store 讀取與合併 ──────────────────────────────────────────────────────────
+
+def _date_range(time_from: str, time_to: str) -> tuple[str, str]:
+    """從時間字串取出 YYYY-MM-DD 日期區間。"""
+    d_from = time_from[:10]
+    d_to = time_to[:10] if time_to.lower() != "now" else datetime.now(TW).strftime("%Y-%m-%d")
+    return d_from, d_to
+
+
+def _load_apply_kpi(date_from: str, date_to: str) -> dict:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_apply_kpi")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_apply_kpi [{date_from}～{date_to}]")
+    applies = sum(r["data"]["applies"] for r in rows)
+    job_views = sum(r["data"]["job_views"] for r in rows)
+    return {
+        "applies": applies,
+        "job_views": job_views,
+        "conversion_rate": applies / job_views * 100 if job_views else 0,
+    }
+
+
+def _load_apply_source(date_from: str, date_to: str) -> list[dict]:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_apply_source")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_apply_source [{date_from}～{date_to}]")
+    totals: dict = {}
+    for r in rows:
+        for item in r["data"]:
+            k = item["name"]
+            totals[k] = totals.get(k, 0) + item["count"]
+    return sorted([{"name": k, "count": v} for k, v in totals.items()], key=lambda x: -x["count"])
+
+
+def _load_apply_daily_trend(date_from: str, date_to: str) -> list[dict]:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_apply_daily_trend")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_apply_daily_trend [{date_from}～{date_to}]")
+    result = []
+    for r in rows:
+        result.extend(r["data"])
+    return sorted(result, key=lambda x: x["date"])
+
+
+def _load_funnel(date_from: str, date_to: str) -> list[dict]:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_funnel")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_funnel [{date_from}～{date_to}]")
+    totals: dict = {}
+    for r in rows:
+        for item in r["data"]:
+            k = item["name"]
+            totals[k] = totals.get(k, 0) + item["count"]
+    # 保持漏斗順序
+    order = ["首頁瀏覽", "搜尋結果頁瀏覽", "職缺詳情頁瀏覽", "應徵送出"]
+    return [{"name": n, "count": totals.get(n, 0)} for n in order if n in totals]
+
+
+def _load_apply_device(date_from: str, date_to: str) -> dict:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_apply_device")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_apply_device [{date_from}～{date_to}]")
+    device_totals: dict = {}
+    os_totals: dict = {}
+    for r in rows:
+        for item in r["data"]["device"]:
+            k = item["name"]
+            device_totals[k] = device_totals.get(k, 0) + item["count"]
+        for item in r["data"]["os"]:
+            k = item["name"]
+            os_totals[k] = os_totals.get(k, 0) + item["count"]
+    return {
+        "device": sorted([{"name": k, "count": v} for k, v in device_totals.items()], key=lambda x: -x["count"]),
+        "os": sorted([{"name": k, "count": v} for k, v in os_totals.items()], key=lambda x: -x["count"]),
+    }
+
+
+def _load_apply_hourly(date_from: str, date_to: str) -> list[int]:
+    rows = load_daily_range(date_from, date_to, REPORT, "query_apply_hourly")
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/query_apply_hourly [{date_from}～{date_to}]")
+    totals = [0] * 24
+    for r in rows:
+        for h, v in enumerate(r["data"]):
+            totals[h] += v
+    return totals
 
 
 # ── HTML 產生 ─────────────────────────────────────────────────────────────────
@@ -449,24 +541,37 @@ def main() -> None:
 
     print(f"[INFO] 查詢區間：{time_from} ～ {time_to}")
     print(f"[INFO] 輸出目錄：{output_dir}")
+    source = "store.db" if args.from_store else "ES"
+    print(f"[INFO] 資料來源：{source}")
 
-    print("[INFO] 查詢應徵 KPI...")
-    kpi = query_apply_kpi(time_from, time_to)
-
-    print("[INFO] 查詢應徵來源...")
-    source_dist = query_apply_source(time_from, time_to)
-
-    print("[INFO] 查詢每日趨勢...")
-    daily = query_apply_daily_trend(time_from, time_to)
-
-    print("[INFO] 查詢轉換漏斗...")
-    funnel = query_funnel(time_from, time_to)
-
-    print("[INFO] 查詢裝置分佈...")
-    device = query_apply_device(time_from, time_to)
-
-    print("[INFO] 查詢每小時分佈...")
-    hourly = query_apply_hourly(time_from, time_to)
+    if args.from_store:
+        init_db()
+        date_from, date_to = _date_range(time_from, time_to)
+        print("[INFO] 讀取應徵 KPI...")
+        kpi = _load_apply_kpi(date_from, date_to)
+        print("[INFO] 讀取應徵來源...")
+        source_dist = _load_apply_source(date_from, date_to)
+        print("[INFO] 讀取每日趨勢...")
+        daily = _load_apply_daily_trend(date_from, date_to)
+        print("[INFO] 讀取轉換漏斗...")
+        funnel = _load_funnel(date_from, date_to)
+        print("[INFO] 讀取裝置分佈...")
+        device = _load_apply_device(date_from, date_to)
+        print("[INFO] 讀取每小時分佈...")
+        hourly = _load_apply_hourly(date_from, date_to)
+    else:
+        print("[INFO] 查詢應徵 KPI...")
+        kpi = query_apply_kpi(time_from, time_to)
+        print("[INFO] 查詢應徵來源...")
+        source_dist = query_apply_source(time_from, time_to)
+        print("[INFO] 查詢每日趨勢...")
+        daily = query_apply_daily_trend(time_from, time_to)
+        print("[INFO] 查詢轉換漏斗...")
+        funnel = query_funnel(time_from, time_to)
+        print("[INFO] 查詢裝置分佈...")
+        device = query_apply_device(time_from, time_to)
+        print("[INFO] 查詢每小時分佈...")
+        hourly = query_apply_hourly(time_from, time_to)
 
     gen_at = generated_now()
     html = generate_html(kpi, source_dist, daily, funnel, device, hourly,

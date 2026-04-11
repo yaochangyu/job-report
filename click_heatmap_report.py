@@ -10,18 +10,22 @@ Dashboard 8：頁面點擊熱點分析（Page Click Heatmap）
     uv run python click_heatmap_report.py --days 7
     uv run python click_heatmap_report.py --from 2026-04-01 --to 2026-04-10
     uv run python click_heatmap_report.py --output /tmp/report
+    uv run python click_heatmap_report.py --from 2026-04-01 --to 2026-04-10 --from-store
 """
 
 import base64
 import json
+from datetime import datetime
 from pathlib import Path
 
 from playwright.sync_api import sync_playwright
 
-from common.es_client import msearch, parse_args, resolve_time_range, generated_now
+from common.es_client import msearch, parse_args, resolve_time_range, generated_now, TW
+from common.store import init_db, load_daily_range
 
 CONFIG_PATH = Path(__file__).parent / "click_heatmap_config.json"
 OUTPUT_DIR = Path(__file__).parent / "output" / "click-heatmap"
+REPORT = "click-heatmap"
 
 SYSTEM_FILTER = {"term": {"system": "jobbank-web"}}
 
@@ -171,6 +175,36 @@ def query_page_clicks(page_path: str, time_from: str, time_to: str) -> list[dict
             "count": b["doc_count"],
         })
     return results
+
+
+# ── Store 讀取與合併 ──────────────────────────────────────────────────────────
+
+def _date_range(time_from: str, time_to: str) -> tuple[str, str]:
+    """從時間字串取出 YYYY-MM-DD 日期區間。"""
+    d_from = time_from[:10]
+    d_to = time_to[:10] if time_to.lower() != "now" else datetime.now(TW).strftime("%Y-%m-%d")
+    return d_from, d_to
+
+
+def _load_page_clicks(page_path: str, date_from: str, date_to: str) -> list[dict]:
+    safe_name = page_path.strip("/").replace("/", "_") or "home"
+    query_name = f"query_page_clicks_{safe_name}"
+    rows = load_daily_range(date_from, date_to, REPORT, query_name)
+    if not rows:
+        raise RuntimeError(f"store.db 無資料：{REPORT}/{query_name} [{date_from}～{date_to}]")
+    totals: dict = {}
+    fname_map: dict = {}
+    for r in rows:
+        for item in r["data"]:
+            fid = item["feature_id"]
+            totals[fid] = totals.get(fid, 0) + item["count"]
+            if item.get("feature_name"):
+                fname_map[fid] = item["feature_name"]
+    return sorted(
+        [{"feature_id": fid, "feature_name": fname_map.get(fid, ""), "count": cnt}
+         for fid, cnt in totals.items()],
+        key=lambda x: -x["count"],
+    )
 
 
 # ── HTML 產生 ─────────────────────────────────────────────────────────────────
@@ -471,9 +505,15 @@ def main() -> None:
 
     print(f"[INFO] 查詢區間：{time_from} ～ {time_to}")
     print(f"[INFO] 輸出目錄：{output_dir}")
+    source = "store.db" if args.from_store else "ES"
+    print(f"[INFO] 資料來源：{source}")
 
     config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
     pages_data = []
+
+    if args.from_store:
+        init_db()
+        date_from, date_to = _date_range(time_from, time_to)
 
     for page_config in config["pages"]:
         page_name = page_config["page_name"]
@@ -481,7 +521,7 @@ def main() -> None:
 
         print(f"\n[INFO] 處理頁面：{page_name} ({page_path})")
 
-        # 截圖
+        # 截圖（不論來源，均需截圖）
         print("  截圖中...")
         screenshot_path, img_w, img_h = take_screenshot(page_config, output_dir)
         screenshot_b64 = base64.b64encode(
@@ -489,9 +529,13 @@ def main() -> None:
         ).decode()
         print(f"  截圖完成：{screenshot_path}（{img_w}x{img_h}）")
 
-        # 查詢 ES
-        print("  查詢 ES 點擊數據...")
-        click_data = query_page_clicks(page_path, time_from, time_to)
+        if args.from_store:
+            print("  讀取 store.db 點擊數據...")
+            click_data = _load_page_clicks(page_path, date_from, date_to)
+        else:
+            print("  查詢 ES 點擊數據...")
+            click_data = query_page_clicks(page_path, time_from, time_to)
+
         total_clicks = sum(c["count"] for c in click_data)
         print(f"  共 {total_clicks:,} clicks，{len(click_data)} 個 featureId")
 
