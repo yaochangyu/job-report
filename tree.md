@@ -40,6 +40,7 @@ job-report-1/
 ├── run_all.py                         # 一鍵執行所有報告 + 產生導覽頁
 │                                      #   --from-store 讓所有子腳本從 store.db 讀取
 ├── snapshot-refactor.plan.md          # ETL 雙層儲存架構實作計畫（含備忘方案 A~E）
+├── duckdb-single-page.plan.md         # 單一頁面 + DuckDB-WASM + Parquet 實作計畫
 ├── grafana-dashboard.plan.md          # Dashboard 實作計畫（Grafana JSON 匯出待完成）
 ├── archive/
 │   └── page-click-analysis.plan.md   # ✅ 已完成：Dashboard 8 實作計畫
