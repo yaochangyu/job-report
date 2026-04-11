@@ -23,7 +23,8 @@ job-report-1/
 ├── frontend/
 │   ├── index.html                      # DuckDB 單頁報表入口
 │   ├── app.css                         # DuckDB 單頁報表樣式
-│   └── app.js                          # DuckDB 單頁報表前端邏輯
+│   ├── app.js                          # DuckDB 單頁報表前端邏輯
+│   └── query-definitions.js            # DuckDB 單頁查詢條件 → SQL 定義
 ├── category_tab_report.py             # 既有報告（保留）
 ├── traffic_overview_report.py         # Dashboard 1：整體流量概覽
 ├── search_behavior_report.py          # Dashboard 2：搜尋行為分析

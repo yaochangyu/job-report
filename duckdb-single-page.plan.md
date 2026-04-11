@@ -49,7 +49,7 @@ ETL（Python）
   - 前端必須先能初始化 DuckDB-WASM、載入 Parquet 檔、建立可重複執行的查詢入口，後續所有功能才有基礎。
   - 這一步是技術可行性的關鍵，若這裡不穩，後面圖表再完整也無法運作。
 
-- [ ] Step 6：把查詢條件綁到前端 SQL
+- [x] Step 6：把查詢條件綁到前端 SQL
   - 需讓日期區間、報表類型、頁面條件等查詢參數能轉成 DuckDB SQL，讓單一頁面真正做到條件切換即時更新。
   - 這一步要明確整理查詢參數與 SQL 模板的對應關係，避免之後條件越加越亂。
 
@@ -219,6 +219,15 @@ dataset/
   - 建立 `events` view 作為後續 SQL 查詢入口
 - `frontend/index.html`
   - 新增已載入日期與資料列數狀態欄位
+
+## Step 6 產出
+
+- 新增 `frontend/query-definitions.js`
+  - 依 `view_mode` 產生對應 SQL
+  - 支援 overview、search、apply、feature、device、ranking、navigation、heatmap
+- `frontend/app.js`
+  - 表單送出時會真正執行 DuckDB 查詢
+  - 查詢結果會先顯示在查詢記錄與主表格
 
 ## 執行方式
 - 目前僅建立新計畫書，不實作程式。

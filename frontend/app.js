@@ -1,6 +1,12 @@
 import * as duckdb from "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.30.0/+esm";
+import { executeViewQueries } from "./query-definitions.js";
 
 const datasetRoot = new URL("../dataset/", import.meta.url);
+const runtime = {
+  db: null,
+  conn: null,
+  hasEventsView: false,
+};
 
 const defaultState = {
   manifestLoaded: false,
@@ -8,6 +14,7 @@ const defaultState = {
   lastQuery: null,
   registeredDates: [],
   rowCount: null,
+  queryResult: null,
 };
 
 function setText(id, value) {
@@ -29,7 +36,34 @@ function renderState(state) {
     registeredDates: state.registeredDates,
     rowCount: state.rowCount,
     lastQuery: state.lastQuery,
+    queryResult: state.queryResult,
   }, null, 2));
+}
+
+function renderPrimaryTable(rows) {
+  const body = document.getElementById("primary-table-body");
+  if (!rows.length) {
+    body.innerHTML = '<tr><td colspan="4" class="empty-cell">查詢沒有結果</td></tr>';
+    return;
+  }
+
+  body.innerHTML = rows
+    .slice(0, 12)
+    .map((row, index) => {
+      const entries = Object.entries(row);
+      const [firstKey, firstValue] = entries[0] || ["name", "-"];
+      const [secondKey, secondValue] = entries[1] || ["value", "-"];
+      const [thirdKey, thirdValue] = entries[2] || ["extra", "-"];
+      return `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${firstKey}: ${firstValue ?? "-"}</td>
+          <td>${secondKey}: ${secondValue ?? "-"}</td>
+          <td>${thirdKey}: ${thirdValue ?? "-"}</td>
+        </tr>
+      `;
+    })
+    .join("");
 }
 
 function hydrateDefaultDates() {
@@ -43,11 +77,29 @@ function hydrateDefaultDates() {
 
 function bindQueryForm(state) {
   const form = document.getElementById("query-form");
-  form.addEventListener("submit", (event) => {
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
     const formData = new FormData(form);
     const payload = Object.fromEntries(formData.entries());
-    state.lastQuery = `待 Step 5 接入 DuckDB：${payload.date_from} ~ ${payload.date_to} / ${payload.view_mode}`;
+    const filters = {
+      dateFrom: payload.date_from,
+      dateTo: payload.date_to,
+      viewMode: payload.view_mode,
+      pagePath: payload.page_path?.trim() || "",
+    };
+
+    if (!runtime.conn || !runtime.hasEventsView) {
+      state.lastQuery = "目前沒有 events view，可先執行 extract_events.py 匯出 Parquet";
+      state.queryResult = null;
+      renderPrimaryTable([]);
+      renderState(state);
+      return;
+    }
+
+    const result = await executeViewQueries(runtime.conn, filters);
+    state.lastQuery = result.summary;
+    state.queryResult = result.outputs;
+    renderPrimaryTable(result.outputs[0]?.rows || []);
     renderState(state);
   });
 }
@@ -107,6 +159,7 @@ async function bootstrap() {
   const state = { ...defaultState };
   hydrateDefaultDates();
   bindQueryForm(state);
+  renderPrimaryTable([]);
   renderState(state);
 
   try {
@@ -115,13 +168,16 @@ async function bootstrap() {
     state.registeredDates = manifest.available_dates || [];
     renderState(state);
 
-    const runtime = await initDuckDB();
+    const duckdbRuntime = await initDuckDB();
     state.duckdbReady = true;
+    runtime.db = duckdbRuntime.db;
+    runtime.conn = duckdbRuntime.conn;
     renderState(state);
 
     const registeredFiles = await registerParquetFiles(runtime.db, manifest);
     state.registeredDates = registeredFiles.map((entry) => entry.date);
     state.rowCount = await buildEventsView(runtime.conn, registeredFiles);
+    runtime.hasEventsView = registeredFiles.length > 0;
     state.lastQuery = registeredFiles.length
       ? `DuckDB 已載入 ${registeredFiles.length} 個日期分區`
       : "manifest 已載入，但目前沒有可查詢的 Parquet 檔";
