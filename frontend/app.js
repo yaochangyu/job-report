@@ -1,5 +1,6 @@
 import * as duckdb from "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.30.0/+esm";
 import { executeViewQueries } from "./query-definitions.js";
+import { renderDashboard, resetDashboard } from "./dashboard-renderers.js";
 
 const datasetRoot = new URL("../dataset/", import.meta.url);
 const runtime = {
@@ -92,6 +93,7 @@ function bindQueryForm(state) {
       state.lastQuery = "目前沒有 events view，可先執行 extract_events.py 匯出 Parquet";
       state.queryResult = null;
       renderPrimaryTable([]);
+      resetDashboard();
       renderState(state);
       return;
     }
@@ -99,7 +101,7 @@ function bindQueryForm(state) {
     const result = await executeViewQueries(runtime.conn, filters);
     state.lastQuery = result.summary;
     state.queryResult = result.outputs;
-    renderPrimaryTable(result.outputs[0]?.rows || []);
+    renderPrimaryTable(renderDashboard(filters.viewMode, result.outputs));
     renderState(state);
   });
 }
@@ -160,6 +162,7 @@ async function bootstrap() {
   hydrateDefaultDates();
   bindQueryForm(state);
   renderPrimaryTable([]);
+  resetDashboard();
   renderState(state);
 
   try {
