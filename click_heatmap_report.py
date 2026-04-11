@@ -89,7 +89,7 @@ def take_screenshot(page_config: dict, output_dir: Path) -> tuple[Path, int, int
             except Exception:
                 pass
 
-        # 移除蓋板廣告（position:fixed 且面積 > 視窗 50% 的 overlay）
+        # 移除蓋板廣告（position:fixed + z-index 高 + 面積 > 視窗 50%）
         page.evaluate("""() => {
             const vw = window.innerWidth;
             const vh = window.innerHeight;
@@ -97,11 +97,14 @@ def take_screenshot(page_config: dict, output_dir: Path) -> tuple[Path, int, int
             const candidates = document.querySelectorAll('*');
             for (const el of candidates) {
                 const style = window.getComputedStyle(el);
-                if (style.position !== 'fixed' && style.position !== 'absolute') continue;
+                // 只處理 fixed，避免誤刪頁面內容區塊
+                if (style.position !== 'fixed') continue;
                 if (style.display === 'none' || style.visibility === 'hidden') continue;
+                // z-index 需 >= 100 才視為蓋板
+                const zIndex = parseInt(style.zIndex) || 0;
+                if (zIndex < 100) continue;
                 const rect = el.getBoundingClientRect();
                 if (rect.width * rect.height >= minArea) {
-                    // 先找內部關閉按鈕
                     const closeBtn = el.querySelector(
                         'button, [role="button"], [class*="close"], [aria-label="close"]'
                     );
