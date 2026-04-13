@@ -238,7 +238,14 @@ function overviewRenderer(data) {
   setKpiCard("5", "Unique Sessions", fmt(sessions), "依 sessionId 去重");
   setKpiCard("6", "Click Rate",  pct(ctr),       "Click / 總事件數");
   setKpiCard("7", "Apply Rate",  pct2(applyRate), "Apply / 總事件數中的 View");
-  setKpiCard("8", "Mobile %", "—", "");
+
+  // Mobile % 從 device_dist 計算
+  const deviceDist = data.device_dist ?? [];
+  const mobileRow  = deviceDist.find(r => r.name === "mobile");
+  const mobileCount = mobileRow ? n(mobileRow.count) : 0;
+  const deviceTotal = deviceDist.reduce((s, r) => s + n(r.count), 0);
+  const mobilePct = deviceTotal ? (mobileCount / deviceTotal) * 100 : 0;
+  setKpiCard("8", "Mobile %", pct(mobilePct), `共 ${fmt(mobileCount)} 筆`);
 
   // 圖表 1 — 每日流量趨勢
   const trend = data.daily_trend ?? [];
