@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>jobbank-web 數據報告</title>
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+
+<header class="site-header">
+  <h1>📈 jobbank-web 數據報告</h1>
+  <div class="meta">資料來源：operation-logs（Elasticsearch）· DuckDB-WASM 即時查詢</div>
+  <div class="badge-row">
+    <span class="pill" id="pill-dates">載入中…</span>
+    <span class="pill" id="pill-rows">--</span>
+    <span class="pill" id="pill-status">初始化中</span>
+  </div>
+</header>
+
+<!-- 報告卡片區 -->
+<section class="card-section">
+  <div class="card-grid">
+
+    <button class="report-card" style="--accent:#4361ee" data-view="overview">
+      <div class="card-icon">📊</div>
+      <div class="card-body">
+        <div class="card-title">整體概覽</div>
+        <div class="card-subtitle">Traffic Overview</div>
+        <div class="card-desc">KPI 指標、每日流量趨勢、裝置分佈、熱門 feature</div>
+      </div>
+    </button>
+
+    <button class="report-card" style="--accent:#7209b7" data-view="search">
+      <div class="card-icon">🔍</div>
+      <div class="card-body">
+        <div class="card-title">搜尋行為</div>
+        <div class="card-subtitle">Search Behavior</div>
+        <div class="card-desc">AI vs 一般搜尋趨勢、搜尋結果頁分佈、快速篩選</div>
+      </div>
+    </button>
+
+    <button class="report-card" style="--accent:#f72585" data-view="apply">
+      <div class="card-icon">🎯</div>
+      <div class="card-body">
+        <div class="card-title">應徵轉換</div>
+        <div class="card-subtitle">Apply Conversion</div>
+        <div class="card-desc">應徵漏斗、每日趨勢、來源分佈、時段分析</div>
+      </div>
+    </button>
+
+    <button class="report-card" style="--accent:#06d6a0" data-view="feature">
+      <div class="card-icon">⚡</div>
+      <div class="card-body">
+        <div class="card-title">功能互動</div>
+        <div class="card-subtitle">Feature Engagement</div>
+        <div class="card-desc">探索職缺/企業、身份辨識、產業 Tab、新聞互動</div>
+      </div>
+    </button>
+
+    <button class="report-card" style="--accent:#fb8500" data-view="device">
+      <div class="card-icon">📱</div>
+      <div class="card-body">
+        <div class="card-title">裝置平台</div>
+        <div class="card-subtitle">Device &amp; Platform</div>
+        <div class="card-desc">Mobile/Desktop 趨勢、OS 與瀏覽器分佈</div>
+      </div>
+    </button>
+
+    <button class="report-card" style="--accent:#118ab2" data-view="ranking">
+      <div class="card-icon">🏆</div>
+      <div class="card-body">
+        <div class="card-title">頁面排行</div>
+        <div class="card-subtitle">Page Ranking</div>
+        <div class="card-desc">featureId 排行 Top 20、功能類別佔比分析</div>
+      </div>
+    </button>
+
+    <button class="report-card" style="--accent:#8338ec" data-view="navigation">
+      <div class="card-icon">🔀</div>
+      <div class="card-body">
+        <div class="card-title">頁面導航</div>
+        <div class="card-subtitle">Page Navigation Flow</div>
+        <div class="card-desc">頁面轉換路徑排行、各頁面來源/目標、初始進入分佈</div>
+      </div>
+    </button>
+
+    <button class="report-card" style="--accent:#e63946" data-view="heatmap">
+      <div class="card-icon">🔥</div>
+      <div class="card-body">
+        <div class="card-title">點擊熱點</div>
+        <div class="card-subtitle">Page Click Heatmap</div>
+        <div class="card-desc">熱門互動按鈕/連結的點擊次數排行</div>
+      </div>
+    </button>
+
+  </div>
+</section>
+
+<!-- 查詢 + 圖表區（點卡片後展開） -->
+<section class="dashboard-section is-hidden" id="dashboard-section">
+
+  <!-- 查詢條件 -->
+  <div class="filter-panel">
+    <h2 id="filter-panel-title">整體概覽</h2>
+    <div class="panel-desc" id="filter-panel-desc">觀察整體 KPI、趨勢與主要流量分佈。</div>
+    <form id="query-form">
+      <div class="filters">
+        <label>
+          <span>開始日期</span>
+          <input type="date" id="date-from" name="date_from" />
+        </label>
+        <label>
+          <span>結束日期</span>
+          <input type="date" id="date-to" name="date_to" />
+        </label>
+        <label>
+          <span>頁面路徑（選填）</span>
+          <input type="text" id="page-path" name="page_path" placeholder="e.g. /job/123" />
+        </label>
+        <div class="filter-actions">
+          <span>&nbsp;</span>
+          <button type="submit" class="btn-query" id="btn-query">查詢</button>
+        </div>
+      </div>
+    </form>
+    <div class="status-bar" id="status-bar">請選擇日期後按查詢</div>
+  </div>
+
+  <!-- KPI -->
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <span class="kpi-label" id="kpi-label-total">總事件</span>
+      <strong class="kpi-value" id="kpi-total">--</strong>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label" id="kpi-label-views">View</span>
+      <strong class="kpi-value" id="kpi-views">--</strong>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label" id="kpi-label-clicks">Click</span>
+      <strong class="kpi-value" id="kpi-clicks">--</strong>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label" id="kpi-label-applies">Apply</span>
+      <strong class="kpi-value" id="kpi-applies">--</strong>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label" id="kpi-label-sessions">Sessions</span>
+      <strong class="kpi-value" id="kpi-sessions">--</strong>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label" id="kpi-label-ctr">CTR</span>
+      <strong class="kpi-value" id="kpi-ctr">--</strong>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label" id="kpi-label-apply-rate">Apply Rate</span>
+      <strong class="kpi-value" id="kpi-apply-rate">--</strong>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-label" id="kpi-label-mobile-rate">Mobile %</span>
+      <strong class="kpi-value" id="kpi-mobile-rate">--</strong>
+    </div>
+  </div>
+
+  <!-- 圖表 -->
+  <div class="chart-grid">
+    <div class="chart-panel">
+      <div class="chart-panel__header">
+        <h3 id="trend-panel-title">趨勢圖</h3>
+        <p id="trend-panel-desc">每日 / 每小時 / AI vs 一般搜尋 / 應徵趨勢</p>
+      </div>
+      <div class="chart-canvas-wrap"><canvas id="trend-chart"></canvas></div>
+    </div>
+    <div class="chart-panel">
+      <div class="chart-panel__header">
+        <h3 id="distribution-panel-title">分佈圖</h3>
+        <p id="distribution-panel-desc">裝置、來源、功能類別、搜尋結果頁</p>
+      </div>
+      <div class="chart-canvas-wrap"><canvas id="distribution-chart"></canvas></div>
+    </div>
+  </div>
+  <div class="chart-grid">
+    <div class="chart-panel">
+      <div class="chart-panel__header">
+        <h3 id="ranking-panel-title">排行圖</h3>
+        <p id="ranking-panel-desc">Top feature、來源頁 / 目標頁、熱門互動</p>
+      </div>
+      <div class="chart-canvas-wrap"><canvas id="ranking-chart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- 排行表 -->
+  <div class="table-panel">
+    <div class="table-panel__header">
+      <h3 id="table-panel-title">排行表</h3>
+      <p id="table-panel-desc">功能、來源、目標與熱門互動明細</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>名稱</th>
+            <th>數值 1</th>
+            <th>數值 2</th>
+          </tr>
+        </thead>
+        <tbody id="primary-table-body">
+          <tr><td colspan="4" class="empty-cell">請先選擇分析角度並查詢</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</section>
+
+<footer>jobbank-web 數據報告 · DuckDB-WASM · operation-logs</footer>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
