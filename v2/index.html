@@ -22,33 +22,6 @@
     </div>
   </header>
 
-  <section class="page page--top">
-    <section class="panel filter-panel filter-panel--top">
-      <div class="panel__header">
-        <h2>查詢條件</h2>
-        <p>所有分析視角共用同一組日期與頁面條件。</p>
-      </div>
-
-      <form id="query-form" class="filters">
-        <label>
-          <span>起始日期</span>
-          <input id="date-from" name="date_from" type="date" />
-        </label>
-        <label>
-          <span>結束日期</span>
-          <input id="date-to" name="date_to" type="date" />
-        </label>
-        <label>
-          <span>頁面路徑（選填）</span>
-          <input id="page-path" name="page_path" type="text" placeholder="/job/123" />
-        </label>
-        <div class="filter-actions">
-          <button id="run-query" type="submit">執行查詢</button>
-        </div>
-      </form>
-    </section>
-  </section>
-
   <main id="page-layout" class="page page-layout">
     <aside class="sidebar panel">
       <div class="sidebar__header">
@@ -127,7 +100,35 @@
       </nav>
     </aside>
 
-    <section class="content">
+    <div class="right-col">
+      <section class="page--top">
+        <section class="panel filter-panel filter-panel--top">
+          <div class="panel__header">
+            <h2>查詢條件</h2>
+            <p>所有分析視角共用同一組日期與頁面條件。</p>
+          </div>
+
+          <form id="query-form" class="filters">
+            <label>
+              <span>起始日期</span>
+              <input id="date-from" name="date_from" type="date" />
+            </label>
+            <label>
+              <span>結束日期</span>
+              <input id="date-to" name="date_to" type="date" />
+            </label>
+            <label>
+              <span>頁面路徑（選填）</span>
+              <input id="page-path" name="page_path" type="text" placeholder="/job/123" />
+            </label>
+            <div class="filter-actions">
+              <button id="run-query" type="submit">執行查詢</button>
+            </div>
+          </form>
+        </section>
+      </section>
+
+      <section class="content">
       <section class="panel view-panel">
         <div class="panel__header">
           <div class="view-panel__heading">
@@ -258,7 +259,8 @@
           <pre id="query-log" class="query-log">尚未執行查詢。</pre>
         </article>
       </section>
-    </section>
+      </section>
+    </div>
   </main>
 
   <script src="./app.js" type="module"></script>

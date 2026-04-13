@@ -59,7 +59,11 @@ body {
 }
 
 .page--top {
-  padding: 24px 24px 0;
+  padding: 0 0 20px;
+}
+
+.right-col {
+  min-width: 0;
 }
 
 .hero__topbar {
@@ -485,6 +489,10 @@ th {
   }
 
   .page--top {
-    padding: 20px 20px 0;
+    padding: 0 0 20px;
+  }
+
+  .right-col {
+    width: 100%;
   }
 }
