@@ -308,6 +308,12 @@ html[data-theme="dark"] .pct { color: var(--accent); }
 .bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #4361ee, #7209b7); }
 .empty-cell { text-align: center; color: var(--muted); padding: 32px 0; }
 
+/* ── Utility ── */
+.hidden { display: none !important; }
+
+/* ── Table panels (standalone, no table-grid wrapper needed) ── */
+.table-panel { margin-top: 20px; }
+
 /* ── Responsive ── */
 @media (max-width: 960px) {
   .hero { padding: 28px 20px 22px; }

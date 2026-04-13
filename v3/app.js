@@ -149,44 +149,6 @@ function renderState(state) {
   setText("query-status", parts.join("  ·  "));
 }
 
-function renderPrimaryTable(rows) {
-  const body = document.getElementById("primary-table-body");
-  if (!rows.length) {
-    body.innerHTML = '<tr><td colspan="4" class="empty-cell">查詢沒有結果</td></tr>';
-    return;
-  }
-
-  // 計算最大值以繪製 bar
-  const entries0 = Object.entries(rows[0] || {});
-  const valueKey = entries0[1]?.[0];
-  const maxVal = Math.max(...rows.map((r) => Number(r[valueKey] || 0)), 1);
-  const total = rows.reduce((s, r) => s + Number(r[valueKey] || 0), 0);
-
-  body.innerHTML = rows
-    .slice(0, 20)
-    .map((row, index) => {
-      const entries = Object.entries(row);
-      const [nameKey, nameVal] = entries[0] || ["name", "-"];
-      const [valKey, valRaw] = entries[1] || ["value", 0];
-      const val = Number(valRaw || 0);
-      const pct = total ? ((val / total) * 100).toFixed(1) : "0.0";
-      const barPct = ((val / maxVal) * 100).toFixed(1);
-      const extra = entries[2] ? `${entries[2][0]}: ${String(entries[2][1] ?? "-")}` : "";
-      return `
-        <tr>
-          <td class="rank">${index + 1}</td>
-          <td>${String(nameVal ?? "-")}</td>
-          <td>${val.toLocaleString()}</td>
-          <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:${barPct}%"></div></div>
-          </td>
-          <td class="pct">${pct}%</td>
-          ${extra ? `<td style="color:var(--muted);font-size:0.82rem">${extra}</td>` : ""}
-        </tr>
-      `;
-    })
-    .join("");
-}
 
 function getQueryForm() {
   return document.getElementById("query-form");
@@ -226,7 +188,6 @@ async function runQuery(state, filters) {
   if (!runtime.conn || !runtime.hasEventsView) {
     state.lastQuery = "目前沒有 events view，可先執行 extract_events.py 匯出 Parquet";
     state.queryResult = null;
-    renderPrimaryTable([]);
     resetDashboard();
     renderState(state);
     return false;
@@ -241,13 +202,12 @@ async function runQuery(state, filters) {
       dateTo: filters.dateTo,
       pagePath: filters.pagePath,
     };
-    renderPrimaryTable(renderDashboard(filters.viewMode, result.outputs));
+    renderDashboard(filters.viewMode, result.outputs);
     renderState(state);
     return true;
   } catch (error) {
     state.lastQuery = error instanceof Error ? error.message : String(error);
     state.queryResult = null;
-    renderPrimaryTable([]);
     resetDashboard();
     renderState(state);
     return false;
@@ -371,7 +331,6 @@ async function bootstrap() {
   bindSidebar(state);
   bindQueryForm(state);
   renderViewMeta(state);
-  renderPrimaryTable([]);
   resetDashboard();
   renderState(state);
 
@@ -402,5 +361,5 @@ async function bootstrap() {
 }
 
 bootstrap().catch((error) => {
-  setText("query-log", `Bootstrap 失敗：${error instanceof Error ? error.message : String(error)}`);
+  setText("query-status", `Bootstrap 失敗：${error instanceof Error ? error.message : String(error)}`);
 });
