@@ -156,19 +156,32 @@ function renderPrimaryTable(rows) {
     return;
   }
 
+  // 計算最大值以繪製 bar
+  const entries0 = Object.entries(rows[0] || {});
+  const valueKey = entries0[1]?.[0];
+  const maxVal = Math.max(...rows.map((r) => Number(r[valueKey] || 0)), 1);
+  const total = rows.reduce((s, r) => s + Number(r[valueKey] || 0), 0);
+
   body.innerHTML = rows
-    .slice(0, 12)
+    .slice(0, 20)
     .map((row, index) => {
       const entries = Object.entries(row);
-      const [firstKey, firstValue] = entries[0] || ["name", "-"];
-      const [secondKey, secondValue] = entries[1] || ["value", "-"];
-      const [thirdKey, thirdValue] = entries[2] || ["extra", "-"];
+      const [nameKey, nameVal] = entries[0] || ["name", "-"];
+      const [valKey, valRaw] = entries[1] || ["value", 0];
+      const val = Number(valRaw || 0);
+      const pct = total ? ((val / total) * 100).toFixed(1) : "0.0";
+      const barPct = ((val / maxVal) * 100).toFixed(1);
+      const extra = entries[2] ? `${entries[2][0]}: ${String(entries[2][1] ?? "-")}` : "";
       return `
         <tr>
-          <td>${index + 1}</td>
-          <td>${firstKey}: ${String(firstValue ?? "-")}</td>
-          <td>${secondKey}: ${String(secondValue ?? "-")}</td>
-          <td>${thirdKey}: ${String(thirdValue ?? "-")}</td>
+          <td class="rank">${index + 1}</td>
+          <td>${String(nameVal ?? "-")}</td>
+          <td>${val.toLocaleString()}</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:${barPct}%"></div></div>
+          </td>
+          <td class="pct">${pct}%</td>
+          ${extra ? `<td style="color:var(--muted);font-size:0.82rem">${extra}</td>` : ""}
         </tr>
       `;
     })
