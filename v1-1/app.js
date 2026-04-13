@@ -160,8 +160,6 @@ function collectFormFilters(form, viewMode) {
   return {
     dateFrom: payload.date_from,
     dateTo: payload.date_to,
-    hourFrom: payload.hour_from?.trim() || "",
-    hourTo:   payload.hour_to?.trim()   || "",
     pagePath: payload.page_path?.trim() || "",
     viewMode,
   };
@@ -183,8 +181,6 @@ function updateFilterFields(viewMode) {
 function applyFiltersToForm(filters) {
   document.getElementById("date-from").value  = filters.dateFrom;
   document.getElementById("date-to").value    = filters.dateTo;
-  document.getElementById("hour-from").value  = filters.hourFrom ?? "";
-  document.getElementById("hour-to").value    = filters.hourTo   ?? "";
   document.getElementById("page-path").value  = filters.pagePath;
 }
 
@@ -204,8 +200,6 @@ async function runQuery(state, filters) {
     state.lastSuccessfulFilters = {
       dateFrom: filters.dateFrom,
       dateTo:   filters.dateTo,
-      hourFrom: filters.hourFrom,
-      hourTo:   filters.hourTo,
       pagePath: filters.pagePath,
     };
     renderDashboard(filters.viewMode, result.outputs);

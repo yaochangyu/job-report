@@ -23,28 +23,8 @@ function quote(value) { return `'${String(value).replaceAll("'", "''")}'`; }
 function inList(values) { return `(${values.map(quote).join(", ")})`; }
 function dateClause(f) { return `date BETWEEN DATE ${quote(f.dateFrom)} AND DATE ${quote(f.dateTo)}`; }
 function pagePathClause(f) { return f.pagePath ? `page_path = ${quote(f.pagePath)}` : null; }
-// 小時篩選：
-//   - 單日（dateFrom == dateTo）：直接 hour BETWEEN from AND to
-//   - 跨多日：開始日限 hour >= from，結束日限 hour <= to，中間日全天
-function hourClause(f) {
-  const hf = parseInt(f.hourFrom, 10);
-  const ht = parseInt(f.hourTo,   10);
-  const hasFrom = !isNaN(hf);
-  const hasTo   = !isNaN(ht);
-  if (!hasFrom && !hasTo) return null;
-  const from = hasFrom ? hf : 0;
-  const to   = hasTo   ? ht : 23;
-  if (f.dateFrom === f.dateTo) {
-    return `hour BETWEEN ${from} AND ${to}`;
-  }
-  const clauses = [];
-  if (hasFrom) clauses.push(`(date > DATE ${quote(f.dateFrom)} OR hour >= ${from})`);
-  if (hasTo)   clauses.push(`(date < DATE ${quote(f.dateTo)} OR hour <= ${to})`);
-  return clauses.length ? clauses.join(" AND ") : null;
-}
-
 function buildWhere(f, extra = []) {
-  return [dateClause(f), hourClause(f), pagePathClause(f), ...extra].filter(Boolean).join(" AND ");
+  return [dateClause(f), pagePathClause(f), ...extra].filter(Boolean).join(" AND ");
 }
 
 // ════════════════════════════════════════════════════════════════
