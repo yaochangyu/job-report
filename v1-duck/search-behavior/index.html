@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>搜尋行為分析 — Search Behavior</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
+      background: #f0f2f5; color: #1a1a2e; min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+      color: #fff; padding: 36px 48px 28px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    header h1 { font-size: 1.8rem; font-weight: 700; }
+    header p  { margin-top: 6px; font-size: 0.9rem; opacity: 0.65; }
+    .badge {
+      display: inline-block; margin-top: 12px;
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px; padding: 4px 14px; font-size: 0.8rem;
+    }
+    main { max-width: 1200px; margin: 0 auto; padding: 36px 24px 60px; }
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px; margin-bottom: 36px;
+    }
+    .kpi-card {
+      background: #fff; border-radius: 14px; padding: 24px 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07); border-top: 4px solid var(--accent);
+    }
+    .kpi-card .label { font-size: 0.78rem; color: #888; text-transform: uppercase; letter-spacing: 0.8px; }
+    .kpi-card .value { font-size: 2rem; font-weight: 800; color: var(--accent); margin-top: 6px; }
+    .kpi-card .sub   { font-size: 0.8rem; color: #aaa; margin-top: 4px; }
+    .chart-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+      gap: 24px; margin-bottom: 28px;
+    }
+    .card {
+      background: #fff; border-radius: 14px; padding: 28px 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+    .card h2 { font-size: 1rem; font-weight: 700; color: #333; margin-bottom: 4px; }
+    .card .subtitle { font-size: 0.8rem; color: #999; margin-bottom: 20px; }
+    .chart-wrap { position: relative; height: 320px; }
+    .chart-wrap-tall { position: relative; height: 380px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead th {
+      background: #f7f8fa; padding: 10px 14px; text-align: left;
+      font-weight: 600; color: #555; border-bottom: 2px solid #e8e8e8;
+    }
+    tbody tr:nth-child(odd) { background: #fafafa; }
+    tbody tr:hover { background: #f0f4ff; }
+    tbody td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; }
+    .rank { color: #bbb; font-weight: 700; font-size: 0.85rem; }
+    .bar-cell { width: 160px; }
+    .bar-bg { background: #eef0f4; border-radius: 4px; height: 8px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #4361ee, #7209b7); }
+    .pct { color: #4361ee; font-weight: 700; }
+    footer { text-align: center; font-size: 0.78rem; color: #bbb; padding: 24px 0 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>搜尋行為分析 — Search Behavior</h1>
+  <p>資料來源：operation-logs（Elasticsearch） · 查詢區間：2026-04-13T00:00:00+08:00 ～ now</p>
+  <span class="badge">產生時間：2026-04-13 17:58:37 +08:00</span>
+</header>
+<main>
+  <div class="kpi-grid">
+    <div class="kpi-card" style="--accent:#4361ee">
+      <div class="label">搜尋相關事件</div>
+      <div class="value">140,307</div>
+      <div class="sub">含搜尋頁、互動與篩選</div>
+    </div>
+    <div class="kpi-card" style="--accent:#118ab2">
+      <div class="label">搜尋結果頁瀏覽</div>
+      <div class="value">89,557</div>
+      <div class="sub">job/corp/gig/intern</div>
+    </div>
+    <div class="kpi-card" style="--accent:#7209b7">
+      <div class="label">一般搜尋互動</div>
+      <div class="value">32,157</div>
+      <div class="sub">keyword/submit/general</div>
+    </div>
+    <div class="kpi-card" style="--accent:#f72585">
+      <div class="label">AI 搜尋互動</div>
+      <div class="value">4,319</div>
+      <div class="sub">AI 佔搜尋互動 11.8%</div>
+    </div>
+    <div class="kpi-card" style="--accent:#fb8500">
+      <div class="label">快速篩選</div>
+      <div class="value">14,274</div>
+      <div class="sub">地區 / 職類篩選</div>
+    </div>  </div>  <div class="chart-grid">
+  <div class="card">
+    <h2>搜尋功能使用量總覽</h2>
+    <div class="subtitle">各搜尋類型事件數比較</div>
+    <div class="chart-wrap"><canvas id="searchOverview"></canvas></div>
+  </div>  </div>  <div class="chart-grid">
+  <div class="card">
+    <h2>AI vs 一般搜尋每日趨勢</h2>
+    <div class="subtitle">click 數量 + AI 佔比（右 Y 軸）</div>
+    <div class="chart-wrap"><canvas id="aiVsGeneralTrend"></canvas></div>
+  </div>
+  <div class="card">
+    <h2>搜尋結果頁分佈</h2>
+    <div class="subtitle">job / corp / gig / intern 佔比</div>
+    <div class="chart-wrap"><canvas id="searchPageDist"></canvas></div>
+  </div>  </div>  <div class="chart-grid">
+  <div class="card">
+    <h2>AI 搜尋互動方式</h2>
+    <div class="subtitle">各 AI 功能點擊分佈</div>
+    <div class="chart-wrap"><canvas id="aiInteraction"></canvas></div>
+  </div>
+  <div class="card">
+    <h2>快速篩選使用</h2>
+    <div class="subtitle">地區篩選 vs 職類篩選每日趨勢</div>
+    <div class="chart-wrap"><canvas id="quickFilterTrend"></canvas></div>
+  </div>  </div>
+  <div class="card" style="margin-bottom:24px">
+    <h2>搜尋功能 featureId 詳細數據</h2>
+    <div class="subtitle">共 140,307 筆</div>
+    <table>
+      <thead><tr><th>#</th><th>featureId</th><th>事件數</th><th>佔比</th><th>類別</th></tr></thead>
+      <tbody><tr><td class="rank">1</td><td>search-job-page</td><td>86,979</td><td class="pct">62.0%</td><td>搜尋結果頁</td></tr><tr><td class="rank">2</td><td>search-general-keyword</td><td>14,510</td><td class="pct">10.3%</td><td>一般搜尋</td></tr><tr><td class="rank">3</td><td>search-general-submit</td><td>10,981</td><td class="pct">7.8%</td><td>一般搜尋</td></tr><tr><td class="rank">4</td><td>T-job-location</td><td>8,695</td><td class="pct">6.2%</td><td>快速篩選</td></tr><tr><td class="rank">5</td><td>search-general</td><td>6,666</td><td class="pct">4.8%</td><td>一般搜尋</td></tr><tr><td class="rank">6</td><td>T-job-category</td><td>5,579</td><td class="pct">4.0%</td><td>快速篩選</td></tr><tr><td class="rank">7</td><td>search-ai-keyword</td><td>3,715</td><td class="pct">2.6%</td><td>AI 搜尋</td></tr><tr><td class="rank">8</td><td>search-corp-page</td><td>1,708</td><td class="pct">1.2%</td><td>搜尋結果頁</td></tr><tr><td class="rank">9</td><td>search-gig-page</td><td>836</td><td class="pct">0.6%</td><td>搜尋結果頁</td></tr><tr><td class="rank">10</td><td>search-ai-submit</td><td>259</td><td class="pct">0.2%</td><td>AI 搜尋</td></tr><tr><td class="rank">11</td><td>search-ai</td><td>157</td><td class="pct">0.1%</td><td>AI 搜尋</td></tr><tr><td class="rank">12</td><td>search-ai-voice-input</td><td>109</td><td class="pct">0.1%</td><td>AI 搜尋</td></tr><tr><td class="rank">13</td><td>search-ai-chat-mode</td><td>79</td><td class="pct">0.1%</td><td>AI 搜尋</td></tr><tr><td class="rank">14</td><td>search-intern-page</td><td>34</td><td class="pct">0.0%</td><td>搜尋結果頁</td></tr></tbody>
+    </table>
+  </div>
+<script>
+  // ── 搜尋功能總覽 Horizontal Bar
+  new Chart(document.getElementById('searchOverview'), {
+    type: 'bar',
+    data: {
+      labels: ["搜尋結果頁（view）", "一般搜尋互動（click）", "AI 搜尋互動（click）", "快速篩選（click）"],
+      datasets: [{
+        label: '事件數',
+        data: [89557, 32157, 4319, 14274],
+        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0"],
+        borderRadius: 6
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: '#f0f0f0' }, title: { display: true, text: '事件數' } },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+
+  // ── AI vs 一般搜尋每日趨勢
+  new Chart(document.getElementById('aiVsGeneralTrend'), {
+    type: 'line',
+    data: {
+      labels: ["2026-04-13"],
+      datasets: [
+        {
+          label: '一般搜尋',
+          data: [32157],
+          borderColor: '#7209b7', backgroundColor: 'rgba(114,9,183,0.08)',
+          fill: true, tension: 0.3, yAxisID: 'y'
+        },
+        {
+          label: 'AI 搜尋',
+          data: [4319],
+          borderColor: '#f72585', backgroundColor: 'rgba(247,37,133,0.08)',
+          fill: true, tension: 0.3, yAxisID: 'y'
+        },
+        {
+          label: 'AI 佔比 %',
+          data: [11.8],
+          borderColor: '#fb8500', borderDash: [6,3],
+          fill: false, tension: 0.3, yAxisID: 'y1'
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        y:  { position: 'left',  title: { display: true, text: 'Click 數' } },
+        y1: { position: 'right', grid: { drawOnChartArea: false },
+               title: { display: true, text: 'AI 佔比 %' }, min: 0, max: 100 }
+      },
+      plugins: { legend: { position: 'bottom' } }
+    }
+  });
+
+  // ── 搜尋結果頁分佈 Doughnut
+  new Chart(document.getElementById('searchPageDist'), {
+    type: 'doughnut',
+    data: {
+      labels: ["正職", "企業", "兼差", "實習"],
+      datasets: [{
+        data: [86979, 1708, 836, 34],
+        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0"],
+        borderWidth: 2, borderColor: '#fff'
+      }]
+    },
+    options: {
+      cutout: '62%',
+      plugins: {
+        legend: { position: 'right', labels: { font: { size: 13 }, padding: 10 } },
+        tooltip: { callbacks: {
+          label: ctx => {
+            const t = 89557;
+            return ` ${ctx.label}：${ctx.parsed.toLocaleString()} 次（${(ctx.parsed/t*100).toFixed(1)}%）`;
+          }
+        } }
+      }
+    }
+  });
+
+  // ── AI 搜尋互動方式
+  new Chart(document.getElementById('aiInteraction'), {
+    type: 'doughnut',
+    data: {
+      labels: ["AI 關鍵字", "AI 送出", "AI 一般", "語音輸入", "聊天模式"],
+      datasets: [{
+        data: [3715, 259, 157, 109, 79],
+        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500"],
+        borderWidth: 2, borderColor: '#fff'
+      }]
+    },
+    options: {
+      cutout: '62%',
+      plugins: {
+        legend: { position: 'right', labels: { font: { size: 13 }, padding: 10 } },
+        tooltip: { callbacks: {
+          label: ctx => {
+            const t = 4319;
+            return ` ${ctx.label}：${ctx.parsed.toLocaleString()} 次（${(ctx.parsed/t*100).toFixed(1)}%）`;
+          }
+        } }
+      }
+    }
+  });
+
+  // ── 快速篩選每日趨勢
+  new Chart(document.getElementById('quickFilterTrend'), {
+    type: 'line',
+    data: {
+      labels: ["2026-04-13"],
+      datasets: [
+        {
+          label: '地區篩選',
+          data: [8695],
+          borderColor: '#118ab2', backgroundColor: 'rgba(17,138,178,0.1)',
+          fill: true, tension: 0.3
+        },
+        {
+          label: '職類篩選',
+          data: [5579],
+          borderColor: '#fb8500', backgroundColor: 'rgba(251,133,0,0.1)',
+          fill: true, tension: 0.3
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        y: { title: { display: true, text: 'Click 數' } }
+      },
+      plugins: { legend: { position: 'bottom' } }
+    }
+  });
+</script>
+
+</main>
+<footer>Generated 2026-04-13 17:58:37 +08:00 · operation-logs</footer>
+</body>
+</html>
