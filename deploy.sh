@@ -21,6 +21,10 @@ git -C "$TMP_DIR" remote add origin "$REPO_URL"
 git -C "$TMP_DIR" fetch origin gh-pages --depth=1 || echo "gh-pages branch not found, creating new..."
 git -C "$TMP_DIR" checkout gh-pages || git -C "$TMP_DIR" checkout -b gh-pages
 
+# 🧹 清理根目錄下不屬於任何版本的舊檔案 (非版本資料夾且非 index.html)
+echo "▶ 清理 gh-pages 根目錄雜物..."
+find "$TMP_DIR" -maxdepth 1 -not -name "." -not -name ".git" -not -name "v*" -not -name "index.html" -exec rm -rf {} +
+
 if [ -n "$VERSION" ]; then
     TARGET_DIR="$TMP_DIR/$VERSION"
     echo "▶ 部署到版本目錄: $VERSION"
