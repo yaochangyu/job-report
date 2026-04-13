@@ -10,10 +10,18 @@ TO_DATE=$(date +%F)
 FROM_DATE=$(date -d "$((DAYS - 1)) days ago" +%F)
 
 echo "▶ 匯出 Parquet dataset（${FROM_DATE} ~ ${TO_DATE}）..."
-# v1 版本使用的是 extract_all.py
-uv run python "$(dirname "$0")/extract_all.py" --mode daily --from "$FROM_DATE" --to "$TO_DATE"
+if [ -f "$(dirname "$0")/extract_events.py" ]; then
+    echo "[INFO] 使用新版 extract_events.py"
+    uv run python "$(dirname "$0")/extract_events.py" --from "$FROM_DATE" --to "$TO_DATE"
+elif [ -f "$(dirname "$0")/extract_all.py" ]; then
+    echo "[INFO] 使用舊版 extract_all.py"
+    uv run python "$(dirname "$0")/extract_all.py" --mode daily --from "$FROM_DATE" --to "$TO_DATE"
+else
+    echo "❌ 找不到資料擷取腳本 (extract_events.py 或 extract_all.py)"
+    exit 1
+fi
 
-echo "▶ 組裝單頁網站..."
+echo "▶ 組裝網站報告..."
 uv run python "$(dirname "$0")/run_all.py"
 
 echo "▶ 部署到 GitHub Pages..."
@@ -22,7 +30,6 @@ git -C "$TMP_DIR" remote add origin "$REPO_URL"
 git -C "$TMP_DIR" fetch origin gh-pages --depth=1 || echo "gh-pages branch not found, creating new..."
 git -C "$TMP_DIR" checkout gh-pages || git -C "$TMP_DIR" checkout -b gh-pages
 
-# 🧹 清理根目錄下不屬於任何版本的舊檔案 (非版本資料夾且非 index.html)
 echo "▶ 清理 gh-pages 根目錄雜物..."
 find "$TMP_DIR" -maxdepth 1 -not -name "." -not -name ".git" -not -name "v*" -not -name "index.html" -exec rm -rf {} +
 
