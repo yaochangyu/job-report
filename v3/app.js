@@ -2,12 +2,10 @@ import * as duckdb from "https://cdn.jsdelivr.net/npm/@duckdb/duckdb-wasm@1.30.0
 import { executeViewQueries } from "./query-definitions.js";
 import { renderDashboard, resetDashboard } from "./dashboard-renderers.js";
 
-// ── Dataset root detection ──────────────────────────────────────────────────
 const datasetRootCandidates = [
   new URL("../dataset/", import.meta.url),
   new URL("./dataset/", import.meta.url),
 ];
-
 const runtime = {
   db: null,
   conn: null,
@@ -15,7 +13,22 @@ const runtime = {
   datasetRoot: null,
 };
 
-// ── View metadata ───────────────────────────────────────────────────────────
+const defaultState = {
+  manifestLoaded: false,
+  duckdbReady: false,
+  lastQuery: null,
+  registeredDates: [],
+  rowCount: null,
+  queryResult: null,
+  selectedViewMode: "overview",
+  theme: "light",
+  lastSuccessfulFilters: null,
+  sidebarCollapsed: false,
+};
+
+const THEME_STORAGE_KEY = "job-report-theme";
+const SIDEBAR_STORAGE_KEY = "job-report-sidebar-collapsed";
+
 const VIEW_META = {
   overview: {
     title: "整體概覽",
@@ -59,158 +72,205 @@ const VIEW_META = {
   },
 };
 
-// ── State ────────────────────────────────────────────────────────────────────
-const state = {
-  selectedView: null,
-  lastSuccessfulFilters: null,
-  ready: false,
-};
-
-// ── DOM helpers ──────────────────────────────────────────────────────────────
 function setText(id, value) {
   const node = document.getElementById(id);
-  if (node) node.textContent = value;
-}
-function setStatus(msg) {
-  setText("status-bar", msg);
-}
-function setPill(id, value) {
-  const node = document.getElementById(id);
-  if (node) node.textContent = value;
-}
-
-function setLoading(loading) {
-  const btn = document.getElementById("btn-query");
-  if (btn) btn.disabled = loading;
-  if (loading) {
-    setStatus("查詢中…");
+  if (node) {
+    node.textContent = value;
   }
 }
 
-// ── Date helpers ─────────────────────────────────────────────────────────────
-function hydrateDefaultDates() {
-  const today = new Date();
-  const from = new Date(today);
-  from.setDate(today.getDate() - 6);
-  document.getElementById("date-from").value = from.toISOString().slice(0, 10);
-  document.getElementById("date-to").value = today.toISOString().slice(0, 10);
+function safeJson(value) {
+  return JSON.stringify(
+    value,
+    (_, current) => (typeof current === "bigint" ? Number(current) : current),
+    2,
+  );
 }
 
-// ── Filters ──────────────────────────────────────────────────────────────────
-function collectFilters(viewMode) {
-  return {
-    dateFrom: document.getElementById("date-from").value,
-    dateTo: document.getElementById("date-to").value,
-    pagePath: document.getElementById("page-path").value.trim(),
-    viewMode,
-  };
+function applyTheme(theme, state) {
+  document.documentElement.dataset.theme = theme;
+  state.theme = theme;
+  localStorage.setItem(THEME_STORAGE_KEY, theme);
+  setText("theme-toggle", theme === "light" ? "切換暗黑版" : "切換光亮版");
 }
 
-// ── Table render ─────────────────────────────────────────────────────────────
-function renderTable(rows) {
+function applySidebarState(collapsed, state) {
+  const pageLayout = document.getElementById("page-layout");
+  pageLayout.classList.toggle("is-sidebar-collapsed", collapsed);
+  state.sidebarCollapsed = collapsed;
+  localStorage.setItem(SIDEBAR_STORAGE_KEY, collapsed ? "true" : "false");
+  document.getElementById("sidebar-toggle").setAttribute("aria-expanded", collapsed ? "false" : "true");
+  document.getElementById("sidebar-toggle").setAttribute("aria-label", collapsed ? "展開側邊導覽" : "收合側邊導覽");
+  setText("sidebar-toggle-icon", collapsed ? "▶" : "◀");
+}
+
+function renderViewMeta(state) {
+  const meta = VIEW_META[state.selectedViewMode] || VIEW_META.overview;
+  setText("current-view-title", meta.title);
+  setText("current-view-subtitle", meta.subtitle);
+  setText("current-view-desc", meta.desc);
+
+  document.querySelectorAll("[data-view-mode]").forEach((button) => {
+    const active = button.dataset.viewMode === state.selectedViewMode;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-current", active ? "page" : "false");
+  });
+}
+
+function summarizeQueryResult(outputs) {
+  return outputs.map((item) => ({
+    name: item.name,
+    rowCount: item.rows.length,
+    sample: item.rows.slice(0, 3),
+  }));
+}
+
+function renderState(state) {
+  // 只更新右側 query-status 顯示
+  const parts = [];
+  if (!state.manifestLoaded) parts.push("資料載入中…");
+  else if (!state.duckdbReady) parts.push("DuckDB 初始化中…");
+  else if (state.rowCount != null) parts.push(`已載入 ${state.registeredDates.length} 個日期分區 · ${state.rowCount.toLocaleString()} 筆`);
+  if (state.lastQuery) parts.push(state.lastQuery);
+  setText("query-status", parts.join("  ·  "));
+}
+
+function renderPrimaryTable(rows) {
   const body = document.getElementById("primary-table-body");
   if (!rows.length) {
     body.innerHTML = '<tr><td colspan="4" class="empty-cell">查詢沒有結果</td></tr>';
     return;
   }
+
   body.innerHTML = rows
-    .slice(0, 20)
-    .map((row, i) => {
+    .slice(0, 12)
+    .map((row, index) => {
       const entries = Object.entries(row);
-      const [k0, v0] = entries[0] || ["name", "-"];
-      const [k1, v1] = entries[1] || ["value", "-"];
-      const [k2, v2] = entries[2] || ["extra", "-"];
-      return `<tr>
-        <td>${i + 1}</td>
-        <td>${k0}: ${String(v0 ?? "-")}</td>
-        <td>${k1}: ${String(v1 ?? "-")}</td>
-        <td>${k2}: ${String(v2 ?? "-")}</td>
-      </tr>`;
+      const [firstKey, firstValue] = entries[0] || ["name", "-"];
+      const [secondKey, secondValue] = entries[1] || ["value", "-"];
+      const [thirdKey, thirdValue] = entries[2] || ["extra", "-"];
+      return `
+        <tr>
+          <td>${index + 1}</td>
+          <td>${firstKey}: ${String(firstValue ?? "-")}</td>
+          <td>${secondKey}: ${String(secondValue ?? "-")}</td>
+          <td>${thirdKey}: ${String(thirdValue ?? "-")}</td>
+        </tr>
+      `;
     })
     .join("");
 }
 
-// ── Run query ────────────────────────────────────────────────────────────────
-async function runQuery(filters) {
+function getQueryForm() {
+  return document.getElementById("query-form");
+}
+
+function collectFormFilters(form, viewMode) {
+  const formData = new FormData(form);
+  const payload = Object.fromEntries(formData.entries());
+  return {
+    dateFrom: payload.date_from,
+    dateTo: payload.date_to,
+    pagePath: payload.page_path?.trim() || "",
+    viewMode,
+  };
+}
+
+function applyFiltersToForm(filters) {
+  document.getElementById("date-from").value = filters.dateFrom;
+  document.getElementById("date-to").value = filters.dateTo;
+  document.getElementById("page-path").value = filters.pagePath;
+}
+
+async function runQuery(state, filters) {
   if (!runtime.conn || !runtime.hasEventsView) {
-    setStatus("資料尚未就緒，請稍候…");
-    return;
+    state.lastQuery = "目前沒有 events view，可先執行 extract_events.py 匯出 Parquet";
+    state.queryResult = null;
+    renderPrimaryTable([]);
+    resetDashboard();
+    renderState(state);
+    return false;
   }
-  setLoading(true);
+
   try {
     const result = await executeViewQueries(runtime.conn, filters);
+    state.lastQuery = result.summary;
+    state.queryResult = summarizeQueryResult(result.outputs);
     state.lastSuccessfulFilters = {
       dateFrom: filters.dateFrom,
       dateTo: filters.dateTo,
       pagePath: filters.pagePath,
     };
-    const tableRows = renderDashboard(filters.viewMode, result.outputs);
-    renderTable(tableRows);
-    setStatus(result.summary);
-  } catch (err) {
-    setStatus("查詢錯誤：" + (err instanceof Error ? err.message : String(err)));
-    renderTable([]);
+    renderPrimaryTable(renderDashboard(filters.viewMode, result.outputs));
+    renderState(state);
+    return true;
+  } catch (error) {
+    state.lastQuery = error instanceof Error ? error.message : String(error);
+    state.queryResult = null;
+    renderPrimaryTable([]);
     resetDashboard();
-  } finally {
-    setLoading(false);
+    renderState(state);
+    return false;
   }
 }
 
-// ── Card selection ────────────────────────────────────────────────────────────
-function selectCard(viewMode) {
-  state.selectedView = viewMode;
+function hydrateDefaultDates() {
+  const today = new Date();
+  const from = new Date(today);
+  from.setDate(today.getDate() - 6);
 
-  // highlight active card
-  document.querySelectorAll(".report-card").forEach((btn) => {
-    btn.classList.toggle("is-active", btn.dataset.view === viewMode);
-  });
-
-  // update filter panel label
-  const meta = VIEW_META[viewMode] || {};
-  setText("filter-panel-title", meta.title || viewMode);
-  setText("filter-panel-desc", meta.desc || "");
-
-  // show dashboard section
-  const section = document.getElementById("dashboard-section");
-  section.classList.remove("is-hidden");
-
-  // scroll to dashboard
-  section.scrollIntoView({ behavior: "smooth", block: "start" });
-
-  // auto-query if already ready
-  if (runtime.hasEventsView) {
-    const filters = state.lastSuccessfulFilters
-      ? { ...state.lastSuccessfulFilters, viewMode }
-      : collectFilters(viewMode);
-    runQuery(filters);
-  } else {
-    resetDashboard();
-    setStatus("資料載入中，就緒後可按查詢…");
-  }
+  document.getElementById("date-from").value = from.toISOString().slice(0, 10);
+  document.getElementById("date-to").value = today.toISOString().slice(0, 10);
 }
 
-// ── Bind events ───────────────────────────────────────────────────────────────
-function bindCards() {
-  document.querySelectorAll(".report-card").forEach((btn) => {
-    btn.addEventListener("click", () => selectCard(btn.dataset.view));
+function bindThemeToggle(state) {
+  document.getElementById("theme-toggle").addEventListener("click", () => {
+    applyTheme(state.theme === "light" ? "dark" : "light", state);
   });
 }
 
-function bindForm() {
-  document.getElementById("query-form").addEventListener("submit", (e) => {
-    e.preventDefault();
-    if (!state.selectedView) return;
-    runQuery(collectFilters(state.selectedView));
+function bindSidebarToggle(state) {
+  document.getElementById("sidebar-toggle").addEventListener("click", () => {
+    applySidebarState(!state.sidebarCollapsed, state);
   });
 }
 
-// ── DuckDB bootstrap ──────────────────────────────────────────────────────────
+function bindSidebar(state) {
+  document.querySelectorAll("[data-view-mode]").forEach((button) => {
+    button.addEventListener("click", async () => {
+      state.selectedViewMode = button.dataset.viewMode;
+      renderViewMeta(state);
+      const form = getQueryForm();
+
+      if (state.lastSuccessfulFilters) {
+        const filters = {
+          ...state.lastSuccessfulFilters,
+          viewMode: state.selectedViewMode,
+        };
+        applyFiltersToForm(filters);
+        await runQuery(state, filters);
+        return;
+      }
+
+      await runQuery(state, collectFormFilters(form, state.selectedViewMode));
+    });
+  });
+}
+
+function bindQueryForm(state) {
+  const form = getQueryForm();
+  form.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await runQuery(state, collectFormFilters(form, state.selectedViewMode));
+  });
+}
+
 async function loadManifest() {
   for (const candidate of datasetRootCandidates) {
-    const res = await fetch(new URL("manifest.json", candidate));
-    if (res.ok) {
+    const response = await fetch(new URL("manifest.json", candidate));
+    if (response.ok) {
       runtime.datasetRoot = candidate;
-      return res.json();
+      return response.json();
     }
   }
   throw new Error("manifest 載入失敗：404");
@@ -232,60 +292,75 @@ async function initDuckDB() {
 async function registerParquetFiles(db, manifest) {
   const entries = manifest.available_dates
     .map((date) => ({ date, meta: manifest.dates?.[date] }))
-    .filter((e) => e.meta?.path);
-  if (!entries.length) return [];
+    .filter((entry) => entry.meta?.path);
+
+  if (!entries.length) {
+    return [];
+  }
+
   for (const entry of entries) {
     const alias = `events_${entry.date.replaceAll("-", "_")}.parquet`;
-    const url = new URL(entry.meta.path, runtime.datasetRoot).href;
-    await db.registerFileURL(alias, url, duckdb.DuckDBDataProtocol.HTTP, false);
+    const sourceUrl = new URL(entry.meta.path, runtime.datasetRoot).href;
+    await db.registerFileURL(alias, sourceUrl, duckdb.DuckDBDataProtocol.HTTP, false);
     entry.alias = alias;
   }
+
   return entries;
 }
 
-async function buildEventsView(conn, files) {
-  if (!files.length) return 0;
-  const list = files.map((e) => `'${e.alias}'`).join(", ");
-  await conn.query(`CREATE OR REPLACE VIEW events AS SELECT * FROM read_parquet([${list}])`);
+async function buildEventsView(conn, registeredFiles) {
+  if (!registeredFiles.length) {
+    return 0;
+  }
+
+  const files = registeredFiles.map((entry) => `'${entry.alias}'`).join(", ");
+  await conn.query(`CREATE OR REPLACE VIEW events AS SELECT * FROM read_parquet([${files}])`);
   const result = await conn.query("SELECT COUNT(*) AS total_rows FROM events");
   return result.toArray()[0].total_rows;
 }
 
-// ── Main ──────────────────────────────────────────────────────────────────────
 async function bootstrap() {
+  const state = { ...defaultState };
+  const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
+  const savedSidebarState = localStorage.getItem(SIDEBAR_STORAGE_KEY);
+  applyTheme(savedTheme === "dark" ? "dark" : "light", state);
+  applySidebarState(savedSidebarState === "true", state);
   hydrateDefaultDates();
-  bindCards();
-  bindForm();
-
-  setPill("pill-status", "載入 manifest…");
+  bindThemeToggle(state);
+  bindSidebarToggle(state);
+  bindSidebar(state);
+  bindQueryForm(state);
+  renderViewMeta(state);
+  renderPrimaryTable([]);
+  resetDashboard();
+  renderState(state);
 
   try {
     const manifest = await loadManifest();
-    const dates = manifest.available_dates || [];
-    setPill("pill-dates", `${dates.length} 個日期分區`);
-    setPill("pill-status", "初始化 DuckDB…");
+    state.manifestLoaded = true;
+    state.registeredDates = manifest.available_dates || [];
+    renderState(state);
 
-    const { db, conn } = await initDuckDB();
-    runtime.db = db;
-    runtime.conn = conn;
+    const duckdbRuntime = await initDuckDB();
+    state.duckdbReady = true;
+    runtime.db = duckdbRuntime.db;
+    runtime.conn = duckdbRuntime.conn;
+    renderState(state);
 
-    const files = await registerParquetFiles(db, manifest);
-    const rowCount = await buildEventsView(conn, files);
-    runtime.hasEventsView = files.length > 0;
-
-    setPill("pill-rows", rowCount.toLocaleString() + " 筆事件");
-    setPill("pill-status", runtime.hasEventsView ? "✓ 就緒" : "無可查詢資料");
-
-    // if user already clicked a card while loading, auto-query now
-    if (state.selectedView && runtime.hasEventsView) {
-      const filters = state.lastSuccessfulFilters
-        ? { ...state.lastSuccessfulFilters, viewMode: state.selectedView }
-        : collectFilters(state.selectedView);
-      runQuery(filters);
-    }
-  } catch (err) {
-    setPill("pill-status", "錯誤：" + (err instanceof Error ? err.message : String(err)));
+    const registeredFiles = await registerParquetFiles(runtime.db, manifest);
+    state.registeredDates = registeredFiles.map((entry) => entry.date);
+    state.rowCount = await buildEventsView(runtime.conn, registeredFiles);
+    runtime.hasEventsView = registeredFiles.length > 0;
+    state.lastQuery = registeredFiles.length
+      ? `DuckDB 已載入 ${registeredFiles.length} 個日期分區`
+      : "manifest 已載入，但目前沒有可查詢的 Parquet 檔";
+  } catch (error) {
+    state.lastQuery = error instanceof Error ? error.message : String(error);
   }
+
+  renderState(state);
 }
 
-bootstrap();
+bootstrap().catch((error) => {
+  setText("query-log", `Bootstrap 失敗：${error instanceof Error ? error.message : String(error)}`);
+});
