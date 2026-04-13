@@ -29,6 +29,18 @@ const defaultState = {
 const THEME_STORAGE_KEY = "job-report-theme";
 const SIDEBAR_STORAGE_KEY = "job-report-sidebar-collapsed";
 
+// 各視角是否顯示「頁面路徑」欄位
+const VIEW_FILTER_FIELDS = {
+  overview:   { pagePath: true  },
+  search:     { pagePath: false },
+  apply:      { pagePath: false },
+  feature:    { pagePath: false },
+  device:     { pagePath: false },
+  ranking:    { pagePath: true  },
+  navigation: { pagePath: true  },
+  heatmap:    { pagePath: true  },
+};
+
 const VIEW_META = {
   overview: {
     title: "整體概覽",
@@ -115,6 +127,8 @@ function renderViewMeta(state) {
     button.classList.toggle("is-active", active);
     button.setAttribute("aria-current", active ? "page" : "false");
   });
+
+  updateFilterFields(state.selectedViewMode);
 }
 
 function summarizeQueryResult(outputs) {
@@ -174,6 +188,19 @@ function collectFormFilters(form, viewMode) {
     pagePath: payload.page_path?.trim() || "",
     viewMode,
   };
+}
+
+function updateFilterFields(viewMode) {
+  const config = VIEW_FILTER_FIELDS[viewMode] || { pagePath: true };
+  const wrap = document.getElementById("filter-page-path-wrap");
+  if (wrap) {
+    wrap.classList.toggle("filter-field--hidden", !config.pagePath);
+    // 視角不支援 pagePath 時清空值，避免帶入查詢
+    if (!config.pagePath) {
+      const input = document.getElementById("page-path");
+      if (input) input.value = "";
+    }
+  }
 }
 
 function applyFiltersToForm(filters) {
