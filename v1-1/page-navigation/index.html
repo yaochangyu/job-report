@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>頁面導航鏈路分析 — Page Navigation Flow</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
+      background: #f0f2f5; color: #1a1a2e; min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+      color: #fff; padding: 36px 48px 28px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    header h1 { font-size: 1.8rem; font-weight: 700; }
+    header p  { margin-top: 6px; font-size: 0.9rem; opacity: 0.65; }
+    .badge {
+      display: inline-block; margin-top: 12px;
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px; padding: 4px 14px; font-size: 0.8rem;
+    }
+    main { max-width: 1200px; margin: 0 auto; padding: 36px 24px 60px; }
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px; margin-bottom: 36px;
+    }
+    .kpi-card {
+      background: #fff; border-radius: 14px; padding: 24px 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07); border-top: 4px solid var(--accent);
+    }
+    .kpi-card .label { font-size: 0.78rem; color: #888; text-transform: uppercase; letter-spacing: 0.8px; }
+    .kpi-card .value { font-size: 2rem; font-weight: 800; color: var(--accent); margin-top: 6px; }
+    .kpi-card .sub   { font-size: 0.8rem; color: #aaa; margin-top: 4px; }
+    .chart-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+      gap: 24px; margin-bottom: 28px;
+    }
+    .card {
+      background: #fff; border-radius: 14px; padding: 28px 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+    .card h2 { font-size: 1rem; font-weight: 700; color: #333; margin-bottom: 4px; }
+    .card .subtitle { font-size: 0.8rem; color: #999; margin-bottom: 20px; }
+    .chart-wrap { position: relative; height: 320px; }
+    .chart-wrap-tall { position: relative; height: 380px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead th {
+      background: #f7f8fa; padding: 10px 14px; text-align: left;
+      font-weight: 600; color: #555; border-bottom: 2px solid #e8e8e8;
+    }
+    tbody tr:nth-child(odd) { background: #fafafa; }
+    tbody tr:hover { background: #f0f4ff; }
+    tbody td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; }
+    .rank { color: #bbb; font-weight: 700; font-size: 0.85rem; }
+    .bar-cell { width: 160px; }
+    .bar-bg { background: #eef0f4; border-radius: 4px; height: 8px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #4361ee, #7209b7); }
+    .pct { color: #4361ee; font-weight: 700; }
+    footer { text-align: center; font-size: 0.78rem; color: #bbb; padding: 24px 0 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>頁面導航鏈路分析 — Page Navigation Flow</h1>
+  <p>資料來源：operation-logs（Elasticsearch） · 查詢區間：2026-04-13T00:00:00+08:00 ～ now</p>
+  <span class="badge">產生時間：2026-04-13 17:58:51 +08:00</span>
+</header>
+<main>
+  <div class="kpi-grid">
+    <div class="kpi-card" style="--accent:#4361ee">
+      <div class="label">導航轉換事件</div>
+      <div class="value">137,889</div>
+      <div class="sub">Top 30 路徑合計</div>
+    </div>
+    <div class="kpi-card" style="--accent:#06d6a0">
+      <div class="label">初始進入事件</div>
+      <div class="value">52,551</div>
+      <div class="sub">無 previousPageName</div>
+    </div>
+    <div class="kpi-card" style="--accent:#7209b7">
+      <div class="label">追蹤頁面數</div>
+      <div class="value">10</div>
+      <div class="sub">有導航記錄的頁面</div>
+    </div>  </div>  <div class="chart-grid">
+  <div class="card">
+    <h2>初始進入頁面分佈</h2>
+    <div class="subtitle">無 previousPageName 的首次瀏覽分佈</div>
+    <div class="chart-wrap"><canvas id="entryDist"></canvas></div>
+  </div>  </div>  <div class="chart-grid">
+  <div class="card">
+    <h2>Top 20 頁面轉換路徑</h2>
+    <div class="subtitle">previousPageName → pageName 轉換次數</div>
+    <div class="chart-wrap-tall"><canvas id="navPairsBar"></canvas></div>
+  </div>  </div>
+  <div class="card" style="margin-bottom:24px">
+    <h2>各頁面 Top 來源（從哪來）</h2>
+    <div class="subtitle">每個頁面最常見的上一頁 Top 5</div>
+    <table>
+      <thead><tr><th>目標頁面</th><th>來源頁面</th><th>次數</th></tr></thead>
+      <tbody><tr><td rowspan="5" style="vertical-align:top;font-weight:600">/</td><td>/</td><td>59,120</td></tr><tr><td>/login/Index</td><td>3,663</td></tr><tr><td>/search/job</td><td>2,149</td></tr><tr><td>/CorpNotification/Index</td><td>1,339</td></tr><tr><td>/ApplyRecord/Index</td><td>993</td></tr><tr><td rowspan="5" style="vertical-align:top;font-weight:600">/search/job</td><td>/</td><td>55,757</td></tr><tr><td>/search/job</td><td>3,917</td></tr><tr><td>/search/category</td><td>370</td></tr><tr><td>/job-pair</td><td>353</td></tr><tr><td>/Resume/Index</td><td>345</td></tr><tr><td rowspan="5" style="vertical-align:top;font-weight:600">/job-pair</td><td>/</td><td>1,642</td></tr><tr><td>/search/job</td><td>837</td></tr><tr><td>/job-pair</td><td>270</td></tr><tr><td>/login/index</td><td>48</td></tr><tr><td>/search/gig</td><td>41</td></tr><tr><td rowspan="5" style="vertical-align:top;font-weight:600">/search/corp</td><td>/</td><td>1,127</td></tr><tr><td>/search/corp</td><td>94</td></tr><tr><td>/search/job</td><td>70</td></tr><tr><td>/Membercenter/Index</td><td>7</td></tr><tr><td>/search/category</td><td>7</td></tr><tr><td rowspan="5" style="vertical-align:top;font-weight:600">/search/gig</td><td>/</td><td>603</td></tr><tr><td>/search/job</td><td>59</td></tr><tr><td>/search/gig</td><td>20</td></tr><tr><td>/job-pair</td><td>19</td></tr><tr><td>/login/Index</td><td>8</td></tr><tr><td rowspan="1" style="vertical-align:top;font-weight:600">/job/preview</td><td>/</td><td>597</td></tr><tr><td rowspan="5" style="vertical-align:top;font-weight:600">/job/132054057/</td><td>/</td><td>105</td></tr><tr><td>/2.0/json/yahoo-mail/recommendations.notify-click</td><td>8</td></tr><tr><td>/2.0/json/yahoo-android-mail/recommendations.notify-click</td><td>2</td></tr><tr><td>/ettodaytwd-ettoday/log/3/click</td><td>1</td></tr><tr><td>/yahoo-homepage-taiwan/log/3/click</td><td>1</td></tr><tr><td rowspan="1" style="vertical-align:top;font-weight:600">/corp/previewNew</td><td>/</td><td>104</td></tr><tr><td rowspan="1" style="vertical-align:top;font-weight:600">/job/132474879</td><td>/</td><td>1</td></tr><tr><td rowspan="1" style="vertical-align:top;font-weight:600">/job/75827172</td><td>/login/Index</td><td>2</td></tr></tbody>
+    </table>
+  </div>
+  <div class="card" style="margin-bottom:24px">
+    <h2>各頁面 Top 目標（往哪去）</h2>
+    <div class="subtitle">離開頁面後最常前往的下一頁 Top 5</div>
+    <table>
+      <thead><tr><th>來源頁面</th><th>目標頁面</th><th>次數</th></tr></thead>
+      <tbody><tr><td rowspan="5" style="vertical-align:top;font-weight:600">/</td><td>/</td><td>59,120</td></tr><tr><td>/search/job</td><td>55,757</td></tr><tr><td>/job-pair</td><td>1,642</td></tr><tr><td>/search/corp</td><td>1,127</td></tr><tr><td>/search/gig</td><td>603</td></tr><tr><td rowspan="5" style="vertical-align:top;font-weight:600">/search/job</td><td>/search/job</td><td>3,917</td></tr><tr><td>/</td><td>2,149</td></tr><tr><td>/job-pair</td><td>837</td></tr><tr><td>/search/corp</td><td>70</td></tr><tr><td>/search/gig</td><td>59</td></tr><tr><td rowspan="5" style="vertical-align:top;font-weight:600">/CorpNotification/Index</td><td>/</td><td>1,339</td></tr><tr><td>/search/job</td><td>226</td></tr><tr><td>/job/132477270/</td><td>24</td></tr><tr><td>/job/131970385/</td><td>21</td></tr><tr><td>/job/132468205/</td><td>20</td></tr><tr><td rowspan="5" style="vertical-align:top;font-weight:600">/login/Index</td><td>/</td><td>3,663</td></tr><tr><td>/search/job</td><td>238</td></tr><tr><td>/job/130256822</td><td>12</td></tr><tr><td>/search/gig</td><td>7</td></tr><tr><td>/job-pair</td><td>5</td></tr><tr><td rowspan="5" style="vertical-align:top;font-weight:600">/ApplyRecord/Index</td><td>/</td><td>993</td></tr><tr><td>/search/job</td><td>202</td></tr><tr><td>/corp/36058912</td><td>17</td></tr><tr><td>/job/132149658/</td><td>12</td></tr><tr><td>/job/132488191/</td><td>10</td></tr><tr><td rowspan="5" style="vertical-align:top;font-weight:600">/CollectJob/Index</td><td>/</td><td>157</td></tr><tr><td>/search/job</td><td>76</td></tr><tr><td>/job/132052007/</td><td>12</td></tr><tr><td>/job/103714549/</td><td>7</td></tr><tr><td>/job/131917478/</td><td>7</td></tr><tr><td rowspan="5" style="vertical-align:top;font-weight:600">/job-pair</td><td>/</td><td>619</td></tr><tr><td>/search/job</td><td>353</td></tr><tr><td>/job-pair</td><td>270</td></tr><tr><td>/search/gig</td><td>19</td></tr><tr><td>/job/132210260</td><td>5</td></tr><tr><td rowspan="5" style="vertical-align:top;font-weight:600">/Resume/Index</td><td>/</td><td>907</td></tr><tr><td>/search/job</td><td>345</td></tr><tr><td>/search/corp</td><td>6</td></tr><tr><td>/search/gig</td><td>5</td></tr><tr><td>/job/132475769</td><td>2</td></tr><tr><td rowspan="5" style="vertical-align:top;font-weight:600">/MailLink/LinkT.asp</td><td>/job/91598325/</td><td>11</td></tr><tr><td>/job/113057250/</td><td>10</td></tr><tr><td>/job/77381192/</td><td>8</td></tr><tr><td>/job/132213113/</td><td>7</td></tr><tr><td>/job/131941556/</td><td>6</td></tr><tr><td rowspan="5" style="vertical-align:top;font-weight:600">/membercenter/Index/</td><td>/</td><td>561</td></tr><tr><td>/search/job</td><td>153</td></tr><tr><td>/search/corp</td><td>5</td></tr><tr><td>/job/132475389/</td><td>3</td></tr><tr><td>/job/92217272/</td><td>3</td></tr></tbody>
+    </table>
+  </div>
+  <div class="card" style="margin-bottom:24px">
+    <h2>完整頁面轉換路徑排行 Top 30</h2>
+    <div class="subtitle">previousPageName → pageName 排行</div>
+    <table>
+      <thead><tr><th>#</th><th>上一頁</th><th>下一頁</th><th>次數</th></tr></thead>
+      <tbody><tr><td class="rank">1</td><td>/</td><td>/</td><td>59,115</td></tr><tr><td class="rank">2</td><td>/</td><td>/search/job</td><td>55,745</td></tr><tr><td class="rank">3</td><td>/search/job</td><td>/search/job</td><td>3,916</td></tr><tr><td class="rank">4</td><td>/login/Index</td><td>/</td><td>3,661</td></tr><tr><td class="rank">5</td><td>/search/job</td><td>/</td><td>2,149</td></tr><tr><td class="rank">6</td><td>/</td><td>/job-pair</td><td>1,642</td></tr><tr><td class="rank">7</td><td>/CorpNotification/Index</td><td>/</td><td>1,339</td></tr><tr><td class="rank">8</td><td>/</td><td>/search/corp</td><td>1,125</td></tr><tr><td class="rank">9</td><td>/ApplyRecord/Index</td><td>/</td><td>993</td></tr><tr><td class="rank">10</td><td>/Resume/Index</td><td>/</td><td>907</td></tr><tr><td class="rank">11</td><td>/search/job</td><td>/job-pair</td><td>836</td></tr><tr><td class="rank">12</td><td>/Login/Index</td><td>/</td><td>659</td></tr><tr><td class="rank">13</td><td>/Resume/ResumeEditNew</td><td>/</td><td>639</td></tr><tr><td class="rank">14</td><td>/job-pair</td><td>/</td><td>619</td></tr><tr><td class="rank">15</td><td>/</td><td>/search/gig</td><td>603</td></tr><tr><td class="rank">16</td><td>/membercenter/Index/</td><td>/</td><td>561</td></tr><tr><td class="rank">17</td><td>/search/category</td><td>/search/job</td><td>370</td></tr><tr><td class="rank">18</td><td>/job-pair</td><td>/search/job</td><td>353</td></tr><tr><td class="rank">19</td><td>/Resume/Index</td><td>/search/job</td><td>345</td></tr><tr><td class="rank">20</td><td>/job-pair</td><td>/job-pair</td><td>270</td></tr><tr><td class="rank">21</td><td>/Membercenter/Index</td><td>/</td><td>246</td></tr><tr><td class="rank">22</td><td>/login/Index</td><td>/search/job</td><td>238</td></tr><tr><td class="rank">23</td><td>/CompanyHistory/Index</td><td>/</td><td>236</td></tr><tr><td class="rank">24</td><td>/membercenter/Index</td><td>/</td><td>229</td></tr><tr><td class="rank">25</td><td>/CorpNotification/Index</td><td>/search/job</td><td>226</td></tr><tr><td class="rank">26</td><td>/ApplyRecord/Index</td><td>/search/job</td><td>202</td></tr><tr><td class="rank">27</td><td>/MemberCenter/Index</td><td>/</td><td>178</td></tr><tr><td class="rank">28</td><td>/login/index</td><td>/</td><td>177</td></tr><tr><td class="rank">29</td><td>/CollectJob/Index</td><td>/</td><td>157</td></tr><tr><td class="rank">30</td><td>/membercenter/Index/</td><td>/search/job</td><td>153</td></tr></tbody>
+    </table>
+  </div>
+<script>
+  // ── 初始進入頁面 Doughnut
+  new Chart(document.getElementById('entryDist'), {
+    type: 'doughnut',
+    data: {
+      labels: ["/search/job", "/", "/search/corp", "/search/gig", "/job/132474879", "/job/75827172", "/job/132054057/", "/job/99027586", "/job-pair", "/job/130421379", "/job/131970385", "/job/132052557/", "/job/132454268", "/job/132489715", "/search/intern"],
+      datasets: [{
+        data: [27352, 24336, 338, 92, 81, 75, 38, 38, 33, 33, 32, 29, 25, 25, 24],
+        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff", "#8338ec", "#ff006e", "#ffbe0b", "#80b918", "#00b4d8", "#e63946", "#457b9d", "#4361ee"],
+        borderWidth: 2, borderColor: '#fff'
+      }]
+    },
+    options: {
+      cutout: '55%',
+      plugins: {
+        legend: { position: 'right', labels: { font: { size: 12 }, padding: 8 } },
+        tooltip: { callbacks: {
+          label: ctx => {
+            const t = 52551;
+            return ` ${ctx.label}：${ctx.parsed.toLocaleString()}（${(ctx.parsed/t*100).toFixed(1)}%）`;
+          }
+        } }
+      }
+    }
+  });
+
+  // ── Top 20 導航路徑 Bar
+  new Chart(document.getElementById('navPairsBar'), {
+    type: 'bar',
+    data: {
+      labels: ["/ → /", "/ → /search/job", "/search/job → /search/job", "/login/Index → /", "/search/job → /", "/ → /job-pair", "/CorpNotification/Index → /", "/ → /search/corp", "/ApplyRecord/Index → /", "/Resume/Index → /", "/search/job → /job-pair", "/Login/Index → /", "/Resume/ResumeEditNew → /", "/job-pair → /", "/ → /search/gig", "/membercenter/Index/ → /", "/search/category → /search/job", "/job-pair → /search/job", "/Resume/Index → /search/job", "/job-pair → /job-pair"],
+      datasets: [{
+        label: '轉換次數',
+        data: [59115, 55745, 3916, 3661, 2149, 1642, 1339, 1125, 993, 907, 836, 659, 639, 619, 603, 561, 370, 353, 345, 270],
+        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff", "#8338ec", "#ff006e", "#ffbe0b", "#80b918", "#00b4d8", "#e63946", "#457b9d", "#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2"],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { title: { display: true, text: '轉換次數' } },
+        y: { grid: { display: false }, ticks: { font: { size: 11 } } }
+      }
+    }
+  });
+</script>
+
+</main>
+<footer>Generated 2026-04-13 17:58:51 +08:00 · operation-logs</footer>
+</body>
+</html>
