@@ -2,6 +2,52 @@ import Chart from "https://cdn.jsdelivr.net/npm/chart.js@4.4.7/auto/+esm";
 
 const chartCache = new Map();
 const colors = ["#38bdf8", "#8b5cf6", "#22c55e", "#f59e0b", "#ef4444", "#14b8a6"];
+const DEFAULT_VIEW_LABELS = {
+  kpis: {
+    total: "總事件",
+    views: "View",
+    clicks: "Click",
+    applies: "Apply",
+    sessions: "Sessions",
+    ctr: "CTR",
+    applyRate: "Apply Rate",
+    mobileRate: "Mobile %",
+  },
+  panels: {
+    trendTitle: "趨勢圖",
+    trendDesc: "每日 / 每小時 / AI vs 一般搜尋 / 應徵趨勢",
+    distributionTitle: "分佈圖",
+    distributionDesc: "裝置、來源、功能類別、搜尋結果頁",
+    rankingTitle: "排行圖",
+    rankingDesc: "Top feature、來源頁 / 目標頁、熱門互動",
+    tableTitle: "排行表",
+    tableDesc: "功能、來源、目標與熱門互動明細",
+  },
+};
+const VIEW_LABELS = {
+  navigation: {
+    kpis: {
+      total: "鏈路 Sessions",
+      views: "不重複鏈路",
+      clicks: "平均步數",
+      applies: "最長步數",
+      sessions: "Top 鏈路 Sessions",
+      ctr: "Top 鏈路占比",
+      applyRate: "常見入口頁",
+      mobileRate: "入口頁 Top Sessions",
+    },
+    panels: {
+      trendTitle: "完整鏈路排行",
+      trendDesc: "依 session 重建後的 Top 10 頁面導航鏈路",
+      distributionTitle: "鏈路步數分佈",
+      distributionDesc: "每條鏈路包含幾個不同頁面步驟",
+      rankingTitle: "常見入口頁",
+      rankingDesc: "完整鏈路最常出現的起始頁面",
+      tableTitle: "完整鏈路排行表",
+      tableDesc: "完整 session 頁面導航鏈路明細",
+    },
+  },
+};
 
 function destroyChart(id) {
   const chart = chartCache.get(id);
@@ -21,6 +67,13 @@ function renderChart(id, config) {
 function setKpi(id, value) {
   const node = document.getElementById(id);
   node.textContent = value;
+}
+
+function setText(id, value) {
+  const node = document.getElementById(id);
+  if (node) {
+    node.textContent = value;
+  }
 }
 
 function number(value) {
@@ -50,6 +103,26 @@ function renderEmptyCharts() {
   renderChart("trend-chart", { type: "line", data: empty });
   renderChart("distribution-chart", { type: "doughnut", data: empty });
   renderChart("ranking-chart", { type: "bar", data: empty });
+}
+
+function applyViewLabels(viewMode) {
+  const labels = VIEW_LABELS[viewMode] || DEFAULT_VIEW_LABELS;
+  setText("kpi-label-total", labels.kpis.total);
+  setText("kpi-label-views", labels.kpis.views);
+  setText("kpi-label-clicks", labels.kpis.clicks);
+  setText("kpi-label-applies", labels.kpis.applies);
+  setText("kpi-label-sessions", labels.kpis.sessions);
+  setText("kpi-label-ctr", labels.kpis.ctr);
+  setText("kpi-label-apply-rate", labels.kpis.applyRate);
+  setText("kpi-label-mobile-rate", labels.kpis.mobileRate);
+  setText("trend-panel-title", labels.panels.trendTitle);
+  setText("trend-panel-desc", labels.panels.trendDesc);
+  setText("distribution-panel-title", labels.panels.distributionTitle);
+  setText("distribution-panel-desc", labels.panels.distributionDesc);
+  setText("ranking-panel-title", labels.panels.rankingTitle);
+  setText("ranking-panel-desc", labels.panels.rankingDesc);
+  setText("table-panel-title", labels.panels.tableTitle);
+  setText("table-panel-desc", labels.panels.tableDesc);
 }
 
 function byName(outputs) {
@@ -236,19 +309,24 @@ function rankingRenderer(data) {
 }
 
 function navigationRenderer(data) {
+  const kpi = data.kpi?.[0] || {};
   const ranking = data.ranking || [];
+  const steps = data.steps || [];
   const entry = data.entry || [];
-  setKpi("kpi-total", ranking.length.toLocaleString());
-  setKpi("kpi-views", number(ranking[0]?.count).toLocaleString());
-  setKpi("kpi-clicks", entry.length.toLocaleString());
-  setKpi("kpi-applies", "--");
-  setKpi("kpi-sessions", "--");
-  setKpi("kpi-ctr", "--");
-  setKpi("kpi-apply-rate", "--");
-  setKpi("kpi-mobile-rate", "--");
+  const totalSessions = number(kpi.sessions);
+  const topChainSessions = number(ranking[0]?.count);
+  const topChainRate = totalSessions ? (topChainSessions / totalSessions) * 100 : 0;
+  setKpi("kpi-total", totalSessions.toLocaleString());
+  setKpi("kpi-views", number(kpi.unique_chains).toLocaleString());
+  setKpi("kpi-clicks", Number(kpi.avg_steps || 0).toFixed(2));
+  setKpi("kpi-applies", number(kpi.max_steps).toLocaleString());
+  setKpi("kpi-sessions", topChainSessions.toLocaleString());
+  setKpi("kpi-ctr", percent(topChainRate));
+  setKpi("kpi-apply-rate", entry[0]?.name || "--");
+  setKpi("kpi-mobile-rate", number(entry[0]?.count).toLocaleString());
 
-  renderChart("trend-chart", barConfig(ranking.slice(0, 10), "count", "target", "Flow"));
-  renderChart("distribution-chart", doughnutConfig(entry));
+  renderChart("trend-chart", barConfig(ranking.slice(0, 10), "count", "name", "Sessions"));
+  renderChart("distribution-chart", doughnutConfig(steps));
   renderChart("ranking-chart", barConfig(entry));
   return ranking;
 }
@@ -285,6 +363,7 @@ const renderers = {
 export function renderDashboard(viewMode, outputs) {
   const data = byName(outputs);
   const renderer = renderers[viewMode];
+  applyViewLabels(viewMode);
   if (!renderer) {
     resetKpis();
     renderEmptyCharts();
@@ -294,6 +373,7 @@ export function renderDashboard(viewMode, outputs) {
 }
 
 export function resetDashboard() {
+  applyViewLabels("default");
   resetKpis();
   renderEmptyCharts();
 }

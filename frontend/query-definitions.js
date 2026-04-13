@@ -268,25 +268,100 @@ function rankingPlan(filters) {
   };
 }
 
+function navigationChainCtes(filters) {
+  const pagePathFilter = filters.pagePath
+    ? `AND MAX(CASE WHEN page_path = ${quote(filters.pagePath)} THEN 1 ELSE 0 END) = 1`
+    : "";
+  return `
+    filtered_nav AS (
+      SELECT
+        session_id,
+        occurred_at,
+        COALESCE(page_path, '/') AS page_path
+      FROM events
+      WHERE ${dateClause(filters)}
+        AND event_type = 'view'
+        AND session_id IS NOT NULL
+        AND page_path IS NOT NULL
+    ),
+    dedup_nav AS (
+      SELECT
+        session_id,
+        occurred_at,
+        page_path,
+        LAG(page_path) OVER (
+          PARTITION BY session_id
+          ORDER BY occurred_at, page_path
+        ) AS previous_page
+      FROM filtered_nav
+    ),
+    chain_steps AS (
+      SELECT
+        session_id,
+        occurred_at,
+        page_path,
+        ROW_NUMBER() OVER (
+          PARTITION BY session_id
+          ORDER BY occurred_at, page_path
+        ) AS seq
+      FROM dedup_nav
+      WHERE previous_page IS NULL OR previous_page <> page_path
+    ),
+    session_chains AS (
+      SELECT
+        session_id,
+        MIN(occurred_at) AS started_at,
+        MAX(occurred_at) AS ended_at,
+        COUNT(*) AS steps,
+        MIN(page_path) FILTER (WHERE seq = 1) AS entry_page,
+        string_agg(page_path, ' -> ' ORDER BY seq) AS chain
+      FROM chain_steps
+      GROUP BY session_id
+      HAVING COUNT(*) >= 2
+      ${pagePathFilter}
+    )
+  `;
+}
+
 function navigationPlan(filters) {
   return {
-    summary: `頁面導航查詢：${filters.dateFrom} ~ ${filters.dateTo}`,
+    summary: `頁面導航鏈路查詢：${filters.dateFrom} ~ ${filters.dateTo}${filters.pagePath ? ` / 包含 ${filters.pagePath}` : ""}`,
     queries: {
-      ranking: `
+      kpi: `
+        WITH ${navigationChainCtes(filters)}
         SELECT
-          COALESCE(previous_page_path, '_entry_') AS source,
-          COALESCE(page_path, '/') AS target,
-          COUNT(*) AS count
-        FROM events
-        WHERE ${buildWhere(filters)}
-        GROUP BY 1, 2
+          COUNT(*) AS sessions,
+          COUNT(DISTINCT chain) AS unique_chains,
+          COALESCE(ROUND(AVG(steps), 2), 0) AS avg_steps,
+          COALESCE(MAX(steps), 0) AS max_steps
+        FROM session_chains
+      `,
+      ranking: `
+        WITH ${navigationChainCtes(filters)}
+        SELECT
+          chain AS name,
+          COUNT(*) AS count,
+          MAX(steps) AS steps
+        FROM session_chains
+        GROUP BY 1
         ORDER BY count DESC
         LIMIT 30
       `,
+      steps: `
+        WITH ${navigationChainCtes(filters)}
+        SELECT
+          CAST(steps AS VARCHAR) AS name,
+          COUNT(*) AS count
+        FROM session_chains
+        GROUP BY 1
+        ORDER BY CAST(name AS INTEGER)
+      `,
       entry: `
-        SELECT COALESCE(page_path, '/') AS name, COUNT(*) AS count
-        FROM events
-        WHERE ${buildWhere(filters, ["previous_page_path = '_entry_'"])}
+        WITH ${navigationChainCtes(filters)}
+        SELECT
+          entry_page AS name,
+          COUNT(*) AS count
+        FROM session_chains
         GROUP BY 1
         ORDER BY count DESC
         LIMIT 15

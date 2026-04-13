@@ -123,6 +123,8 @@ bash deploy.sh 30
 - `navigation`
 - `heatmap`
 
+其中 `navigation` 視角目前會以 `session_id + occurred_at` 重建完整 session 頁面鏈路，只保留 `view` 事件，並移除連續重複頁面。
+
 ---
 
 ## Dataset 與 Schema
@@ -147,6 +149,15 @@ Parquet schema 由 `common/parquet_schema.py` 定義，主表為 `events`，核�
 | `category_tab` | `metadata.categoryTab` |
 | `identity_type` | `metadata.identityType` |
 | `industry_tab` | `metadata.industryTab` |
+
+---
+
+## 導航鏈路定義
+
+- 單頁前端與 `page_navigation_report.py` 皆以 `session_id + occurred_at` 排序後的 `page_path` 序列重建完整鏈路
+- 僅納入 `event_type = 'view'` 的事件
+- 連續重複頁面會去重，避免同頁重複 view / refresh 汙染鏈路
+- 只保留至少 2 步的 session 作為有效導航鏈路
 
 ---
 

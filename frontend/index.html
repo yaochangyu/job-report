@@ -183,21 +183,21 @@
       </section>
 
       <section class="kpi-grid" id="kpi-grid">
-        <article class="kpi-card"><span>總事件</span><strong id="kpi-total">--</strong></article>
-        <article class="kpi-card"><span>View</span><strong id="kpi-views">--</strong></article>
-        <article class="kpi-card"><span>Click</span><strong id="kpi-clicks">--</strong></article>
-        <article class="kpi-card"><span>Apply</span><strong id="kpi-applies">--</strong></article>
-        <article class="kpi-card"><span>Sessions</span><strong id="kpi-sessions">--</strong></article>
-        <article class="kpi-card"><span>CTR</span><strong id="kpi-ctr">--</strong></article>
-        <article class="kpi-card"><span>Apply Rate</span><strong id="kpi-apply-rate">--</strong></article>
-        <article class="kpi-card"><span>Mobile %</span><strong id="kpi-mobile-rate">--</strong></article>
+        <article class="kpi-card"><span id="kpi-label-total">總事件</span><strong id="kpi-total">--</strong></article>
+        <article class="kpi-card"><span id="kpi-label-views">View</span><strong id="kpi-views">--</strong></article>
+        <article class="kpi-card"><span id="kpi-label-clicks">Click</span><strong id="kpi-clicks">--</strong></article>
+        <article class="kpi-card"><span id="kpi-label-applies">Apply</span><strong id="kpi-applies">--</strong></article>
+        <article class="kpi-card"><span id="kpi-label-sessions">Sessions</span><strong id="kpi-sessions">--</strong></article>
+        <article class="kpi-card"><span id="kpi-label-ctr">CTR</span><strong id="kpi-ctr">--</strong></article>
+        <article class="kpi-card"><span id="kpi-label-apply-rate">Apply Rate</span><strong id="kpi-apply-rate">--</strong></article>
+        <article class="kpi-card"><span id="kpi-label-mobile-rate">Mobile %</span><strong id="kpi-mobile-rate">--</strong></article>
       </section>
 
       <section class="chart-grid">
         <article class="panel chart-panel">
           <div class="panel__header">
-            <h2>趨勢圖</h2>
-            <p>每日 / 每小時 / AI vs 一般搜尋 / 應徵趨勢</p>
+            <h2 id="trend-panel-title">趨勢圖</h2>
+            <p id="trend-panel-desc">每日 / 每小時 / AI vs 一般搜尋 / 應徵趨勢</p>
           </div>
           <div class="chart-canvas-wrap">
             <canvas id="trend-chart"></canvas>
@@ -206,8 +206,8 @@
 
         <article class="panel chart-panel">
           <div class="panel__header">
-            <h2>分佈圖</h2>
-            <p>裝置、來源、功能類別、搜尋結果頁</p>
+            <h2 id="distribution-panel-title">分佈圖</h2>
+            <p id="distribution-panel-desc">裝置、來源、功能類別、搜尋結果頁</p>
           </div>
           <div class="chart-canvas-wrap">
             <canvas id="distribution-chart"></canvas>
@@ -216,8 +216,8 @@
 
         <article class="panel chart-panel">
           <div class="panel__header">
-            <h2>排行圖</h2>
-            <p>Top feature、來源頁 / 目標頁、熱門互動</p>
+            <h2 id="ranking-panel-title">排行圖</h2>
+            <p id="ranking-panel-desc">Top feature、來源頁 / 目標頁、熱門互動</p>
           </div>
           <div class="chart-canvas-wrap">
             <canvas id="ranking-chart"></canvas>
@@ -228,8 +228,8 @@
       <section class="table-grid">
         <article class="panel table-panel">
           <div class="panel__header">
-            <h2>排行表</h2>
-            <p>功能、來源、目標與熱門互動明細</p>
+            <h2 id="table-panel-title">排行表</h2>
+            <p id="table-panel-desc">功能、來源、目標與熱門互動明細</p>
           </div>
           <div class="table-wrap">
             <table>

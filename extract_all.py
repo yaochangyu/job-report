@@ -75,10 +75,10 @@ from page_ranking_report import (
     query_category_summary,
 )
 from page_navigation_report import (
-    query_nav_pairs,
+    query_chain_kpi,
+    query_chain_ranking,
+    query_chain_steps,
     query_entry_pages,
-    query_page_sources,
-    query_page_destinations,
 )
 from click_heatmap_report import query_page_clicks
 
@@ -128,10 +128,10 @@ def _build_queries(time_from: str, time_to: str) -> list[tuple[str, str, callabl
         # page-ranking（query_category_summary 依賴 query_feature_ranking 結果，特殊處理）
         ("page-ranking",     "query_feature_ranking",       lambda: query_feature_ranking(time_from, time_to)),
         # page-navigation
-        ("page-navigation",  "query_nav_pairs",             lambda: query_nav_pairs(time_from, time_to)),
+        ("page-navigation",  "query_chain_kpi",             lambda: query_chain_kpi(time_from, time_to)),
+        ("page-navigation",  "query_chain_ranking",         lambda: query_chain_ranking(time_from, time_to)),
+        ("page-navigation",  "query_chain_steps",           lambda: query_chain_steps(time_from, time_to)),
         ("page-navigation",  "query_entry_pages",           lambda: query_entry_pages(time_from, time_to)),
-        ("page-navigation",  "query_page_sources",          lambda: query_page_sources(time_from, time_to)),
-        ("page-navigation",  "query_page_destinations",     lambda: query_page_destinations(time_from, time_to)),
     ]
 
     # click-heatmap：每個頁面各一筆

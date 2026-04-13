@@ -63,7 +63,7 @@ const VIEW_META = {
   navigation: {
     title: "頁面導航",
     subtitle: "Page Navigation",
-    desc: "分析來源頁、目標頁與流向排行。",
+    desc: "依 session 還原完整頁面鏈路，查看常見導航序列與入口頁。",
   },
   heatmap: {
     title: "點擊熱點",
