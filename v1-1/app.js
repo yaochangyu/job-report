@@ -363,6 +363,15 @@ async function bootstrap() {
     state.lastQuery = registeredFiles.length
       ? `DuckDB 已載入 ${registeredFiles.length} 個日期分區`
       : "manifest 已載入，但目前沒有可查詢的 Parquet 檔";
+
+    // DuckDB 載入完成後自動執行查詢
+    if (runtime.hasEventsView) {
+      renderState(state);
+      const form = document.getElementById("query-form");
+      const filters = collectFormFilters(form, state.selectedViewMode);
+      await runQuery(state, filters);
+      return;
+    }
   } catch (error) {
     state.lastQuery = error instanceof Error ? error.message : String(error);
   }
