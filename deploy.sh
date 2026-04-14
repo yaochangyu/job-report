@@ -25,6 +25,7 @@ if [ -n "$VERSION" ]; then
     TARGET_DIR="$TMP_DIR/$VERSION"
     echo "▶ 部署到版本目錄: $VERSION"
     mkdir -p "$TARGET_DIR"
+    find "$TARGET_DIR" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
     cp -r "$OUTPUT_DIR/." "$TARGET_DIR/"
 
     # 產生根目錄導向 index.html

@@ -7,11 +7,13 @@ job-report-1/
 │   ├── page-click-analysis.plan.md    # ✅ 已完成：Dashboard 8 實作計畫
 │   ├── project-cleanup.plan.md        # ✅ 已完成：專案垃圾檔 / legacy 清理計畫
 │   ├── report-data-pipeline.plan.md   # ✅ 已完成：三層資料管線重構計畫
+│   ├── v1-2-report-shell-sync.plan.md  # ✅ 已完成：v1-2 報表頁接回 v1-1 導覽殼與查詢條件的實作計畫
 │   └── v1-2-ui-sync.plan.md           # ✅ 已完成：v1-2 UI 對齊 v1-1 的實作計畫
 ├── common/
 │   ├── __init__.py
 │   ├── data_pipeline.py               # T1/T2/T3 資料管線契約與路徑定義
 │   ├── es_client.py                    # Grafana _msearch 共用封裝
+│   ├── frontend_shell.py              # GitHub Pages v1-2 共用前端殼 HTML 模板
 │   ├── raw_events.py                  # T1 raw 事件欄位契約與正規化工具
 │   ├── t1_reader.py                   # 讀取 T1 raw parquet 的共用工具
 │   ├── html_template.py                # HTML header/footer/style 共用模板
@@ -27,6 +29,11 @@ job-report-1/
 │   ├── page-navigation/index.html      # Dashboard 7 報告產出
 │   └── click-heatmap/index.html        # Dashboard 8 報告產出
 ├── category_tab_report.py             # 既有報告（保留）
+├── app.css                            # v1-2 / GitHub Pages 共用前端殼樣式
+├── app.js                             # v1-2 / GitHub Pages 共用前端殼啟動邏輯
+├── dashboard-renderers.js             # 各 dashboard 視角的前端 renderer
+├── query-definitions.js               # DuckDB 前端查詢定義
+├── site-manifest.json                 # 前端站點資產與資料集 manifest
 ├── traffic_overview_report.py         # Dashboard 1：整體流量概覽
 ├── search_behavior_report.py          # Dashboard 2：搜尋行為分析
 ├── apply_conversion_report.py         # Dashboard 3：應徵轉換分析
