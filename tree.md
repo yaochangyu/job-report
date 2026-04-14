@@ -34,6 +34,7 @@ job-report-1/
 ├── click_heatmap_discover.py          # 輔助：自動探索頁面可點擊元素
 ├── click_heatmap_config.json          # 頁面 URL + featureId → 元素位置 對應表
 ├── build_apply_conversion_t2.py       # 從 T1 產出 apply-conversion 的 T2 parquet
+├── build_click_heatmap_t2.py          # 從 T1 產出 click-heatmap 的 T2 parquet
 ├── build_device_platform_t2.py        # 從 T1 產出 device-platform 的 T2 parquet
 ├── build_frontend_bundle.py           # 將 v1-1 前端資產與 dataset 複製到 output/
 ├── build_feature_engagement_t2.py     # 從 T1 產出 feature-engagement 的 T2 parquet
@@ -50,6 +51,7 @@ job-report-1/
 │   ├── index.html                     # v1-1 主入口頁
 │   └── query-definitions.js           # v1-1 DuckDB 查詢定義
 ├── render_apply_conversion_t3.py      # 從 T2 產出 apply-conversion HTML
+├── render_click_heatmap_t3.py         # 從 T2 產出 click-heatmap HTML
 ├── render_device_platform_t3.py       # 從 T2 產出 device-platform HTML
 ├── render_feature_engagement_t3.py    # 從 T2 產出 feature-engagement HTML
 ├── render_page_navigation_t3.py       # 從 T2 產出 page-navigation HTML
@@ -63,6 +65,7 @@ job-report-1/
 ├── run_traffic_overview_pipeline.py   # traffic-overview 的 extract→transform→render PoC
 ├── run_all.py                         # 一鍵執行所有報告 + 產生導覽頁
 ├── run_apply_conversion_pipeline.py   # apply-conversion 的 extract→transform→render PoC
+├── run_click_heatmap_pipeline.py      # click-heatmap 的 extract→transform→render PoC
 ├── grafana-dashboard.plan.md          # Dashboard 實作計畫（Grafana JSON 匯出待完成）
 ├── run_feature_engagement_pipeline.py # feature-engagement 的 extract→transform→render PoC
 ├── report-data-pipeline.plan.md       # ES→raw→report→html 三層資料管線重構計畫
