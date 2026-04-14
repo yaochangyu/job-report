@@ -215,8 +215,8 @@ def main() -> None:
     extra_args = ["--from", date_from, "--to", date_to, "--keep-existing"]
 
     print(f"[INFO] 查詢區間：{date_from} ～ {date_to}")
-    print("[INFO] 先抽取 T1 raw 資料...")
-    extract_raw_events(date_from, date_to)
+    print("[INFO] 先同步 T1 raw 資料（優先重用本地快取）...")
+    extract_raw_events(date_from, date_to, keep_existing=True)
     print(f"[INFO] 開始執行 {len(REPORTS)} 份報告...\n")
 
     results = []
