@@ -134,6 +134,7 @@ def _write_manifest(date_from: str, date_to: str, output_dir: Path, total_rows: 
         "rows": total_rows,
         "updated_at": generated_now(),
     }
+    traffic_overview["available_snapshots"] = sorted(traffic_overview["snapshots"].keys())
 
     manifest["tier"] = "t2-report"
     manifest["schema_version"] = 1
