@@ -42,7 +42,7 @@ T2_REPORT_MANIFEST_PATH = MANIFEST_DIR / "t2-report-manifest.json"
 T3_RENDER_MANIFEST_PATH = MANIFEST_DIR / "t3-render-manifest.json"
 
 RAW_PARTITION_RULE = "date=YYYY-MM-DD"
-REPORT_PARTITION_RULE = "report-name/date=YYYY-MM-DD"
+REPORT_PARTITION_RULE = "report-name/range=YYYY-MM-DD_YYYY-MM-DD"
 RENDER_PARTITION_RULE = "render-output/<version-or-latest>"
 
 TIER_CONTRACTS: dict[DataTier, TierContract] = {
@@ -101,3 +101,9 @@ def t2_report_root_dir(report_name: str) -> Path:
     """回傳 T2 單一報表根目錄。"""
 
     return T2_REPORT_DIR / report_name
+
+
+def t2_report_range_dir(report_name: str, date_from: str, date_to: str) -> Path:
+    """回傳 T2 單一報表指定日期區間目錄。"""
+
+    return t2_report_root_dir(report_name) / f"range={date_from}_{date_to}"
