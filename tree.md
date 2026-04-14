@@ -3,6 +3,9 @@
 ```
 job-report-1/
 ├── .archive/
+│   ├── grafana-dashboard.plan.md      # ✅ 已完成：原始 Dashboard 規劃總計畫
+│   ├── page-click-analysis.plan.md    # ✅ 已完成：Dashboard 8 實作計畫
+│   ├── project-cleanup.plan.md        # ✅ 已完成：專案垃圾檔 / legacy 清理計畫
 │   ├── report-data-pipeline.plan.md   # ✅ 已完成：三層資料管線重構計畫
 │   └── v1-2-ui-sync.plan.md           # ✅ 已完成：v1-2 UI 對齊 v1-1 的實作計畫
 ├── common/
@@ -37,7 +40,6 @@ job-report-1/
 ├── build_apply_conversion_t2.py       # 從 T1 產出 apply-conversion 的 T2 parquet
 ├── build_click_heatmap_t2.py          # 從 T1 產出 click-heatmap 的 T2 parquet
 ├── build_device_platform_t2.py        # 從 T1 產出 device-platform 的 T2 parquet
-├── build_frontend_bundle.py           # Legacy helper：僅複製前端靜態資產到 output/
 ├── build_feature_engagement_t2.py     # 從 T1 產出 feature-engagement 的 T2 parquet
 ├── build_page_navigation_t2.py        # 從 T1 產出 page-navigation 的 T2 parquet
 ├── build_page_ranking_t2.py           # 從 T1 產出 page-ranking 的 T2 parquet
@@ -45,12 +47,6 @@ job-report-1/
 ├── build_traffic_overview_t2.py       # 從 T1 產出 traffic-overview 的 T2 parquet
 ├── deploy.sh                          # 一鍵產生報告並部署到 GitHub Pages
 ├── extract_raw_events.py              # 從 ES 抽取 T1 raw 事件 parquet
-├── frontend/
-│   ├── app.css                        # v1-1 共用前端樣式
-│   ├── app.js                         # v1-1 SPA 入口互動邏輯
-│   ├── dashboard-renderers.js         # v1-1 圖表與表格渲染邏輯
-│   ├── index.html                     # v1-1 主入口頁
-│   └── query-definitions.js           # v1-1 DuckDB 查詢定義
 ├── render_apply_conversion_t3.py      # 從 T2 產出 apply-conversion HTML
 ├── render_click_heatmap_t3.py         # 從 T2 產出 click-heatmap HTML
 ├── render_device_platform_t3.py       # 從 T2 產出 device-platform HTML
@@ -67,10 +63,7 @@ job-report-1/
 ├── run_all.py                         # 一鍵執行所有報告 + 產生導覽頁
 ├── run_apply_conversion_pipeline.py   # apply-conversion 的 extract→transform→render PoC
 ├── run_click_heatmap_pipeline.py      # click-heatmap 的 extract→transform→render PoC
-├── grafana-dashboard.plan.md          # Dashboard 實作計畫（Grafana JSON 匯出待完成）
 ├── run_feature_engagement_pipeline.py # feature-engagement 的 extract→transform→render PoC
-├── archive/
-│   └── page-click-analysis.plan.md   # ✅ 已完成：Dashboard 8 實作計畫
 ├── pyproject.toml                     # uv 專案設定
 ├── .python-version                    # Python 版本
 └── tree.md                            # 本檔案
