@@ -88,6 +88,8 @@ output/
     - `render`
   - 調整 `deploy.sh`，讓 GitHub Pages 只帶需要的 HTML / 前端資產 / 輕量資料，不部署 raw parquet。
   - **為什麼需要這一步**：若部署流程不一起調整，前面重構完資料層，最後仍可能把大資料整包帶上線。
+  - PoC：
+    - [x] **Step 8.1 — traffic-overview 串接 extract → transform → render**
 
 - [ ] **Step 9 — 規劃 manifest 與版本資訊**
   - 為 `raw` 與 `report` 層建立 manifest，紀錄：
