@@ -29,6 +29,8 @@ Thumbs.db
 
 # Output (generated reports)
 output/
+dataset/
+store.db
 
 # Secrets / credentials
 .env
