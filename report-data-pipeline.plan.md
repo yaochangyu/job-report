@@ -58,6 +58,7 @@ output/
     - [x] **Step 4.4 — page-ranking 改讀 T1 raw parquet**
     - [x] **Step 4.5 — device-platform 改讀 T1 raw parquet**
     - [x] **Step 4.6 — apply-conversion 改讀 T1 raw parquet**
+    - [x] **Step 4.7 — feature-engagement 改讀 T1 raw parquet**
 
 - [ ] **Step 5 — 為每份報表輸出 report parquet**
   - 各報表分析完成後，將輸出寫入 `dataset/report/<report-name>/`。
@@ -70,6 +71,7 @@ output/
     - [x] **Step 5.4 — page-ranking 輸出 T2 report parquet**
     - [x] **Step 5.5 — device-platform 輸出 T2 report parquet**
     - [x] **Step 5.6 — apply-conversion 輸出 T2 report parquet**
+    - [x] **Step 5.7 — feature-engagement 輸出 T2 report parquet**
 
 - [ ] **Step 6 — 定義各報表的 report parquet schema**
   - 逐一列出各報表最終會輸出的表結構，例如：
@@ -86,6 +88,7 @@ output/
     - [x] **Step 6.4 — 定義 page-ranking 的 T2 schema 與 manifest**
     - [x] **Step 6.5 — 定義 device-platform 的 T2 schema 與 manifest**
     - [x] **Step 6.6 — 定義 apply-conversion 的 T2 schema 與 manifest**
+    - [x] **Step 6.7 — 定義 feature-engagement 的 T2 schema 與 manifest**
 
 - [ ] **Step 7 — 重構 HTML 產生器只讀 report parquet**
   - 讓 HTML 產生器從 `dataset/report/` 讀取資料，不直接碰 raw parquet。
@@ -100,6 +103,7 @@ output/
     - [x] **Step 7.4 — page-ranking 從 T2 產出 HTML**
     - [x] **Step 7.5 — device-platform 從 T2 產出 HTML**
     - [x] **Step 7.6 — apply-conversion 從 T2 產出 HTML**
+    - [x] **Step 7.7 — feature-engagement 從 T2 產出 HTML**
 
 - [ ] **Step 8 — 重整 `run_all.py` 與部署流程**
   - 將流程拆成清楚的三段：
@@ -115,6 +119,7 @@ output/
     - [x] **Step 8.4 — page-ranking 串接 extract → transform → render**
     - [x] **Step 8.5 — device-platform 串接 extract → transform → render**
     - [x] **Step 8.6 — apply-conversion 串接 extract → transform → render**
+    - [x] **Step 8.7 — feature-engagement 串接 extract → transform → render**
 
 - [x] **Step 9 — 規劃 manifest 與版本資訊**
   - 為 `raw` 與 `report` 層建立 manifest，紀錄：

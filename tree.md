@@ -36,6 +36,7 @@ job-report-1/
 ├── build_apply_conversion_t2.py       # 從 T1 產出 apply-conversion 的 T2 parquet
 ├── build_device_platform_t2.py        # 從 T1 產出 device-platform 的 T2 parquet
 ├── build_frontend_bundle.py           # 將 v1-1 前端資產與 dataset 複製到 output/
+├── build_feature_engagement_t2.py     # 從 T1 產出 feature-engagement 的 T2 parquet
 ├── build_page_navigation_t2.py        # 從 T1 產出 page-navigation 的 T2 parquet
 ├── build_page_ranking_t2.py           # 從 T1 產出 page-ranking 的 T2 parquet
 ├── build_search_behavior_t2.py        # 從 T1 產出 search-behavior 的 T2 parquet
@@ -50,6 +51,7 @@ job-report-1/
 │   └── query-definitions.js           # v1-1 DuckDB 查詢定義
 ├── render_apply_conversion_t3.py      # 從 T2 產出 apply-conversion HTML
 ├── render_device_platform_t3.py       # 從 T2 產出 device-platform HTML
+├── render_feature_engagement_t3.py    # 從 T2 產出 feature-engagement HTML
 ├── render_page_navigation_t3.py       # 從 T2 產出 page-navigation HTML
 ├── render_page_ranking_t3.py          # 從 T2 產出 page-ranking HTML
 ├── render_search_behavior_t3.py       # 從 T2 產出 search-behavior HTML
@@ -62,6 +64,7 @@ job-report-1/
 ├── run_all.py                         # 一鍵執行所有報告 + 產生導覽頁
 ├── run_apply_conversion_pipeline.py   # apply-conversion 的 extract→transform→render PoC
 ├── grafana-dashboard.plan.md          # Dashboard 實作計畫（Grafana JSON 匯出待完成）
+├── run_feature_engagement_pipeline.py # feature-engagement 的 extract→transform→render PoC
 ├── report-data-pipeline.plan.md       # ES→raw→report→html 三層資料管線重構計畫
 ├── archive/
 │   └── page-click-analysis.plan.md   # ✅ 已完成：Dashboard 8 實作計畫
