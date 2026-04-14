@@ -9,6 +9,7 @@ job-report-1/
 │   ├── data_pipeline.py               # T1/T2/T3 資料管線契約與路徑定義
 │   ├── es_client.py                    # Grafana _msearch 共用封裝
 │   ├── raw_events.py                  # T1 raw 事件欄位契約與正規化工具
+│   ├── t1_reader.py                   # 讀取 T1 raw parquet 的共用工具
 │   ├── html_template.py                # HTML header/footer/style 共用模板
 │   └── chart_helpers.py               # Chart.js 輔助函式
 ├── output/
@@ -33,6 +34,7 @@ job-report-1/
 ├── click_heatmap_discover.py          # 輔助：自動探索頁面可點擊元素
 ├── click_heatmap_config.json          # 頁面 URL + featureId → 元素位置 對應表
 ├── build_frontend_bundle.py           # 將 v1-1 前端資產與 dataset 複製到 output/
+├── build_traffic_overview_t2.py       # 從 T1 產出 traffic-overview 的 T2 parquet
 ├── deploy.sh                          # 一鍵產生報告並部署到 GitHub Pages
 ├── extract_raw_events.py              # 從 ES 抽取 T1 raw 事件 parquet
 ├── frontend/
@@ -41,6 +43,7 @@ job-report-1/
 │   ├── dashboard-renderers.js         # v1-1 圖表與表格渲染邏輯
 │   ├── index.html                     # v1-1 主入口頁
 │   └── query-definitions.js           # v1-1 DuckDB 查詢定義
+├── render_traffic_overview_t3.py      # 從 T2 產出 traffic-overview HTML
 ├── run_all.py                         # 一鍵執行所有報告 + 產生導覽頁
 ├── grafana-dashboard.plan.md          # Dashboard 實作計畫（Grafana JSON 匯出待完成）
 ├── report-data-pipeline.plan.md       # ES→raw→report→html 三層資料管線重構計畫

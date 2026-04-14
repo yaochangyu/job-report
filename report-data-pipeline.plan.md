@@ -51,11 +51,15 @@ output/
   - 調整各報表產生器，改成從本地 `dataset/raw/` 讀資料。
   - 每份報表只保留自己的查詢邏輯與指標計算，不再關心 ES 查詢細節。
   - **為什麼需要這一步**：這一步會把「資料取得」與「資料分析」分離，讓報表邏輯變得可重跑、可測、可離線執行。
+  - PoC：
+    - [x] **Step 4.1 — traffic-overview 改讀 T1 raw parquet**
 
 - [ ] **Step 5 — 為每份報表輸出 report parquet**
   - 各報表分析完成後，將輸出寫入 `dataset/report/<report-name>/`。
   - 每份報表只存自己需要的結果欄位，不攜帶多餘明細。
   - **為什麼需要這一步**：前端與 HTML 產生器應該吃小而穩定的報表資料，而不是整包原始事件 parquet。
+  - PoC：
+    - [x] **Step 5.1 — traffic-overview 輸出 T2 report parquet**
 
 - [ ] **Step 6 — 定義各報表的 report parquet schema**
   - 逐一列出各報表最終會輸出的表結構，例如：
@@ -65,6 +69,8 @@ output/
     - 排行資料
     - 導航鏈路資料
   - **為什麼需要這一步**：HTML 產生器與前端畫面必須依賴穩定輸入；先定 schema 才能避免畫面層反過來綁死分析層。
+  - PoC：
+    - [x] **Step 6.1 — 定義 traffic-overview 的 T2 schema 與 manifest**
 
 - [ ] **Step 7 — 重構 HTML 產生器只讀 report parquet**
   - 讓 HTML 產生器從 `dataset/report/` 讀取資料，不直接碰 raw parquet。
@@ -72,6 +78,8 @@ output/
     - 直接在後端產生完成版 HTML，或
     - 將 report parquet 再轉成小型 JSON 給前端讀取
   - **為什麼需要這一步**：這一步是改善載入速度的核心，因為畫面層不該直接載入數十 MB 的原始資料。
+  - PoC：
+    - [x] **Step 7.1 — traffic-overview 從 T2 產出 HTML**
 
 - [ ] **Step 8 — 重整 `run_all.py` 與部署流程**
   - 將流程拆成清楚的三段：
