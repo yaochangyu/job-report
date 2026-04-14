@@ -212,7 +212,7 @@ def main() -> None:
     if OUTPUT_DIR.exists():
         shutil.rmtree(OUTPUT_DIR)
 
-    extra_args = ["--from", date_from, "--to", date_to, "--keep-existing"]
+    extra_args = ["--from", date_from, "--to", date_to, "--skip-extract"]
 
     print(f"[INFO] 查詢區間：{date_from} ～ {date_to}")
     print("[INFO] 先同步 T1 raw 資料（優先重用本地快取）...")
