@@ -44,6 +44,7 @@ job-report-1/
 │   ├── index.html                     # v1-1 主入口頁
 │   └── query-definitions.js           # v1-1 DuckDB 查詢定義
 ├── render_traffic_overview_t3.py      # 從 T2 產出 traffic-overview HTML
+├── run_traffic_overview_pipeline.py   # traffic-overview 的 extract→transform→render PoC
 ├── run_all.py                         # 一鍵執行所有報告 + 產生導覽頁
 ├── grafana-dashboard.plan.md          # Dashboard 實作計畫（Grafana JSON 匯出待完成）
 ├── report-data-pipeline.plan.md       # ES→raw→report→html 三層資料管線重構計畫

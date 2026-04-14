@@ -171,14 +171,15 @@ def write_manifest(results: dict[str, dict[str, Any]]) -> None:
     )
 
 
-def main() -> None:
-    args = parse_args()
+def extract_raw_events(date_from: str, date_to: str, keep_existing: bool = False) -> dict[str, dict[str, Any]]:
+    """抽取指定日期區間的 T1 raw parquet。"""
+
     ensure_pipeline_directories()
     results: dict[str, dict[str, Any]] = {}
 
-    for target_date in resolve_dates(args):
+    for target_date in resolve_dates(argparse.Namespace(days=None, date_from=date_from, date_to=date_to)):
         output_path = t1_raw_date_dir(target_date) / PARQUET_FILE_NAME
-        if args.keep_existing and output_path.exists():
+        if keep_existing and output_path.exists():
             print(f"[SKIP] {target_date} 已存在：{output_path}")
             results[target_date] = {
                 "path": str(output_path.relative_to(output_path.parents[2])),
@@ -198,7 +199,22 @@ def main() -> None:
         }
 
     write_manifest(results)
+    return results
+
+
+def main() -> None:
+    args = parse_args()
+    date_from, date_to = resolve_date_window(args)
+    results = extract_raw_events(date_from, date_to, keep_existing=args.keep_existing)
     print(f"[OK] T1 manifest 已更新：{T1_RAW_MANIFEST_PATH}")
+    print(f"[OK] 完成日期：{', '.join(sorted(results))}")
+
+
+def resolve_date_window(args: argparse.Namespace) -> tuple[str, str]:
+    """將 CLI 參數轉為日期區間。"""
+
+    dates = resolve_dates(args)
+    return dates[0], dates[-1]
 
 
 if __name__ == "__main__":
