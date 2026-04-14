@@ -33,6 +33,7 @@ job-report-1/
 ├── click_heatmap_report.py            # Dashboard 8：頁面點擊熱點分析
 ├── click_heatmap_discover.py          # 輔助：自動探索頁面可點擊元素
 ├── click_heatmap_config.json          # 頁面 URL + featureId → 元素位置 對應表
+├── build_device_platform_t2.py        # 從 T1 產出 device-platform 的 T2 parquet
 ├── build_frontend_bundle.py           # 將 v1-1 前端資產與 dataset 複製到 output/
 ├── build_page_navigation_t2.py        # 從 T1 產出 page-navigation 的 T2 parquet
 ├── build_page_ranking_t2.py           # 從 T1 產出 page-ranking 的 T2 parquet
@@ -46,10 +47,12 @@ job-report-1/
 │   ├── dashboard-renderers.js         # v1-1 圖表與表格渲染邏輯
 │   ├── index.html                     # v1-1 主入口頁
 │   └── query-definitions.js           # v1-1 DuckDB 查詢定義
+├── render_device_platform_t3.py       # 從 T2 產出 device-platform HTML
 ├── render_page_navigation_t3.py       # 從 T2 產出 page-navigation HTML
 ├── render_page_ranking_t3.py          # 從 T2 產出 page-ranking HTML
 ├── render_search_behavior_t3.py       # 從 T2 產出 search-behavior HTML
 ├── render_traffic_overview_t3.py      # 從 T2 產出 traffic-overview HTML
+├── run_device_platform_pipeline.py    # device-platform 的 extract→transform→render PoC
 ├── run_page_navigation_pipeline.py    # page-navigation 的 extract→transform→render PoC
 ├── run_page_ranking_pipeline.py       # page-ranking 的 extract→transform→render PoC
 ├── run_search_behavior_pipeline.py    # search-behavior 的 extract→transform→render PoC
