@@ -36,7 +36,7 @@ job-report-1/
 ├── build_apply_conversion_t2.py       # 從 T1 產出 apply-conversion 的 T2 parquet
 ├── build_click_heatmap_t2.py          # 從 T1 產出 click-heatmap 的 T2 parquet
 ├── build_device_platform_t2.py        # 從 T1 產出 device-platform 的 T2 parquet
-├── build_frontend_bundle.py           # 將 v1-1 前端資產與 dataset 複製到 output/
+├── build_frontend_bundle.py           # Legacy helper：僅複製前端靜態資產到 output/
 ├── build_feature_engagement_t2.py     # 從 T1 產出 feature-engagement 的 T2 parquet
 ├── build_page_navigation_t2.py        # 從 T1 產出 page-navigation 的 T2 parquet
 ├── build_page_ranking_t2.py           # 從 T1 產出 page-ranking 的 T2 parquet
