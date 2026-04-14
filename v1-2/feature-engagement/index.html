@@ -66,29 +66,29 @@
 <body>
 <header>
   <h1>功能互動分析 — Feature Engagement</h1>
-  <p>資料來源：operation-logs（Elasticsearch） · 查詢區間：2026-04-14T00:00:00+08:00 ～ now</p>
-  <span class="badge">產生時間：2026-04-14 11:53:23 +08:00</span>
+  <p>資料來源：operation-logs（Elasticsearch） · 查詢區間：2026-04-08T00:00:00+08:00 ～ 2026-04-14T23:59:59+08:00</p>
+  <span class="badge">產生時間：2026-04-14 15:18:29 +08:00</span>
 </header>
 <main>
   <div class="kpi-grid">
     <div class="kpi-card" style="--accent:#4361ee">
       <div class="label">探索職缺</div>
-      <div class="value">1,075</div>
+      <div class="value">34,178</div>
       <div class="sub">organic + corp</div>
     </div>
     <div class="kpi-card" style="--accent:#7209b7">
       <div class="label">探索企業</div>
-      <div class="value">345</div>
+      <div class="value">9,173</div>
       <div class="sub">各企業探索入口</div>
     </div>
     <div class="kpi-card" style="--accent:#f72585">
       <div class="label">身份辨識</div>
-      <div class="value">1,126</div>
+      <div class="value">16,505</div>
       <div class="sub">7 種身份類型</div>
     </div>
     <div class="kpi-card" style="--accent:#06d6a0">
       <div class="label">新聞互動</div>
-      <div class="value">84</div>
+      <div class="value">1,750</div>
       <div class="sub">news-card 點擊</div>
     </div>  </div>  <div class="chart-grid">
   <div class="card">
@@ -133,125 +133,134 @@
   </div>  </div>
   <div class="card" style="margin-bottom:24px">
     <h2>身份辨識詳細數據</h2>
-    <div class="subtitle">共 1,126 筆</div>
+    <div class="subtitle">共 16,505 筆</div>
     <table>
       <thead><tr><th>#</th><th>身份</th><th>事件數</th><th>視覺</th><th>佔比</th></tr></thead>
       <tbody>
         <tr>
           <td class="rank">1</td>
-          <td>worker</td>
-          <td>349</td>
+          <td>returning</td>
+          <td>4,869</td>
           <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:31.0%"></div></div>
+            <div class="bar-bg"><div class="bar-fill" style="width:29.5%"></div></div>
           </td>
-          <td class="pct">31.0%</td>
+          <td class="pct">29.5%</td>
         </tr>
         <tr>
           <td class="rank">2</td>
-          <td>returning</td>
-          <td>296</td>
+          <td>worker</td>
+          <td>3,863</td>
           <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:26.3%"></div></div>
+            <div class="bar-bg"><div class="bar-fill" style="width:23.4%"></div></div>
           </td>
-          <td class="pct">26.3%</td>
+          <td class="pct">23.4%</td>
         </tr>
         <tr>
           <td class="rank">3</td>
           <td>student</td>
-          <td>176</td>
+          <td>2,666</td>
           <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:15.6%"></div></div>
+            <div class="bar-bg"><div class="bar-fill" style="width:16.2%"></div></div>
           </td>
-          <td class="pct">15.6%</td>
+          <td class="pct">16.2%</td>
         </tr>
         <tr>
           <td class="rank">4</td>
           <td>senior</td>
-          <td>111</td>
+          <td>1,593</td>
           <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:9.9%"></div></div>
+            <div class="bar-bg"><div class="bar-fill" style="width:9.7%"></div></div>
           </td>
-          <td class="pct">9.9%</td>
+          <td class="pct">9.7%</td>
         </tr>
         <tr>
           <td class="rank">5</td>
           <td>fresh</td>
-          <td>107</td>
+          <td>1,585</td>
           <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:9.5%"></div></div>
+            <div class="bar-bg"><div class="bar-fill" style="width:9.6%"></div></div>
           </td>
-          <td class="pct">9.5%</td>
+          <td class="pct">9.6%</td>
         </tr>
         <tr>
           <td class="rank">6</td>
           <td>personal</td>
-          <td>87</td>
+          <td>971</td>
           <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:7.7%"></div></div>
+            <div class="bar-bg"><div class="bar-fill" style="width:5.9%"></div></div>
           </td>
-          <td class="pct">7.7%</td>
+          <td class="pct">5.9%</td>
+        </tr>
+        <tr>
+          <td class="rank">7</td>
+          <td>professional</td>
+          <td>958</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:5.8%"></div></div>
+          </td>
+          <td class="pct">5.8%</td>
         </tr></tbody>
     </table>
   </div>
   <div class="card" style="margin-bottom:24px">
     <h2>新聞互動詳細數據</h2>
-    <div class="subtitle">共 84 筆</div>
+    <div class="subtitle">共 1,750 筆</div>
     <table>
       <thead><tr><th>#</th><th>featureId</th><th>點擊數</th><th>視覺</th><th>佔比</th></tr></thead>
       <tbody>
         <tr>
           <td class="rank">1</td>
           <td>news-card-1</td>
-          <td>23</td>
+          <td>483</td>
           <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:27.4%"></div></div>
+            <div class="bar-bg"><div class="bar-fill" style="width:27.6%"></div></div>
           </td>
-          <td class="pct">27.4%</td>
+          <td class="pct">27.6%</td>
         </tr>
         <tr>
           <td class="rank">2</td>
-          <td>news-card-3</td>
-          <td>18</td>
+          <td>news-card-2</td>
+          <td>441</td>
           <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:21.4%"></div></div>
+            <div class="bar-bg"><div class="bar-fill" style="width:25.2%"></div></div>
           </td>
-          <td class="pct">21.4%</td>
+          <td class="pct">25.2%</td>
         </tr>
         <tr>
           <td class="rank">3</td>
-          <td>news-card-2</td>
-          <td>15</td>
+          <td>news-card-3</td>
+          <td>394</td>
           <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:17.9%"></div></div>
+            <div class="bar-bg"><div class="bar-fill" style="width:22.5%"></div></div>
           </td>
-          <td class="pct">17.9%</td>
+          <td class="pct">22.5%</td>
         </tr>
         <tr>
           <td class="rank">4</td>
           <td>news-card-4</td>
-          <td>15</td>
+          <td>362</td>
           <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:17.9%"></div></div>
+            <div class="bar-bg"><div class="bar-fill" style="width:20.7%"></div></div>
           </td>
-          <td class="pct">17.9%</td>
+          <td class="pct">20.7%</td>
         </tr>
         <tr>
           <td class="rank">5</td>
           <td>news-workplace</td>
-          <td>8</td>
+          <td>42</td>
           <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:9.5%"></div></div>
+            <div class="bar-bg"><div class="bar-fill" style="width:2.4%"></div></div>
           </td>
-          <td class="pct">9.5%</td>
+          <td class="pct">2.4%</td>
         </tr>
         <tr>
           <td class="rank">6</td>
           <td>news-industry</td>
-          <td>5</td>
+          <td>28</td>
           <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:6.0%"></div></div>
+            <div class="bar-bg"><div class="bar-fill" style="width:1.6%"></div></div>
           </td>
-          <td class="pct">6.0%</td>
+          <td class="pct">1.6%</td>
         </tr></tbody>
     </table>
   </div>
@@ -260,10 +269,10 @@
   new Chart(document.getElementById('expJobCatTab'), {
     type: 'doughnut',
     data: {
-      labels: ["unknown"],
+      labels: ["AI 推薦", "二度就業", "全職工作", "最新工作", "學生實習", "新鮮人", "熱門工作", "中高階", "兼職", "知名企業", "工讀", "無經驗可", "外商企業", "研替", "應屆畢業生", "幸福企業", "高薪機會"],
       datasets: [{
-        data: [1075],
-        backgroundColor: ["#4361ee"],
+        data: [31451, 547, 502, 370, 315, 269, 193, 177, 64, 60, 59, 45, 34, 29, 24, 23, 16],
+        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff", "#8338ec", "#ff006e", "#ffbe0b", "#80b918", "#00b4d8", "#e63946", "#457b9d", "#4361ee", "#7209b7", "#f72585"],
         borderWidth: 2, borderColor: '#fff'
       }]
     },
@@ -273,7 +282,7 @@
         legend: { position: 'right', labels: { font: { size: 12 }, padding: 8 } },
         tooltip: { callbacks: {
           label: ctx => {
-            const t = 1075;
+            const t = 34178;
             return ` ${ctx.label}：${ctx.parsed.toLocaleString()}（${(ctx.parsed/t*100).toFixed(1)}%）`;
           }
         } }
@@ -285,10 +294,10 @@
   new Chart(document.getElementById('expJobIdentity'), {
     type: 'doughnut',
     data: {
-      labels: ["unknown"],
+      labels: ["Default", "Reenter", "OfficeWorker", "Student", "Freshman", "Senior"],
       datasets: [{
-        data: [1075],
-        backgroundColor: ["#4361ee"],
+        data: [31988, 646, 600, 399, 339, 206],
+        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2"],
         borderWidth: 2, borderColor: '#fff'
       }]
     },
@@ -298,7 +307,7 @@
         legend: { position: 'right', labels: { font: { size: 12 }, padding: 8 } },
         tooltip: { callbacks: {
           label: ctx => {
-            const t = 1075;
+            const t = 34178;
             return ` ${ctx.label}：${ctx.parsed.toLocaleString()}（${(ctx.parsed/t*100).toFixed(1)}%）`;
           }
         } }
@@ -310,17 +319,17 @@
   new Chart(document.getElementById('expJobDaily'), {
     type: 'line',
     data: {
-      labels: ["2026-04-14"],
+      labels: ["2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14"],
       datasets: [
         {
           label: 'explore-jobs-organic',
-          data: [891],
+          data: [719, 2153, 2606, 1170, 1348, 3166, 20453],
           borderColor: '#4361ee', backgroundColor: 'rgba(67,97,238,0.1)',
           fill: true, tension: 0.3
         },
         {
           label: 'explore-jobs-organic-corp',
-          data: [184],
+          data: [165, 524, 439, 305, 303, 531, 296],
           borderColor: '#f72585', backgroundColor: 'rgba(247,37,133,0.08)',
           fill: true, tension: 0.3
         }
@@ -338,10 +347,10 @@
   new Chart(document.getElementById('expCorpFeature'), {
     type: 'bar',
     data: {
-      labels: ["corp", "job1", "job2", "job-more", "next", "service", "manufacturing"],
+      labels: ["corp", "job1", "job2", "job-more", "manufacturing", "service", "next"],
       datasets: [{
         label: '事件數',
-        data: [130, 85, 57, 30, 22, 12, 9],
+        data: [5891, 1374, 1000, 430, 234, 174, 70],
         backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff"],
         borderRadius: 6
       }]
@@ -359,11 +368,11 @@
   new Chart(document.getElementById('expCorpIndustry'), {
     type: 'bar',
     data: {
-      labels: ["unknown"],
+      labels: ["一般傳統製造", "批發╱零售", "一般服務業", "醫療照護╱環境衛生", "餐飲╱住宿服務", "unknown", "教育╱出版╱藝文相關", "電子科技╱資訊╱軟體╱半導體", "運輸物流╱倉儲╱貿易", "建築營造╱不動產相關", "政治╱宗教╱社福", "旅遊╱休閒╱運動", "金融投顧╱保險相關", "法律╱會計╱顧問╱研發╱設計", "農林漁牧╱水電資源", "大眾傳播相關", "礦業╱土石能源採取"],
       datasets: [{
         label: '點擊數',
-        data: [345],
-        backgroundColor: ["#4361ee"],
+        data: [1306, 1089, 1021, 993, 993, 875, 834, 798, 346, 300, 191, 149, 102, 87, 47, 39, 3],
+        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff", "#8338ec", "#ff006e", "#ffbe0b", "#80b918", "#00b4d8", "#e63946", "#457b9d", "#4361ee", "#7209b7", "#f72585"],
         borderRadius: 4
       }]
     },
@@ -382,11 +391,11 @@
   new Chart(document.getElementById('identityMain'), {
     type: 'bar',
     data: {
-      labels: ["worker", "returning", "student", "senior", "fresh", "personal"],
+      labels: ["returning", "worker", "student", "senior", "fresh", "personal", "professional"],
       datasets: [{
         label: '點擊數',
-        data: [349, 296, 176, 111, 107, 87],
-        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2"],
+        data: [4869, 3863, 2666, 1593, 1585, 971, 958],
+        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff"],
         borderRadius: 6
       }]
     },
@@ -403,10 +412,10 @@
   new Chart(document.getElementById('newsFeature'), {
     type: 'bar',
     data: {
-      labels: ["news-card-1", "news-card-3", "news-card-2", "news-card-4", "news-workplace", "news-industry"],
+      labels: ["news-card-1", "news-card-2", "news-card-3", "news-card-4", "news-workplace", "news-industry"],
       datasets: [{
         label: '點擊數',
-        data: [23, 18, 15, 15, 8, 5],
+        data: [483, 441, 394, 362, 42, 28],
         backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2"],
         borderRadius: 6
       }]
@@ -424,10 +433,10 @@
   new Chart(document.getElementById('newsCat'), {
     type: 'doughnut',
     data: {
-      labels: ["unknown"],
+      labels: ["unknown", "JobHunting", "CareerProspects", "TrendAnalysis"],
       datasets: [{
-        data: [84],
-        backgroundColor: ["#4361ee"],
+        data: [1552, 86, 72, 40],
+        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0"],
         borderWidth: 2, borderColor: '#fff'
       }]
     },
@@ -441,6 +450,6 @@
 </script>
 
 </main>
-<footer>Generated 2026-04-14 11:53:23 +08:00 · operation-logs</footer>
+<footer>Generated 2026-04-14 15:18:29 +08:00 · operation-logs</footer>
 </body>
 </html>
