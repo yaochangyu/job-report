@@ -10,16 +10,20 @@ run_all.py
     uv run python run_all.py --from 2026-04-01 --to 2026-04-10
 """
 
+import os
 import shutil
 import subprocess
 import sys
 import time
 from pathlib import Path
-from common.es_client import parse_args, generated_now
+from common.es_client import parse_args
+from common.frontend_shell import FRONTEND_ASSETS, build_shell_html
 from common.t1_reader import resolve_date_window
 from extract_raw_events import extract_raw_events
 
 OUTPUT_DIR = Path(__file__).parent / "output"
+ROOT_DIR = Path(__file__).parent
+DATASET_DIR = ROOT_DIR / "dataset"
 
 REPORTS = [
     {
@@ -30,6 +34,7 @@ REPORTS = [
         "path": "traffic-overview/index.html",
         "icon": "📊",
         "color": "#4361ee",
+        "view_mode": "overview",
     },
     {
         "script": "run_search_behavior_pipeline.py",
@@ -39,6 +44,7 @@ REPORTS = [
         "path": "search-behavior/index.html",
         "icon": "🔍",
         "color": "#7209b7",
+        "view_mode": "search",
     },
     {
         "script": "run_apply_conversion_pipeline.py",
@@ -48,6 +54,7 @@ REPORTS = [
         "path": "apply-conversion/index.html",
         "icon": "🎯",
         "color": "#f72585",
+        "view_mode": "apply",
     },
     {
         "script": "run_feature_engagement_pipeline.py",
@@ -57,6 +64,7 @@ REPORTS = [
         "path": "feature-engagement/index.html",
         "icon": "⚡",
         "color": "#06d6a0",
+        "view_mode": "feature",
     },
     {
         "script": "run_device_platform_pipeline.py",
@@ -66,6 +74,7 @@ REPORTS = [
         "path": "device-platform/index.html",
         "icon": "📱",
         "color": "#fb8500",
+        "view_mode": "device",
     },
     {
         "script": "run_page_ranking_pipeline.py",
@@ -75,6 +84,7 @@ REPORTS = [
         "path": "page-ranking/index.html",
         "icon": "🏆",
         "color": "#118ab2",
+        "view_mode": "ranking",
     },
     {
         "script": "run_page_navigation_pipeline.py",
@@ -84,6 +94,7 @@ REPORTS = [
         "path": "page-navigation/index.html",
         "icon": "🔀",
         "color": "#8338ec",
+        "view_mode": "navigation",
     },
     {
         "script": "run_click_heatmap_pipeline.py",
@@ -93,107 +104,36 @@ REPORTS = [
         "path": "click-heatmap/index.html",
         "icon": "🔥",
         "color": "#e63946",
+        "view_mode": "heatmap",
     },
 ]
 
 
-def build_nav_html(results: list[dict], time_from: str, time_to: str, gen_at: str) -> str:
-    """產生 output/index.html 導覽頁面。"""
-    cards_html = ""
-    for r in results:
-        status_badge = ""
-        if r["ok"]:
-            status_badge = '<span class="badge ok">✓ 完成</span>'
-        else:
-            status_badge = f'<span class="badge err">✗ 失敗</span>'
+def copy_frontend_bundle(output_dir: Path) -> None:
+    output_dir.mkdir(parents=True, exist_ok=True)
+    for asset_name in FRONTEND_ASSETS:
+        shutil.copy2(ROOT_DIR / asset_name, output_dir / asset_name)
 
-        link_attr = f'href="{r["path"]}"' if r["ok"] else 'href="#" onclick="return false"'
-        card_style = "" if r["ok"] else "opacity:0.6"
+    dataset_output = output_dir / "dataset"
+    if dataset_output.exists():
+        shutil.rmtree(dataset_output)
+    shutil.copytree(DATASET_DIR, dataset_output)
 
-        cards_html += f"""
-    <a {link_attr} class="report-card" style="--accent:{r['color']};{card_style}" target="_blank">
-      <div class="card-icon">{r['icon']}</div>
-      <div class="card-body">
-        <div class="card-title">{r['title']}</div>
-        <div class="card-subtitle">{r['subtitle']}</div>
-        <div class="card-desc">{r['desc']}</div>
-      </div>
-      {status_badge}
-    </a>"""
 
-    ok_count = sum(1 for r in results if r["ok"])
-    total = len(results)
+def build_shell_pages(output_dir: Path, reports: list[dict]) -> None:
+    (output_dir / "index.html").write_text(
+        build_shell_html(".", "overview"),
+        encoding="utf-8",
+    )
 
-    return f"""<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>jobbank-web 數據報告導覽</title>
-  <style>
-    *, *::before, *::after {{ box-sizing: border-box; margin: 0; padding: 0; }}
-    body {{
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
-      background: #f0f2f5; color: #1a1a2e; min-height: 100vh;
-    }}
-    header {{
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
-      color: #fff; padding: 48px 48px 36px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    }}
-    header h1 {{ font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; }}
-    header .meta {{ margin-top: 8px; font-size: 0.9rem; opacity: 0.65; }}
-    .badge-row {{ margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; }}
-    .pill {{
-      display: inline-block;
-      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 20px; padding: 4px 14px; font-size: 0.82rem;
-    }}
-    main {{ max-width: 1100px; margin: 0 auto; padding: 40px 24px 60px; }}
-    .grid {{
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 20px;
-    }}
-    .report-card {{
-      display: flex; align-items: flex-start; gap: 16px;
-      background: #fff; border-radius: 16px; padding: 24px 20px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-      border-left: 5px solid var(--accent);
-      text-decoration: none; color: inherit;
-      transition: transform 0.15s, box-shadow 0.15s;
-      position: relative;
-    }}
-    .report-card:hover {{ transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }}
-    .card-icon {{ font-size: 2.2rem; flex-shrink: 0; margin-top: 2px; }}
-    .card-body {{ flex: 1; }}
-    .card-title {{ font-size: 1.1rem; font-weight: 700; color: var(--accent); }}
-    .card-subtitle {{ font-size: 0.78rem; color: #aaa; margin-top: 2px; letter-spacing: 0.5px; }}
-    .card-desc {{ font-size: 0.85rem; color: #666; margin-top: 8px; line-height: 1.5; }}
-    .badge {{ position: absolute; top: 14px; right: 16px; font-size: 0.75rem; padding: 3px 10px; border-radius: 12px; }}
-    .badge.ok {{ background: #e8f9f2; color: #1a8a5a; border: 1px solid #b7e7d3; }}
-    .badge.err {{ background: #fdecea; color: #c0392b; border: 1px solid #f5b7b1; }}
-    footer {{ text-align: center; font-size: 0.78rem; color: #bbb; padding: 24px 0 12px; }}
-  </style>
-</head>
-<body>
-<header>
-  <h1>📈 jobbank-web 數據報告</h1>
-  <div class="meta">資料來源：operation-logs（Elasticsearch）· 查詢區間：{time_from} ～ {time_to}</div>
-  <div class="badge-row">
-    <span class="pill">共 {total} 份報告</span>
-    <span class="pill">✓ {ok_count} 份完成</span>
-    <span class="pill">產生時間：{gen_at}</span>
-  </div>
-</header>
-<main>
-  <div class="grid">
-    {cards_html}
-  </div>
-</main>
-<footer>Generated {gen_at} · operation-logs</footer>
-</body>
-</html>"""
+    for report in reports:
+        page_file = output_dir / report["path"]
+        page_file.parent.mkdir(parents=True, exist_ok=True)
+        asset_prefix = Path(os.path.relpath(output_dir, page_file.parent)).as_posix()
+        page_file.write_text(
+            build_shell_html(asset_prefix, report["view_mode"]),
+            encoding="utf-8",
+        )
 
 
 def run_report(script: str, extra_args: list[str]) -> tuple[bool, float]:
@@ -236,13 +176,9 @@ def main() -> None:
     print(f"\n{'═'*60}")
     print(f"[完成] {ok_count}/{len(REPORTS)} 份報告成功，共耗時 {total_elapsed}s")
 
-    # 產生導覽頁面
-    gen_at = generated_now()
-    nav_html = build_nav_html(results, date_from, date_to, gen_at)
-    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
-    nav_file = OUTPUT_DIR / "index.html"
-    nav_file.write_text(nav_html, encoding="utf-8")
-    print(f"[OK] 導覽頁面已產生：{nav_file}")
+    copy_frontend_bundle(OUTPUT_DIR)
+    build_shell_pages(OUTPUT_DIR, REPORTS)
+    print(f"[OK] 前端殼已產生：{OUTPUT_DIR / 'index.html'}")
 
 
 if __name__ == "__main__":
