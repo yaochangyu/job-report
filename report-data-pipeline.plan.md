@@ -30,14 +30,14 @@ output/
   - 明確定義 `raw`、`report`、`output` 各層責任，包含檔案命名、目錄位置、manifest 格式與日期分區規則。
   - **為什麼需要這一步**：如果一開始不先定義資料契約，後面各腳本很容易再次耦合，最後又回到「分析邏輯、前端資料、部署內容混在一起」的狀態。
 
-- [ ] **Step 2 — 建立 ES → raw parquet 的抽取流程**
+- [x] **Step 2 — 建立 ES → raw parquet 的抽取流程**
   - 新增或重構抽取腳本，支援：
     - 指定日期區間
     - 指定往前幾天
   - 將 ES 事件標準化後寫入本地 `dataset/raw/`，並依 `date=YYYY-MM-DD` 分區。
   - **為什麼需要這一步**：這是整條資料管線的唯一資料入口；ES 只查一次，後續報表就不必重複打 ES。
 
-- [ ] **Step 3 — 定義 raw parquet 的標準欄位**
+- [x] **Step 3 — 定義 raw parquet 的標準欄位**
   - 將目前報表共用的事件欄位整理成穩定 schema，例如：
     - 時間：`date`、`hour`、`occurred_at`
     - 行為：`event_type`、`action`

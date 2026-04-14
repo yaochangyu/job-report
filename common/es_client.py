@@ -12,6 +12,7 @@ import sys
 import urllib.request
 import urllib.error
 from datetime import datetime, timezone, timedelta
+from typing import Any
 
 # ── Grafana / ES 設定 ────────────────────────────────────────────────────────
 
@@ -26,24 +27,17 @@ TW = timezone(timedelta(hours=8))
 
 # ── msearch ──────────────────────────────────────────────────────────────────
 
-def msearch(body: dict, index: str = ES_INDEX) -> dict:
-    """透過 Grafana Datasource Proxy 發送 _msearch 請求，回傳第一個 response。"""
-    url = f"{GRAFANA_URL}/api/datasources/proxy/uid/{DATASOURCE_UID}/_msearch"
-    ndjson = (
-        json.dumps({"index": index}) + "\n" +
-        json.dumps(body) + "\n"
-    ).encode("utf-8")
+def _build_basic_auth_token() -> str:
+    return base64.b64encode(f"{GRAFANA_USER}:{GRAFANA_PASSWORD}".encode()).decode()
 
-    token = base64.b64encode(
-        f"{GRAFANA_USER}:{GRAFANA_PASSWORD}".encode()
-    ).decode()
 
+def _open_json_request(url: str, data: bytes, content_type: str) -> dict[str, Any]:
     req = urllib.request.Request(
         url,
-        data=ndjson,
+        data=data,
         headers={
-            "Content-Type": "application/x-ndjson",
-            "Authorization": f"Basic {token}",
+            "Content-Type": content_type,
+            "Authorization": f"Basic {_build_basic_auth_token()}",
         },
         method="POST",
     )
@@ -53,8 +47,18 @@ def msearch(body: dict, index: str = ES_INDEX) -> dict:
     ctx.verify_mode = ssl.CERT_NONE
 
     with urllib.request.urlopen(req, context=ctx, timeout=30) as resp:
-        data = json.loads(resp.read())
+        return json.loads(resp.read())
 
+
+def msearch(body: dict, index: str = ES_INDEX) -> dict:
+    """透過 Grafana Datasource Proxy 發送 _msearch 請求，回傳第一個 response。"""
+    url = f"{GRAFANA_URL}/api/datasources/proxy/uid/{DATASOURCE_UID}/_msearch"
+    ndjson = (
+        json.dumps({"index": index}) + "\n" +
+        json.dumps(body) + "\n"
+    ).encode("utf-8")
+
+    data = _open_json_request(url, ndjson, "application/x-ndjson")
     r = data["responses"][0]
     if "error" in r:
         print(f"[ERROR] ES 回傳錯誤：{r['error']['reason']}", file=sys.stderr)
