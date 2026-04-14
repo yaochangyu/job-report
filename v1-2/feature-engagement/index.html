@@ -1,455 +1,295 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>功能互動分析 — Feature Engagement</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
-      background: #f0f2f5; color: #1a1a2e; min-height: 100vh;
-    }
-    header {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
-      color: #fff; padding: 36px 48px 28px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    }
-    header h1 { font-size: 1.8rem; font-weight: 700; }
-    header p  { margin-top: 6px; font-size: 0.9rem; opacity: 0.65; }
-    .badge {
-      display: inline-block; margin-top: 12px;
-      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 20px; padding: 4px 14px; font-size: 0.8rem;
-    }
-    main { max-width: 1200px; margin: 0 auto; padding: 36px 24px 60px; }
-    .kpi-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px; margin-bottom: 36px;
-    }
-    .kpi-card {
-      background: #fff; border-radius: 14px; padding: 24px 20px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.07); border-top: 4px solid var(--accent);
-    }
-    .kpi-card .label { font-size: 0.78rem; color: #888; text-transform: uppercase; letter-spacing: 0.8px; }
-    .kpi-card .value { font-size: 2rem; font-weight: 800; color: var(--accent); margin-top: 6px; }
-    .kpi-card .sub   { font-size: 0.8rem; color: #aaa; margin-top: 4px; }
-    .chart-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
-      gap: 24px; margin-bottom: 28px;
-    }
-    .card {
-      background: #fff; border-radius: 14px; padding: 28px 24px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-    }
-    .card h2 { font-size: 1rem; font-weight: 700; color: #333; margin-bottom: 4px; }
-    .card .subtitle { font-size: 0.8rem; color: #999; margin-bottom: 20px; }
-    .chart-wrap { position: relative; height: 320px; }
-    .chart-wrap-tall { position: relative; height: 380px; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-    thead th {
-      background: #f7f8fa; padding: 10px 14px; text-align: left;
-      font-weight: 600; color: #555; border-bottom: 2px solid #e8e8e8;
-    }
-    tbody tr:nth-child(odd) { background: #fafafa; }
-    tbody tr:hover { background: #f0f4ff; }
-    tbody td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; }
-    .rank { color: #bbb; font-weight: 700; font-size: 0.85rem; }
-    .bar-cell { width: 160px; }
-    .bar-bg { background: #eef0f4; border-radius: 4px; height: 8px; overflow: hidden; }
-    .bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #4361ee, #7209b7); }
-    .pct { color: #4361ee; font-weight: 700; }
-    footer { text-align: center; font-size: 0.78rem; color: #bbb; padding: 24px 0 12px; }
-</style>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ <title>jobbank-web 數據報告</title>
+ <link rel="stylesheet" href="../app.css" />
 </head>
-<body>
-<header>
-  <h1>功能互動分析 — Feature Engagement</h1>
-  <p>資料來源：operation-logs（Elasticsearch） · 查詢區間：2026-04-08T00:00:00+08:00 ～ 2026-04-14T23:59:59+08:00</p>
-  <span class="badge">產生時間：2026-04-14 15:18:29 +08:00</span>
-</header>
-<main>
-  <div class="kpi-grid">
-    <div class="kpi-card" style="--accent:#4361ee">
-      <div class="label">探索職缺</div>
-      <div class="value">34,178</div>
-      <div class="sub">organic + corp</div>
-    </div>
-    <div class="kpi-card" style="--accent:#7209b7">
-      <div class="label">探索企業</div>
-      <div class="value">9,173</div>
-      <div class="sub">各企業探索入口</div>
-    </div>
-    <div class="kpi-card" style="--accent:#f72585">
-      <div class="label">身份辨識</div>
-      <div class="value">16,505</div>
-      <div class="sub">7 種身份類型</div>
-    </div>
-    <div class="kpi-card" style="--accent:#06d6a0">
-      <div class="label">新聞互動</div>
-      <div class="value">1,750</div>
-      <div class="sub">news-card 點擊</div>
-    </div>  </div>  <div class="chart-grid">
-  <div class="card">
-    <h2>探索職缺 — categoryTab 分佈</h2>
-    <div class="subtitle">各 Tab 點擊分佈</div>
-    <div class="chart-wrap"><canvas id="expJobCatTab"></canvas></div>
-  </div>
-  <div class="card">
-    <h2>探索職缺 — identityType 分佈</h2>
-    <div class="subtitle">使用者身份分佈</div>
-    <div class="chart-wrap"><canvas id="expJobIdentity"></canvas></div>
-  </div>  </div>  <div class="chart-grid">
-  <div class="card">
-    <h2>探索職缺每日趨勢</h2>
-    <div class="subtitle">organic vs corp-organic</div>
-    <div class="chart-wrap"><canvas id="expJobDaily"></canvas></div>
-  </div>
-  <div class="card">
-    <h2>探索企業 — featureId 分佈</h2>
-    <div class="subtitle">各企業探索入口使用量</div>
-    <div class="chart-wrap"><canvas id="expCorpFeature"></canvas></div>
-  </div>  </div>  <div class="chart-grid">
-  <div class="card">
-    <h2>探索企業 — industryTab 分佈</h2>
-    <div class="subtitle">各產業 Tab 點擊</div>
-    <div class="chart-wrap"><canvas id="expCorpIndustry"></canvas></div>
-  </div>
-  <div class="card">
-    <h2>身份辨識 — 主身份分佈</h2>
-    <div class="subtitle">各身份入口點擊數</div>
-    <div class="chart-wrap"><canvas id="identityMain"></canvas></div>
-  </div>  </div>  <div class="chart-grid">
-  <div class="card">
-    <h2>新聞卡片點擊</h2>
-    <div class="subtitle">各位置點擊量</div>
-    <div class="chart-wrap"><canvas id="newsFeature"></canvas></div>
-  </div>
-  <div class="card">
-    <h2>新聞分類分佈</h2>
-    <div class="subtitle">各新聞類別點擊數</div>
-    <div class="chart-wrap"><canvas id="newsCat"></canvas></div>
-  </div>  </div>
-  <div class="card" style="margin-bottom:24px">
-    <h2>身份辨識詳細數據</h2>
-    <div class="subtitle">共 16,505 筆</div>
-    <table>
-      <thead><tr><th>#</th><th>身份</th><th>事件數</th><th>視覺</th><th>佔比</th></tr></thead>
-      <tbody>
-        <tr>
-          <td class="rank">1</td>
-          <td>returning</td>
-          <td>4,869</td>
-          <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:29.5%"></div></div>
-          </td>
-          <td class="pct">29.5%</td>
-        </tr>
-        <tr>
-          <td class="rank">2</td>
-          <td>worker</td>
-          <td>3,863</td>
-          <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:23.4%"></div></div>
-          </td>
-          <td class="pct">23.4%</td>
-        </tr>
-        <tr>
-          <td class="rank">3</td>
-          <td>student</td>
-          <td>2,666</td>
-          <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:16.2%"></div></div>
-          </td>
-          <td class="pct">16.2%</td>
-        </tr>
-        <tr>
-          <td class="rank">4</td>
-          <td>senior</td>
-          <td>1,593</td>
-          <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:9.7%"></div></div>
-          </td>
-          <td class="pct">9.7%</td>
-        </tr>
-        <tr>
-          <td class="rank">5</td>
-          <td>fresh</td>
-          <td>1,585</td>
-          <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:9.6%"></div></div>
-          </td>
-          <td class="pct">9.6%</td>
-        </tr>
-        <tr>
-          <td class="rank">6</td>
-          <td>personal</td>
-          <td>971</td>
-          <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:5.9%"></div></div>
-          </td>
-          <td class="pct">5.9%</td>
-        </tr>
-        <tr>
-          <td class="rank">7</td>
-          <td>professional</td>
-          <td>958</td>
-          <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:5.8%"></div></div>
-          </td>
-          <td class="pct">5.8%</td>
-        </tr></tbody>
-    </table>
-  </div>
-  <div class="card" style="margin-bottom:24px">
-    <h2>新聞互動詳細數據</h2>
-    <div class="subtitle">共 1,750 筆</div>
-    <table>
-      <thead><tr><th>#</th><th>featureId</th><th>點擊數</th><th>視覺</th><th>佔比</th></tr></thead>
-      <tbody>
-        <tr>
-          <td class="rank">1</td>
-          <td>news-card-1</td>
-          <td>483</td>
-          <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:27.6%"></div></div>
-          </td>
-          <td class="pct">27.6%</td>
-        </tr>
-        <tr>
-          <td class="rank">2</td>
-          <td>news-card-2</td>
-          <td>441</td>
-          <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:25.2%"></div></div>
-          </td>
-          <td class="pct">25.2%</td>
-        </tr>
-        <tr>
-          <td class="rank">3</td>
-          <td>news-card-3</td>
-          <td>394</td>
-          <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:22.5%"></div></div>
-          </td>
-          <td class="pct">22.5%</td>
-        </tr>
-        <tr>
-          <td class="rank">4</td>
-          <td>news-card-4</td>
-          <td>362</td>
-          <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:20.7%"></div></div>
-          </td>
-          <td class="pct">20.7%</td>
-        </tr>
-        <tr>
-          <td class="rank">5</td>
-          <td>news-workplace</td>
-          <td>42</td>
-          <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:2.4%"></div></div>
-          </td>
-          <td class="pct">2.4%</td>
-        </tr>
-        <tr>
-          <td class="rank">6</td>
-          <td>news-industry</td>
-          <td>28</td>
-          <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:1.6%"></div></div>
-          </td>
-          <td class="pct">1.6%</td>
-        </tr></tbody>
-    </table>
-  </div>
-<script>
-  // ── 探索職缺 categoryTab Doughnut
-  new Chart(document.getElementById('expJobCatTab'), {
-    type: 'doughnut',
-    data: {
-      labels: ["AI 推薦", "二度就業", "全職工作", "最新工作", "學生實習", "新鮮人", "熱門工作", "中高階", "兼職", "知名企業", "工讀", "無經驗可", "外商企業", "研替", "應屆畢業生", "幸福企業", "高薪機會"],
-      datasets: [{
-        data: [31451, 547, 502, 370, 315, 269, 193, 177, 64, 60, 59, 45, 34, 29, 24, 23, 16],
-        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff", "#8338ec", "#ff006e", "#ffbe0b", "#80b918", "#00b4d8", "#e63946", "#457b9d", "#4361ee", "#7209b7", "#f72585"],
-        borderWidth: 2, borderColor: '#fff'
-      }]
-    },
-    options: {
-      cutout: '55%',
-      plugins: {
-        legend: { position: 'right', labels: { font: { size: 12 }, padding: 8 } },
-        tooltip: { callbacks: {
-          label: ctx => {
-            const t = 34178;
-            return ` ${ctx.label}：${ctx.parsed.toLocaleString()}（${(ctx.parsed/t*100).toFixed(1)}%）`;
-          }
-        } }
-      }
-    }
-  });
+<body data-initial-view="feature">
 
-  // ── 探索職缺 identityType
-  new Chart(document.getElementById('expJobIdentity'), {
-    type: 'doughnut',
-    data: {
-      labels: ["Default", "Reenter", "OfficeWorker", "Student", "Freshman", "Senior"],
-      datasets: [{
-        data: [31988, 646, 600, 399, 339, 206],
-        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2"],
-        borderWidth: 2, borderColor: '#fff'
-      }]
-    },
-    options: {
-      cutout: '55%',
-      plugins: {
-        legend: { position: 'right', labels: { font: { size: 12 }, padding: 8 } },
-        tooltip: { callbacks: {
-          label: ctx => {
-            const t = 34178;
-            return ` ${ctx.label}：${ctx.parsed.toLocaleString()}（${(ctx.parsed/t*100).toFixed(1)}%）`;
-          }
-        } }
-      }
-    }
-  });
+ <header class="hero">
+   <div class="hero__content">
+     <div class="hero__topbar">
+       <div>
+         <p class="hero__eyebrow">DuckDB-WASM Analytics</p>
+         <h1>📈 jobbank-web 數據報告</h1>
+         <p class="hero__desc">資料來源：operation-logs（Elasticsearch）· DuckDB-WASM 即時查詢</p>
+       </div>
+       <button id="theme-toggle" class="theme-toggle" type="button">切換暗黑版</button>
+     </div>
+   </div>
+ </header>
 
-  // ── 探索職缺每日趨勢
-  new Chart(document.getElementById('expJobDaily'), {
-    type: 'line',
-    data: {
-      labels: ["2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14"],
-      datasets: [
-        {
-          label: 'explore-jobs-organic',
-          data: [719, 2153, 2606, 1170, 1348, 3166, 20453],
-          borderColor: '#4361ee', backgroundColor: 'rgba(67,97,238,0.1)',
-          fill: true, tension: 0.3
-        },
-        {
-          label: 'explore-jobs-organic-corp',
-          data: [165, 524, 439, 305, 303, 531, 296],
-          borderColor: '#f72585', backgroundColor: 'rgba(247,37,133,0.08)',
-          fill: true, tension: 0.3
-        }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      scales: { y: { title: { display: true, text: 'Click 數' } } },
-      plugins: { legend: { position: 'bottom' } }
-    }
-  });
+ <main id="page-layout" class="page-layout">
 
-  // ── 探索企業 featureId Bar
-  new Chart(document.getElementById('expCorpFeature'), {
-    type: 'bar',
-    data: {
-      labels: ["corp", "job1", "job2", "job-more", "manufacturing", "service", "next"],
-      datasets: [{
-        label: '事件數',
-        data: [5891, 1374, 1000, 430, 234, 174, 70],
-        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff"],
-        borderRadius: 6
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { title: { display: true, text: '事件數' } }
-      }
-    }
-  });
+   <aside class="sidebar panel">
+     <div class="sidebar__header">
+       <div>
+         <h2>分析角度</h2>
+         <p>切換報表視角</p>
+       </div>
+       <button
+         id="sidebar-toggle"
+         class="sidebar__toggle"
+         type="button"
+         aria-expanded="true"
+         aria-label="收合側邊導覽"
+       >
+         <span id="sidebar-toggle-icon">◀</span>
+       </button>
+     </div>
 
-  // ── 探索企業 industryTab
-  new Chart(document.getElementById('expCorpIndustry'), {
-    type: 'bar',
-    data: {
-      labels: ["一般傳統製造", "批發╱零售", "一般服務業", "醫療照護╱環境衛生", "餐飲╱住宿服務", "unknown", "教育╱出版╱藝文相關", "電子科技╱資訊╱軟體╱半導體", "運輸物流╱倉儲╱貿易", "建築營造╱不動產相關", "政治╱宗教╱社福", "旅遊╱休閒╱運動", "金融投顧╱保險相關", "法律╱會計╱顧問╱研發╱設計", "農林漁牧╱水電資源", "大眾傳播相關", "礦業╱土石能源採取"],
-      datasets: [{
-        label: '點擊數',
-        data: [1306, 1089, 1021, 993, 993, 875, 834, 798, 346, 300, 191, 149, 102, 87, 47, 39, 3],
-        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff", "#8338ec", "#ff006e", "#ffbe0b", "#80b918", "#00b4d8", "#e63946", "#457b9d", "#4361ee", "#7209b7", "#f72585"],
-        borderRadius: 4
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { title: { display: true, text: '點擊數' } },
-        y: { grid: { display: false } }
-      }
-    }
-  });
+     <nav class="sidebar__nav" aria-label="分析角度導覽">
+       <button class="sidebar__nav-item is-active" type="button" data-view-mode="overview">
+         <span class="sidebar__icon">📊</span>
+         <span>
+           <strong>整體概覽</strong>
+           <small>Traffic Overview</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="search">
+         <span class="sidebar__icon">🔍</span>
+         <span>
+           <strong>搜尋行為</strong>
+           <small>Search Behavior</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="apply">
+         <span class="sidebar__icon">🎯</span>
+         <span>
+           <strong>應徵轉換</strong>
+           <small>Apply Conversion</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="feature">
+         <span class="sidebar__icon">⚡</span>
+         <span>
+           <strong>功能互動</strong>
+           <small>Feature Engagement</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="device">
+         <span class="sidebar__icon">📱</span>
+         <span>
+           <strong>裝置平台</strong>
+           <small>Device &amp; Platform</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="ranking">
+         <span class="sidebar__icon">🏆</span>
+         <span>
+           <strong>頁面排行</strong>
+           <small>Page Ranking</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="navigation">
+         <span class="sidebar__icon">🔀</span>
+         <span>
+           <strong>頁面導航</strong>
+           <small>Page Navigation</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="heatmap">
+         <span class="sidebar__icon">🔥</span>
+         <span>
+           <strong>點擊熱點</strong>
+           <small>Page Click Heatmap</small>
+         </span>
+       </button>
+     </nav>
+   </aside>
 
-  // ── 身份辨識 Bar
-  new Chart(document.getElementById('identityMain'), {
-    type: 'bar',
-    data: {
-      labels: ["returning", "worker", "student", "senior", "fresh", "personal", "professional"],
-      datasets: [{
-        label: '點擊數',
-        data: [4869, 3863, 2666, 1593, 1585, 971, 958],
-        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff"],
-        borderRadius: 6
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { title: { display: true, text: '點擊數' } }
-      }
-    }
-  });
+   <div class="right-col">
 
-  // ── 新聞卡片 Bar
-  new Chart(document.getElementById('newsFeature'), {
-    type: 'bar',
-    data: {
-      labels: ["news-card-1", "news-card-2", "news-card-3", "news-card-4", "news-workplace", "news-industry"],
-      datasets: [{
-        label: '點擊數',
-        data: [483, 441, 394, 362, 42, 28],
-        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2"],
-        borderRadius: 6
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { title: { display: true, text: '點擊數' } }
-      }
-    }
-  });
+     <div class="filter-wrap">
+       <section class="panel filter-panel">
+         <div class="panel__header">
+           <h2>查詢條件</h2>
+           <p>所有分析視角共用同一組日期與頁面條件。</p>
+         </div>
+         <form id="query-form" class="filters">
+           <label>
+             <span>起始日期</span>
+             <input id="date-from" name="date_from" type="date" />
+           </label>
+           <label>
+             <span>結束日期</span>
+             <input id="date-to" name="date_to" type="date" />
+           </label>
+           <label id="filter-page-path-wrap" class="filter-field--hidden">
+             <span>頁面路徑（選填）</span>
+             <input id="page-path" name="page_path" type="text" placeholder="/job/123" />
+           </label>
+           <div class="filter-actions">
+             <span>&nbsp;</span>
+             <button id="run-query" type="submit">執行查詢</button>
+           </div>
+         </form>
+         <p class="query-status" id="query-status"></p>
+       </section>
+     </div>
 
-  // ── 新聞分類 Doughnut
-  new Chart(document.getElementById('newsCat'), {
-    type: 'doughnut',
-    data: {
-      labels: ["unknown", "JobHunting", "CareerProspects", "TrendAnalysis"],
-      datasets: [{
-        data: [1552, 86, 72, 40],
-        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0"],
-        borderWidth: 2, borderColor: '#fff'
-      }]
-    },
-    options: {
-      cutout: '55%',
-      plugins: {
-        legend: { position: 'right', labels: { font: { size: 13 }, padding: 10 } }
-      }
-    }
-  });
-</script>
+     <div class="content">
 
-</main>
-<footer>Generated 2026-04-14 15:18:29 +08:00 · operation-logs</footer>
+       <section class="panel view-panel">
+         <div class="panel__header view-panel__heading">
+           <div>
+             <p class="view-panel__eyebrow">Current View</p>
+             <h2 id="current-view-title">整體概覽</h2>
+           </div>
+           <p id="current-view-subtitle" class="view-panel__subtitle">Traffic Overview</p>
+         </div>
+         <p id="current-view-desc" class="panel__desc">觀察整體 KPI、趨勢與主要流量分佈。</p>
+       </section>
+
+       <section class="kpi-grid">
+         <article class="kpi-card" style="--kpi-color:#4361ee">
+           <div class="kpi-card__label" id="kpi-label-1">總事件</div>
+           <div class="kpi-card__value" id="kpi-1">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-1">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#118ab2">
+           <div class="kpi-card__label" id="kpi-label-2">View</div>
+           <div class="kpi-card__value" id="kpi-2">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-2">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#7209b7">
+           <div class="kpi-card__label" id="kpi-label-3">Click</div>
+           <div class="kpi-card__value" id="kpi-3">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-3">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#f72585">
+           <div class="kpi-card__label" id="kpi-label-4">Apply</div>
+           <div class="kpi-card__value" id="kpi-4">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-4">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#06d6a0">
+           <div class="kpi-card__label" id="kpi-label-5">Sessions</div>
+           <div class="kpi-card__value" id="kpi-5">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-5">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#fb8500">
+           <div class="kpi-card__label" id="kpi-label-6">Click Rate</div>
+           <div class="kpi-card__value" id="kpi-6">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-6">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#e63946">
+           <div class="kpi-card__label" id="kpi-label-7">Apply Rate</div>
+           <div class="kpi-card__value" id="kpi-7">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-7">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#118ab2">
+           <div class="kpi-card__label" id="kpi-label-8">Mobile %</div>
+           <div class="kpi-card__value" id="kpi-8">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-8">&nbsp;</div>
+         </article>
+       </section>
+
+       <section class="chart-grid">
+         <article class="panel chart-panel">
+           <div class="panel__header">
+             <h2 id="chart1-title">趨勢圖</h2>
+             <p id="chart1-desc">每日流量趨勢</p>
+           </div>
+           <div class="chart-canvas-wrap">
+             <canvas id="chart1"></canvas>
+           </div>
+         </article>
+
+         <article class="panel chart-panel">
+           <div class="panel__header">
+             <h2 id="chart2-title">分佈圖</h2>
+             <p id="chart2-desc">裝置、來源、功能類別</p>
+           </div>
+           <div class="chart-canvas-wrap">
+             <canvas id="chart2"></canvas>
+           </div>
+         </article>
+
+         <article id="chart3-panel" class="panel chart-panel">
+           <div class="panel__header">
+             <h2 id="chart3-title">排行圖</h2>
+             <p id="chart3-desc">Top feature / 互動排行</p>
+           </div>
+           <div class="chart-canvas-wrap">
+             <canvas id="chart3"></canvas>
+           </div>
+         </article>
+       </section>
+
+       <article id="table1-panel" class="panel table-panel">
+         <div class="panel__header">
+           <h2 id="table1-title">排行表</h2>
+           <p id="table1-desc"></p>
+         </div>
+         <div class="table-wrap">
+           <table>
+             <thead id="table1-head">
+               <tr><th>#</th><th>名稱</th><th>數值</th><th></th><th>佔比</th></tr>
+             </thead>
+             <tbody id="table1-body">
+               <tr><td colspan="5" class="empty-cell">尚未載入資料</td></tr>
+             </tbody>
+           </table>
+         </div>
+       </article>
+
+       <article id="table2-panel" class="panel table-panel hidden">
+         <div class="panel__header">
+           <h2 id="table2-title">表格 2</h2>
+           <p id="table2-desc"></p>
+         </div>
+         <div class="table-wrap">
+           <table>
+             <thead id="table2-head">
+               <tr><th>#</th><th>名稱</th><th>數值</th><th></th><th>佔比</th></tr>
+             </thead>
+             <tbody id="table2-body">
+               <tr><td colspan="5" class="empty-cell">尚未載入資料</td></tr>
+             </tbody>
+           </table>
+         </div>
+       </article>
+
+       <article id="table3-panel" class="panel table-panel hidden">
+         <div class="panel__header">
+           <h2 id="table3-title">表格 3</h2>
+           <p id="table3-desc"></p>
+         </div>
+         <div class="table-wrap">
+           <table>
+             <thead id="table3-head">
+               <tr><th>#</th><th>名稱</th><th>數值</th><th></th><th>佔比</th></tr>
+             </thead>
+             <tbody id="table3-body">
+               <tr><td colspan="5" class="empty-cell">尚未載入資料</td></tr>
+             </tbody>
+           </table>
+         </div>
+       </article>
+
+       <article id="table4-panel" class="panel table-panel hidden">
+         <div class="panel__header">
+           <h2 id="table4-title">表格 4</h2>
+           <p id="table4-desc"></p>
+         </div>
+         <div class="table-wrap">
+           <table>
+             <thead id="table4-head">
+               <tr><th>#</th><th>名稱</th><th>數值</th><th></th><th>佔比</th></tr>
+             </thead>
+             <tbody id="table4-body">
+               <tr><td colspan="5" class="empty-cell">尚未載入資料</td></tr>
+             </tbody>
+           </table>
+         </div>
+       </article>
+
+     </div>
+   </div>
+ </main>
+
+ <script type="module" src="../app.js"></script>
 </body>
 </html>

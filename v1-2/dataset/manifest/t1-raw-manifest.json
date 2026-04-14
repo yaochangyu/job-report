@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "tier": "t1-raw",
+  "description": "從 Elasticsearch 匯出的標準化原始事件 parquet。",
+  "source_index": "operation-logs",
+  "source_fields": [
+    "@timestamp",
+    "system",
+    "eventType",
+    "action",
+    "sessionId",
+    "anonymousId",
+    "userId",
+    "clientId",
+    "locale",
+    "messageId",
+    "featureId",
+    "featureName",
+    "featureType",
+    "pageUrl",
+    "previousPageUrl",
+    "deviceType",
+    "os",
+    "browser",
+    "metadata"
+  ],
+  "partition_rule": "date=YYYY-MM-DD",
+  "compression": "zstd",
+  "row_group_size": 100000,
+  "available_dates": [
+    "2026-04-08",
+    "2026-04-09",
+    "2026-04-10",
+    "2026-04-11",
+    "2026-04-12",
+    "2026-04-13",
+    "2026-04-14"
+  ],
+  "dates": {
+    "2026-04-08": {
+      "path": "raw/date=2026-04-08/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-09": {
+      "path": "raw/date=2026-04-09/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-10": {
+      "path": "raw/date=2026-04-10/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-11": {
+      "path": "raw/date=2026-04-11/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-12": {
+      "path": "raw/date=2026-04-12/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-13": {
+      "path": "raw/date=2026-04-13/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-14": {
+      "path": "raw/date=2026-04-14/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    }
+  },
+  "updated_at": "2026-04-14 19:54:24 +08:00"
+}

@@ -1,0 +1,307 @@
+{
+  "reports": {
+    "traffic-overview": {
+      "snapshots": {
+        "2026-04-13_2026-04-13": {
+          "date_from": "2026-04-13",
+          "date_to": "2026-04-13",
+          "root": "report/traffic-overview/range=2026-04-13_2026-04-13",
+          "files": {
+            "kpi": "report/traffic-overview/range=2026-04-13_2026-04-13/kpi.parquet",
+            "daily": "report/traffic-overview/range=2026-04-13_2026-04-13/daily.parquet",
+            "hourly": "report/traffic-overview/range=2026-04-13_2026-04-13/hourly.parquet",
+            "device_type": "report/traffic-overview/range=2026-04-13_2026-04-13/device_type.parquet",
+            "os": "report/traffic-overview/range=2026-04-13_2026-04-13/os.parquet",
+            "browser": "report/traffic-overview/range=2026-04-13_2026-04-13/browser.parquet"
+          },
+          "rows": 618050,
+          "updated_at": "2026-04-14 16:30:42 +08:00"
+        },
+        "2026-04-08_2026-04-14": {
+          "date_from": "2026-04-08",
+          "date_to": "2026-04-14",
+          "root": "report/traffic-overview/range=2026-04-08_2026-04-14",
+          "files": {
+            "kpi": "report/traffic-overview/range=2026-04-08_2026-04-14/kpi.parquet",
+            "daily": "report/traffic-overview/range=2026-04-08_2026-04-14/daily.parquet",
+            "hourly": "report/traffic-overview/range=2026-04-08_2026-04-14/hourly.parquet",
+            "device_type": "report/traffic-overview/range=2026-04-08_2026-04-14/device_type.parquet",
+            "os": "report/traffic-overview/range=2026-04-08_2026-04-14/os.parquet",
+            "browser": "report/traffic-overview/range=2026-04-08_2026-04-14/browser.parquet"
+          },
+          "rows": 3415176,
+          "updated_at": "2026-04-14 19:54:26 +08:00"
+        }
+      },
+      "available_snapshots": [
+        "2026-04-08_2026-04-14",
+        "2026-04-13_2026-04-13"
+      ]
+    },
+    "search-behavior": {
+      "snapshots": {
+        "2026-04-13_2026-04-13": {
+          "date_from": "2026-04-13",
+          "date_to": "2026-04-13",
+          "root": "report/search-behavior/range=2026-04-13_2026-04-13",
+          "files": {
+            "summary": "report/search-behavior/range=2026-04-13_2026-04-13/summary.parquet",
+            "feature_counts": "report/search-behavior/range=2026-04-13_2026-04-13/feature_counts.parquet",
+            "daily_trend": "report/search-behavior/range=2026-04-13_2026-04-13/daily_trend.parquet",
+            "search_page_dist": "report/search-behavior/range=2026-04-13_2026-04-13/search_page_dist.parquet",
+            "ai_interaction": "report/search-behavior/range=2026-04-13_2026-04-13/ai_interaction.parquet",
+            "quick_overview": "report/search-behavior/range=2026-04-13_2026-04-13/quick_overview.parquet",
+            "quick_daily": "report/search-behavior/range=2026-04-13_2026-04-13/quick_daily.parquet"
+          },
+          "rows": 196816,
+          "updated_at": "2026-04-14 16:30:45 +08:00"
+        },
+        "2026-04-08_2026-04-14": {
+          "date_from": "2026-04-08",
+          "date_to": "2026-04-14",
+          "root": "report/search-behavior/range=2026-04-08_2026-04-14",
+          "files": {
+            "summary": "report/search-behavior/range=2026-04-08_2026-04-14/summary.parquet",
+            "feature_counts": "report/search-behavior/range=2026-04-08_2026-04-14/feature_counts.parquet",
+            "daily_trend": "report/search-behavior/range=2026-04-08_2026-04-14/daily_trend.parquet",
+            "search_page_dist": "report/search-behavior/range=2026-04-08_2026-04-14/search_page_dist.parquet",
+            "ai_interaction": "report/search-behavior/range=2026-04-08_2026-04-14/ai_interaction.parquet",
+            "quick_overview": "report/search-behavior/range=2026-04-08_2026-04-14/quick_overview.parquet",
+            "quick_daily": "report/search-behavior/range=2026-04-08_2026-04-14/quick_daily.parquet"
+          },
+          "rows": 1044010,
+          "updated_at": "2026-04-14 19:54:28 +08:00"
+        }
+      },
+      "available_snapshots": [
+        "2026-04-08_2026-04-14",
+        "2026-04-13_2026-04-13"
+      ]
+    },
+    "page-navigation": {
+      "snapshots": {
+        "2026-04-13_2026-04-13": {
+          "date_from": "2026-04-13",
+          "date_to": "2026-04-13",
+          "root": "report/page-navigation/range=2026-04-13_2026-04-13",
+          "files": {
+            "summary": "report/page-navigation/range=2026-04-13_2026-04-13/summary.parquet",
+            "nav_pairs": "report/page-navigation/range=2026-04-13_2026-04-13/nav_pairs.parquet",
+            "entry_pages": "report/page-navigation/range=2026-04-13_2026-04-13/entry_pages.parquet",
+            "page_sources": "report/page-navigation/range=2026-04-13_2026-04-13/page_sources.parquet",
+            "page_destinations": "report/page-navigation/range=2026-04-13_2026-04-13/page_destinations.parquet"
+          },
+          "rows": 618050,
+          "updated_at": "2026-04-14 16:31:00 +08:00"
+        },
+        "2026-04-08_2026-04-14": {
+          "date_from": "2026-04-08",
+          "date_to": "2026-04-14",
+          "root": "report/page-navigation/range=2026-04-08_2026-04-14",
+          "files": {
+            "summary": "report/page-navigation/range=2026-04-08_2026-04-14/summary.parquet",
+            "nav_pairs": "report/page-navigation/range=2026-04-08_2026-04-14/nav_pairs.parquet",
+            "entry_pages": "report/page-navigation/range=2026-04-08_2026-04-14/entry_pages.parquet",
+            "page_sources": "report/page-navigation/range=2026-04-08_2026-04-14/page_sources.parquet",
+            "page_destinations": "report/page-navigation/range=2026-04-08_2026-04-14/page_destinations.parquet"
+          },
+          "rows": 3415176,
+          "updated_at": "2026-04-14 19:54:39 +08:00"
+        }
+      },
+      "available_snapshots": [
+        "2026-04-08_2026-04-14",
+        "2026-04-13_2026-04-13"
+      ]
+    },
+    "page-ranking": {
+      "snapshots": {
+        "2026-04-13_2026-04-13": {
+          "date_from": "2026-04-13",
+          "date_to": "2026-04-13",
+          "root": "report/page-ranking/range=2026-04-13_2026-04-13",
+          "files": {
+            "summary": "report/page-ranking/range=2026-04-13_2026-04-13/summary.parquet",
+            "features": "report/page-ranking/range=2026-04-13_2026-04-13/features.parquet",
+            "categories": "report/page-ranking/range=2026-04-13_2026-04-13/categories.parquet"
+          },
+          "rows": 618050,
+          "updated_at": "2026-04-14 16:30:57 +08:00"
+        },
+        "2026-04-08_2026-04-14": {
+          "date_from": "2026-04-08",
+          "date_to": "2026-04-14",
+          "root": "report/page-ranking/range=2026-04-08_2026-04-14",
+          "files": {
+            "summary": "report/page-ranking/range=2026-04-08_2026-04-14/summary.parquet",
+            "features": "report/page-ranking/range=2026-04-08_2026-04-14/features.parquet",
+            "categories": "report/page-ranking/range=2026-04-08_2026-04-14/categories.parquet"
+          },
+          "rows": 3415176,
+          "updated_at": "2026-04-14 19:54:36 +08:00"
+        }
+      },
+      "available_snapshots": [
+        "2026-04-08_2026-04-14",
+        "2026-04-13_2026-04-13"
+      ]
+    },
+    "device-platform": {
+      "snapshots": {
+        "2026-04-13_2026-04-13": {
+          "date_from": "2026-04-13",
+          "date_to": "2026-04-13",
+          "root": "report/device-platform/range=2026-04-13_2026-04-13",
+          "files": {
+            "summary": "report/device-platform/range=2026-04-13_2026-04-13/summary.parquet",
+            "device_total": "report/device-platform/range=2026-04-13_2026-04-13/device_total.parquet",
+            "daily": "report/device-platform/range=2026-04-13_2026-04-13/daily.parquet",
+            "os": "report/device-platform/range=2026-04-13_2026-04-13/os.parquet",
+            "browser": "report/device-platform/range=2026-04-13_2026-04-13/browser.parquet",
+            "device_behavior": "report/device-platform/range=2026-04-13_2026-04-13/device_behavior.parquet",
+            "os_behavior": "report/device-platform/range=2026-04-13_2026-04-13/os_behavior.parquet"
+          },
+          "rows": 618050,
+          "updated_at": "2026-04-14 16:30:54 +08:00"
+        },
+        "2026-04-08_2026-04-14": {
+          "date_from": "2026-04-08",
+          "date_to": "2026-04-14",
+          "root": "report/device-platform/range=2026-04-08_2026-04-14",
+          "files": {
+            "summary": "report/device-platform/range=2026-04-08_2026-04-14/summary.parquet",
+            "device_total": "report/device-platform/range=2026-04-08_2026-04-14/device_total.parquet",
+            "daily": "report/device-platform/range=2026-04-08_2026-04-14/daily.parquet",
+            "os": "report/device-platform/range=2026-04-08_2026-04-14/os.parquet",
+            "browser": "report/device-platform/range=2026-04-08_2026-04-14/browser.parquet",
+            "device_behavior": "report/device-platform/range=2026-04-08_2026-04-14/device_behavior.parquet",
+            "os_behavior": "report/device-platform/range=2026-04-08_2026-04-14/os_behavior.parquet"
+          },
+          "rows": 3415176,
+          "updated_at": "2026-04-14 19:54:35 +08:00"
+        }
+      },
+      "available_snapshots": [
+        "2026-04-08_2026-04-14",
+        "2026-04-13_2026-04-13"
+      ]
+    },
+    "apply-conversion": {
+      "snapshots": {
+        "2026-04-13_2026-04-13": {
+          "date_from": "2026-04-13",
+          "date_to": "2026-04-13",
+          "root": "report/apply-conversion/range=2026-04-13_2026-04-13",
+          "files": {
+            "kpi": "report/apply-conversion/range=2026-04-13_2026-04-13/kpi.parquet",
+            "source": "report/apply-conversion/range=2026-04-13_2026-04-13/source.parquet",
+            "daily": "report/apply-conversion/range=2026-04-13_2026-04-13/daily.parquet",
+            "funnel": "report/apply-conversion/range=2026-04-13_2026-04-13/funnel.parquet",
+            "device": "report/apply-conversion/range=2026-04-13_2026-04-13/device.parquet",
+            "os": "report/apply-conversion/range=2026-04-13_2026-04-13/os.parquet",
+            "hourly": "report/apply-conversion/range=2026-04-13_2026-04-13/hourly.parquet"
+          },
+          "rows": 618050,
+          "updated_at": "2026-04-14 16:30:48 +08:00"
+        },
+        "2026-04-08_2026-04-14": {
+          "date_from": "2026-04-08",
+          "date_to": "2026-04-14",
+          "root": "report/apply-conversion/range=2026-04-08_2026-04-14",
+          "files": {
+            "kpi": "report/apply-conversion/range=2026-04-08_2026-04-14/kpi.parquet",
+            "source": "report/apply-conversion/range=2026-04-08_2026-04-14/source.parquet",
+            "daily": "report/apply-conversion/range=2026-04-08_2026-04-14/daily.parquet",
+            "funnel": "report/apply-conversion/range=2026-04-08_2026-04-14/funnel.parquet",
+            "device": "report/apply-conversion/range=2026-04-08_2026-04-14/device.parquet",
+            "os": "report/apply-conversion/range=2026-04-08_2026-04-14/os.parquet",
+            "hourly": "report/apply-conversion/range=2026-04-08_2026-04-14/hourly.parquet"
+          },
+          "rows": 3415176,
+          "updated_at": "2026-04-14 19:54:30 +08:00"
+        }
+      },
+      "available_snapshots": [
+        "2026-04-08_2026-04-14",
+        "2026-04-13_2026-04-13"
+      ]
+    },
+    "feature-engagement": {
+      "snapshots": {
+        "2026-04-13_2026-04-13": {
+          "date_from": "2026-04-13",
+          "date_to": "2026-04-13",
+          "root": "report/feature-engagement/range=2026-04-13_2026-04-13",
+          "files": {
+            "explore_jobs_features": "report/feature-engagement/range=2026-04-13_2026-04-13/explore_jobs_features.parquet",
+            "explore_jobs_category_tabs": "report/feature-engagement/range=2026-04-13_2026-04-13/explore_jobs_category_tabs.parquet",
+            "explore_jobs_identity_types": "report/feature-engagement/range=2026-04-13_2026-04-13/explore_jobs_identity_types.parquet",
+            "explore_jobs_daily": "report/feature-engagement/range=2026-04-13_2026-04-13/explore_jobs_daily.parquet",
+            "explore_corp_features": "report/feature-engagement/range=2026-04-13_2026-04-13/explore_corp_features.parquet",
+            "explore_corp_industry_tabs": "report/feature-engagement/range=2026-04-13_2026-04-13/explore_corp_industry_tabs.parquet",
+            "identity_main": "report/feature-engagement/range=2026-04-13_2026-04-13/identity_main.parquet",
+            "identity_all": "report/feature-engagement/range=2026-04-13_2026-04-13/identity_all.parquet",
+            "news_features": "report/feature-engagement/range=2026-04-13_2026-04-13/news_features.parquet",
+            "news_categories": "report/feature-engagement/range=2026-04-13_2026-04-13/news_categories.parquet"
+          },
+          "rows": 618050,
+          "updated_at": "2026-04-14 16:30:51 +08:00"
+        },
+        "2026-04-08_2026-04-14": {
+          "date_from": "2026-04-08",
+          "date_to": "2026-04-14",
+          "root": "report/feature-engagement/range=2026-04-08_2026-04-14",
+          "files": {
+            "explore_jobs_features": "report/feature-engagement/range=2026-04-08_2026-04-14/explore_jobs_features.parquet",
+            "explore_jobs_category_tabs": "report/feature-engagement/range=2026-04-08_2026-04-14/explore_jobs_category_tabs.parquet",
+            "explore_jobs_identity_types": "report/feature-engagement/range=2026-04-08_2026-04-14/explore_jobs_identity_types.parquet",
+            "explore_jobs_daily": "report/feature-engagement/range=2026-04-08_2026-04-14/explore_jobs_daily.parquet",
+            "explore_corp_features": "report/feature-engagement/range=2026-04-08_2026-04-14/explore_corp_features.parquet",
+            "explore_corp_industry_tabs": "report/feature-engagement/range=2026-04-08_2026-04-14/explore_corp_industry_tabs.parquet",
+            "identity_main": "report/feature-engagement/range=2026-04-08_2026-04-14/identity_main.parquet",
+            "identity_all": "report/feature-engagement/range=2026-04-08_2026-04-14/identity_all.parquet",
+            "news_features": "report/feature-engagement/range=2026-04-08_2026-04-14/news_features.parquet",
+            "news_categories": "report/feature-engagement/range=2026-04-08_2026-04-14/news_categories.parquet"
+          },
+          "rows": 3415176,
+          "updated_at": "2026-04-14 19:54:32 +08:00"
+        }
+      },
+      "available_snapshots": [
+        "2026-04-08_2026-04-14",
+        "2026-04-13_2026-04-13"
+      ]
+    },
+    "click-heatmap": {
+      "snapshots": {
+        "2026-04-13_2026-04-13": {
+          "date_from": "2026-04-13",
+          "date_to": "2026-04-13",
+          "root": "report/click-heatmap/range=2026-04-13_2026-04-13",
+          "files": {
+            "click_counts": "report/click-heatmap/range=2026-04-13_2026-04-13/click_counts.parquet"
+          },
+          "rows": 84495,
+          "updated_at": "2026-04-14 16:31:02 +08:00"
+        },
+        "2026-04-08_2026-04-14": {
+          "date_from": "2026-04-08",
+          "date_to": "2026-04-14",
+          "root": "report/click-heatmap/range=2026-04-08_2026-04-14",
+          "files": {
+            "click_counts": "report/click-heatmap/range=2026-04-08_2026-04-14/click_counts.parquet"
+          },
+          "rows": 415146,
+          "updated_at": "2026-04-14 19:54:41 +08:00"
+        }
+      },
+      "available_snapshots": [
+        "2026-04-08_2026-04-14",
+        "2026-04-13_2026-04-13"
+      ]
+    }
+  },
+  "tier": "t2-report",
+  "schema_version": 1,
+  "updated_at": "2026-04-14 19:54:41 +08:00"
+}

@@ -1,160 +1,295 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>頁面流量排行 — Page Ranking</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
-      background: #f0f2f5; color: #1a1a2e; min-height: 100vh;
-    }
-    header {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
-      color: #fff; padding: 36px 48px 28px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    }
-    header h1 { font-size: 1.8rem; font-weight: 700; }
-    header p  { margin-top: 6px; font-size: 0.9rem; opacity: 0.65; }
-    .badge {
-      display: inline-block; margin-top: 12px;
-      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 20px; padding: 4px 14px; font-size: 0.8rem;
-    }
-    main { max-width: 1200px; margin: 0 auto; padding: 36px 24px 60px; }
-    .kpi-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px; margin-bottom: 36px;
-    }
-    .kpi-card {
-      background: #fff; border-radius: 14px; padding: 24px 20px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.07); border-top: 4px solid var(--accent);
-    }
-    .kpi-card .label { font-size: 0.78rem; color: #888; text-transform: uppercase; letter-spacing: 0.8px; }
-    .kpi-card .value { font-size: 2rem; font-weight: 800; color: var(--accent); margin-top: 6px; }
-    .kpi-card .sub   { font-size: 0.8rem; color: #aaa; margin-top: 4px; }
-    .chart-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
-      gap: 24px; margin-bottom: 28px;
-    }
-    .card {
-      background: #fff; border-radius: 14px; padding: 28px 24px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-    }
-    .card h2 { font-size: 1rem; font-weight: 700; color: #333; margin-bottom: 4px; }
-    .card .subtitle { font-size: 0.8rem; color: #999; margin-bottom: 20px; }
-    .chart-wrap { position: relative; height: 320px; }
-    .chart-wrap-tall { position: relative; height: 380px; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-    thead th {
-      background: #f7f8fa; padding: 10px 14px; text-align: left;
-      font-weight: 600; color: #555; border-bottom: 2px solid #e8e8e8;
-    }
-    tbody tr:nth-child(odd) { background: #fafafa; }
-    tbody tr:hover { background: #f0f4ff; }
-    tbody td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; }
-    .rank { color: #bbb; font-weight: 700; font-size: 0.85rem; }
-    .bar-cell { width: 160px; }
-    .bar-bg { background: #eef0f4; border-radius: 4px; height: 8px; overflow: hidden; }
-    .bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #4361ee, #7209b7); }
-    .pct { color: #4361ee; font-weight: 700; }
-    footer { text-align: center; font-size: 0.78rem; color: #bbb; padding: 24px 0 12px; }
-</style>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ <title>jobbank-web 數據報告</title>
+ <link rel="stylesheet" href="../app.css" />
 </head>
-<body>
-<header>
-  <h1>頁面流量排行 — Page Ranking</h1>
-  <p>資料來源：operation-logs（Elasticsearch） · 查詢區間：2026-04-08T00:00:00+08:00 ～ 2026-04-14T23:59:59+08:00</p>
-  <span class="badge">產生時間：2026-04-14 15:18:34 +08:00</span>
-</header>
-<main>
-  <div class="kpi-grid">
-    <div class="kpi-card" style="--accent:#4361ee">
-      <div class="label">總事件數</div>
-      <div class="value">3,415,176</div>
-      <div class="sub">所有 featureId 合計</div>
-    </div>
-    <div class="kpi-card" style="--accent:#7209b7">
-      <div class="label">功能數量</div>
-      <div class="value">86</div>
-      <div class="sub">不重複 featureId 數</div>
-    </div>
-    <div class="kpi-card" style="--accent:#f72585">
-      <div class="label">Top 1 功能</div>
-      <div class="value">job-page</div>
-      <div class="sub">1,835,392 次</div>
-    </div>  </div>  <div class="chart-grid">
-  <div class="card">
-    <h2>Top 20 功能流量排行</h2>
-    <div class="subtitle">依總事件數排序（顏色代表類別）</div>
-    <div class="chart-wrap-tall"><canvas id="top20Bar"></canvas></div>
-  </div>
-  <div class="card">
-    <h2>功能類別佔比</h2>
-    <div class="subtitle">各功能類別事件數比例</div>
-    <div class="chart-wrap"><canvas id="categoryPie"></canvas></div>
-  </div>  </div>
-  <div class="card" style="margin-bottom:24px">
-    <h2>完整 featureId 排行</h2>
-    <div class="subtitle">共 86 個功能 / 3,415,176 筆事件</div>
-    <table>
-      <thead><tr><th>#</th><th>featureId</th><th>總計</th><th>View</th><th>Click</th><th>CTR</th><th>類別</th></tr></thead>
-      <tbody><tr><td class="rank">1</td><td>job-page</td><td>1,835,392</td><td>1,835,392</td><td>0</td><td class="pct">0.00%</td><td>頁面瀏覽</td></tr><tr><td class="rank">2</td><td>search-job-page</td><td>676,401</td><td>676,401</td><td>0</td><td class="pct">0.00%</td><td>頁面瀏覽</td></tr><tr><td class="rank">3</td><td>home-page</td><td>329,692</td><td>329,692</td><td>0</td><td class="pct">0.00%</td><td>頁面瀏覽</td></tr><tr><td class="rank">4</td><td>apply-job</td><td>106,709</td><td>0</td><td>106,709</td><td class="pct">100.00%</td><td>應徵</td></tr><tr><td class="rank">5</td><td>search-general-keyword</td><td>97,154</td><td>0</td><td>97,154</td><td class="pct">100.00%</td><td>搜尋</td></tr><tr><td class="rank">6</td><td>search-general-submit</td><td>72,499</td><td>0</td><td>72,499</td><td class="pct">100.00%</td><td>搜尋</td></tr><tr><td class="rank">7</td><td>T-job-location</td><td>58,194</td><td>0</td><td>58,194</td><td class="pct">100.00%</td><td>快速篩選</td></tr><tr><td class="rank">8</td><td>search-general</td><td>47,107</td><td>0</td><td>47,107</td><td class="pct">100.00%</td><td>搜尋</td></tr><tr><td class="rank">9</td><td>T-job-category</td><td>37,750</td><td>0</td><td>37,750</td><td class="pct">100.00%</td><td>快速篩選</td></tr><tr><td class="rank">10</td><td>explore-jobs-organic</td><td>31,615</td><td>20,338</td><td>11,277</td><td class="pct">35.67%</td><td>探索功能</td></tr><tr><td class="rank">11</td><td>search-ai-keyword</td><td>28,841</td><td>0</td><td>28,841</td><td class="pct">100.00%</td><td>AI 搜尋</td></tr><tr><td class="rank">12</td><td>job-pair-page</td><td>24,534</td><td>24,534</td><td>0</td><td class="pct">0.00%</td><td>頁面瀏覽</td></tr><tr><td class="rank">13</td><td>search-corp-page</td><td>14,162</td><td>14,162</td><td>0</td><td class="pct">0.00%</td><td>頁面瀏覽</td></tr><tr><td class="rank">14</td><td>search-gig-page</td><td>6,662</td><td>6,662</td><td>0</td><td class="pct">0.00%</td><td>頁面瀏覽</td></tr><tr><td class="rank">15</td><td>explore-company-corp</td><td>5,891</td><td>5,048</td><td>843</td><td class="pct">14.31%</td><td>探索功能</td></tr><tr><td class="rank">16</td><td>identify-returning</td><td>4,869</td><td>0</td><td>4,869</td><td class="pct">100.00%</td><td>身份辨識</td></tr><tr><td class="rank">17</td><td>identify-worker</td><td>3,863</td><td>0</td><td>3,863</td><td class="pct">100.00%</td><td>身份辨識</td></tr><tr><td class="rank">18</td><td>job-preview-page</td><td>3,230</td><td>3,230</td><td>0</td><td class="pct">0.00%</td><td>頁面瀏覽</td></tr><tr><td class="rank">19</td><td>identify-student</td><td>2,666</td><td>0</td><td>2,666</td><td class="pct">100.00%</td><td>身份辨識</td></tr><tr><td class="rank">20</td><td>explore-jobs-organic-corp</td><td>2,563</td><td>0</td><td>2,563</td><td class="pct">100.00%</td><td>探索功能</td></tr><tr><td class="rank">21</td><td>search-ai-submit</td><td>2,182</td><td>0</td><td>2,182</td><td class="pct">100.00%</td><td>AI 搜尋</td></tr><tr><td class="rank">22</td><td>identify-personal-tab-2</td><td>2,150</td><td>0</td><td>2,150</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">23</td><td>identify-senior</td><td>1,593</td><td>0</td><td>1,593</td><td class="pct">100.00%</td><td>身份辨識</td></tr><tr><td class="rank">24</td><td>identify-fresh</td><td>1,585</td><td>0</td><td>1,585</td><td class="pct">100.00%</td><td>身份辨識</td></tr><tr><td class="rank">25</td><td>explore-company-job1</td><td>1,374</td><td>0</td><td>1,374</td><td class="pct">100.00%</td><td>探索功能</td></tr><tr><td class="rank">26</td><td>search-ai</td><td>1,326</td><td>0</td><td>1,326</td><td class="pct">100.00%</td><td>AI 搜尋</td></tr><tr><td class="rank">27</td><td>explore-company-job2</td><td>1,000</td><td>0</td><td>1,000</td><td class="pct">100.00%</td><td>探索功能</td></tr><tr><td class="rank">28</td><td>identify-personal</td><td>971</td><td>0</td><td>971</td><td class="pct">100.00%</td><td>身份辨識</td></tr><tr><td class="rank">29</td><td>identify-professional</td><td>958</td><td>0</td><td>958</td><td class="pct">100.00%</td><td>身份辨識</td></tr><tr><td class="rank">30</td><td>search-ai-voice-input</td><td>890</td><td>0</td><td>890</td><td class="pct">100.00%</td><td>AI 搜尋</td></tr><tr><td class="rank">31</td><td>explore-jobs-next</td><td>727</td><td>0</td><td>727</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">32</td><td>explore-jobs-prev</td><td>723</td><td>0</td><td>723</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">33</td><td>identify-personal-tab-3</td><td>667</td><td>0</td><td>667</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">34</td><td>search-ai-chat-mode</td><td>602</td><td>0</td><td>602</td><td class="pct">100.00%</td><td>AI 搜尋</td></tr><tr><td class="rank">35</td><td>corp-preview-new-page</td><td>599</td><td>599</td><td>0</td><td class="pct">0.00%</td><td>頁面瀏覽</td></tr><tr><td class="rank">36</td><td>identify-personal-tab-1</td><td>545</td><td>0</td><td>545</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">37</td><td>news-card-1</td><td>483</td><td>465</td><td>18</td><td class="pct">3.73%</td><td>新聞</td></tr><tr><td class="rank">38</td><td>news-card-2</td><td>441</td><td>434</td><td>7</td><td class="pct">1.59%</td><td>新聞</td></tr><tr><td class="rank">39</td><td>welcome-page</td><td>434</td><td>434</td><td>0</td><td class="pct">0.00%</td><td>頁面瀏覽</td></tr><tr><td class="rank">40</td><td>explore-company-job-more</td><td>430</td><td>0</td><td>430</td><td class="pct">100.00%</td><td>探索功能</td></tr><tr><td class="rank">41</td><td>identify-student-tab-2</td><td>412</td><td>0</td><td>412</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">42</td><td>news-card-3</td><td>394</td><td>379</td><td>15</td><td class="pct">3.81%</td><td>新聞</td></tr><tr><td class="rank">43</td><td>identify-returning-tab-2</td><td>380</td><td>0</td><td>380</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">44</td><td>company-select-job</td><td>373</td><td>0</td><td>373</td><td class="pct">100.00%</td><td>企業互動</td></tr><tr><td class="rank">45</td><td>identify-worker-tab-1</td><td>367</td><td>0</td><td>367</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">46</td><td>news-card-4</td><td>362</td><td>351</td><td>11</td><td class="pct">3.04%</td><td>新聞</td></tr><tr><td class="rank">47</td><td>explore-jobs-more</td><td>339</td><td>0</td><td>339</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">48</td><td>identify-returning-tab-1</td><td>296</td><td>0</td><td>296</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">49</td><td>search-intern-page</td><td>240</td><td>240</td><td>0</td><td class="pct">0.00%</td><td>頁面瀏覽</td></tr><tr><td class="rank">50</td><td>explore-company-manufacturing</td><td>234</td><td>0</td><td>234</td><td class="pct">100.00%</td><td>探索功能</td></tr><tr><td class="rank">51</td><td>餐飲╱住宿服務</td><td>214</td><td>0</td><td>214</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">52</td><td>explore-company-service</td><td>174</td><td>0</td><td>174</td><td class="pct">100.00%</td><td>探索功能</td></tr><tr><td class="rank">53</td><td>電子科技╱資訊╱軟體╱半導體</td><td>161</td><td>0</td><td>161</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">54</td><td>醫療照護╱環境衛生</td><td>151</td><td>0</td><td>151</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">55</td><td>corp-page</td><td>143</td><td>143</td><td>0</td><td class="pct">0.00%</td><td>頁面瀏覽</td></tr><tr><td class="rank">56</td><td>教育╱出版╱藝文相關</td><td>129</td><td>0</td><td>129</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">57</td><td>explore-company-more</td><td>125</td><td>0</td><td>125</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">58</td><td>批發╱零售</td><td>104</td><td>0</td><td>104</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">59</td><td>identify-fresh-tab-2</td><td>103</td><td>0</td><td>103</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">60</td><td>運輸物流╱倉儲╱貿易</td><td>94</td><td>0</td><td>94</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">61</td><td>identify-professional-tab-1</td><td>89</td><td>0</td><td>89</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">62</td><td>identify-returning-tab-3</td><td>89</td><td>0</td><td>89</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">63</td><td>identify-fresh-tab-3</td><td>88</td><td>0</td><td>88</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">64</td><td>identify-student-tab-1</td><td>81</td><td>0</td><td>81</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">65</td><td>identify-worker-tab-2</td><td>78</td><td>0</td><td>78</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">66</td><td>explore-company-next</td><td>70</td><td>0</td><td>70</td><td class="pct">100.00%</td><td>探索功能</td></tr><tr><td class="rank">67</td><td>identify-senior-tab-2</td><td>55</td><td>0</td><td>55</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">68</td><td>identify-worker-tab-3</td><td>55</td><td>0</td><td>55</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">69</td><td>news-workplace</td><td>42</td><td>0</td><td>42</td><td class="pct">100.00%</td><td>新聞</td></tr><tr><td class="rank">70</td><td>建築營造╱不動產相關</td><td>34</td><td>0</td><td>34</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">71</td><td>news-industry</td><td>28</td><td>0</td><td>28</td><td class="pct">100.00%</td><td>新聞</td></tr><tr><td class="rank">72</td><td>identify-fresh-tab-1</td><td>26</td><td>0</td><td>26</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">73</td><td>identify-senior-tab-1</td><td>25</td><td>0</td><td>25</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">74</td><td>explore-company-prev</td><td>23</td><td>0</td><td>23</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">75</td><td>news-interview</td><td>23</td><td>0</td><td>23</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">76</td><td>identify-student-tab-3</td><td>22</td><td>0</td><td>22</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">77</td><td>旅遊╱休閒╱運動</td><td>20</td><td>0</td><td>20</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">78</td><td>identify-senior-tab-3</td><td>14</td><td>0</td><td>14</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">79</td><td>identify-professional-tab-2</td><td>12</td><td>0</td><td>12</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">80</td><td>政治╱宗教╱社福</td><td>12</td><td>0</td><td>12</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">81</td><td>identify-professional-tab-3</td><td>9</td><td>0</td><td>9</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">82</td><td>法律╱會計╱顧問╱研發╱設計</td><td>5</td><td>0</td><td>5</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">83</td><td>農林漁牧╱水電資源</td><td>4</td><td>0</td><td>4</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">84</td><td>news-more</td><td>1</td><td>0</td><td>1</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">85</td><td>大眾傳播相關</td><td>1</td><td>0</td><td>1</td><td class="pct">100.00%</td><td>其他</td></tr><tr><td class="rank">86</td><td>金融投顧╱保險相關</td><td>1</td><td>0</td><td>1</td><td class="pct">100.00%</td><td>其他</td></tr></tbody>
-    </table>
-  </div>
-<script>
-  // ── Top 20 Bar (horizontal)
-  new Chart(document.getElementById('top20Bar'), {
-    type: 'bar',
-    data: {
-      labels: ["job-page", "search-job-page", "home-page", "apply-job", "search-general-keyword", "search-general-submit", "T-job-location", "search-general", "T-job-category", "explore-jobs-organic", "search-ai-keyword", "job-pair-page", "search-corp-page", "search-gig-page", "explore-company-corp", "identify-returning", "identify-worker", "job-preview-page", "identify-student", "explore-jobs-organic-corp"],
-      datasets: [{
-        label: '事件數',
-        data: [1835392, 676401, 329692, 106709, 97154, 72499, 58194, 47107, 37750, 31615, 28841, 24534, 14162, 6662, 5891, 4869, 3863, 3230, 2666, 2563],
-        backgroundColor: ["#4361ee", "#4361ee", "#4361ee", "#f72585", "#7209b7", "#7209b7", "#fb8500", "#7209b7", "#fb8500", "#06d6a0", "#8338ec", "#4361ee", "#4361ee", "#4361ee", "#06d6a0", "#118ab2", "#118ab2", "#4361ee", "#118ab2", "#06d6a0"],
-        borderRadius: 4
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { title: { display: true, text: '事件數' } },
-        y: { grid: { display: false } }
-      }
-    }
-  });
+<body data-initial-view="ranking">
 
-  // ── 功能類別 Doughnut
-  new Chart(document.getElementById('categoryPie'), {
-    type: 'doughnut',
-    data: {
-      labels: ["頁面瀏覽", "搜尋", "應徵", "快速篩選", "探索功能", "AI 搜尋", "身份辨識", "其他", "新聞", "企業互動"],
-      datasets: [{
-        data: [2891489, 216760, 106709, 95944, 43351, 33841, 16505, 8454, 1750, 373],
-        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#fb8500", "#06d6a0", "#8338ec", "#118ab2", "#888888", "#ffbe0b", "#80b918"],
-        borderWidth: 2, borderColor: '#fff'
-      }]
-    },
-    options: {
-      cutout: '55%',
-      plugins: {
-        legend: { position: 'right', labels: { font: { size: 13 }, padding: 10 } },
-        tooltip: { callbacks: {
-          label: ctx => {
-            const t = 3415176;
-            return ` ${ctx.label}：${ctx.parsed.toLocaleString()}（${(ctx.parsed/t*100).toFixed(1)}%）`;
-          }
-        } }
-      }
-    }
-  });
-</script>
+ <header class="hero">
+   <div class="hero__content">
+     <div class="hero__topbar">
+       <div>
+         <p class="hero__eyebrow">DuckDB-WASM Analytics</p>
+         <h1>📈 jobbank-web 數據報告</h1>
+         <p class="hero__desc">資料來源：operation-logs（Elasticsearch）· DuckDB-WASM 即時查詢</p>
+       </div>
+       <button id="theme-toggle" class="theme-toggle" type="button">切換暗黑版</button>
+     </div>
+   </div>
+ </header>
 
-</main>
-<footer>Generated 2026-04-14 15:18:34 +08:00 · operation-logs</footer>
+ <main id="page-layout" class="page-layout">
+
+   <aside class="sidebar panel">
+     <div class="sidebar__header">
+       <div>
+         <h2>分析角度</h2>
+         <p>切換報表視角</p>
+       </div>
+       <button
+         id="sidebar-toggle"
+         class="sidebar__toggle"
+         type="button"
+         aria-expanded="true"
+         aria-label="收合側邊導覽"
+       >
+         <span id="sidebar-toggle-icon">◀</span>
+       </button>
+     </div>
+
+     <nav class="sidebar__nav" aria-label="分析角度導覽">
+       <button class="sidebar__nav-item is-active" type="button" data-view-mode="overview">
+         <span class="sidebar__icon">📊</span>
+         <span>
+           <strong>整體概覽</strong>
+           <small>Traffic Overview</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="search">
+         <span class="sidebar__icon">🔍</span>
+         <span>
+           <strong>搜尋行為</strong>
+           <small>Search Behavior</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="apply">
+         <span class="sidebar__icon">🎯</span>
+         <span>
+           <strong>應徵轉換</strong>
+           <small>Apply Conversion</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="feature">
+         <span class="sidebar__icon">⚡</span>
+         <span>
+           <strong>功能互動</strong>
+           <small>Feature Engagement</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="device">
+         <span class="sidebar__icon">📱</span>
+         <span>
+           <strong>裝置平台</strong>
+           <small>Device &amp; Platform</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="ranking">
+         <span class="sidebar__icon">🏆</span>
+         <span>
+           <strong>頁面排行</strong>
+           <small>Page Ranking</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="navigation">
+         <span class="sidebar__icon">🔀</span>
+         <span>
+           <strong>頁面導航</strong>
+           <small>Page Navigation</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="heatmap">
+         <span class="sidebar__icon">🔥</span>
+         <span>
+           <strong>點擊熱點</strong>
+           <small>Page Click Heatmap</small>
+         </span>
+       </button>
+     </nav>
+   </aside>
+
+   <div class="right-col">
+
+     <div class="filter-wrap">
+       <section class="panel filter-panel">
+         <div class="panel__header">
+           <h2>查詢條件</h2>
+           <p>所有分析視角共用同一組日期與頁面條件。</p>
+         </div>
+         <form id="query-form" class="filters">
+           <label>
+             <span>起始日期</span>
+             <input id="date-from" name="date_from" type="date" />
+           </label>
+           <label>
+             <span>結束日期</span>
+             <input id="date-to" name="date_to" type="date" />
+           </label>
+           <label id="filter-page-path-wrap" class="filter-field--hidden">
+             <span>頁面路徑（選填）</span>
+             <input id="page-path" name="page_path" type="text" placeholder="/job/123" />
+           </label>
+           <div class="filter-actions">
+             <span>&nbsp;</span>
+             <button id="run-query" type="submit">執行查詢</button>
+           </div>
+         </form>
+         <p class="query-status" id="query-status"></p>
+       </section>
+     </div>
+
+     <div class="content">
+
+       <section class="panel view-panel">
+         <div class="panel__header view-panel__heading">
+           <div>
+             <p class="view-panel__eyebrow">Current View</p>
+             <h2 id="current-view-title">整體概覽</h2>
+           </div>
+           <p id="current-view-subtitle" class="view-panel__subtitle">Traffic Overview</p>
+         </div>
+         <p id="current-view-desc" class="panel__desc">觀察整體 KPI、趨勢與主要流量分佈。</p>
+       </section>
+
+       <section class="kpi-grid">
+         <article class="kpi-card" style="--kpi-color:#4361ee">
+           <div class="kpi-card__label" id="kpi-label-1">總事件</div>
+           <div class="kpi-card__value" id="kpi-1">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-1">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#118ab2">
+           <div class="kpi-card__label" id="kpi-label-2">View</div>
+           <div class="kpi-card__value" id="kpi-2">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-2">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#7209b7">
+           <div class="kpi-card__label" id="kpi-label-3">Click</div>
+           <div class="kpi-card__value" id="kpi-3">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-3">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#f72585">
+           <div class="kpi-card__label" id="kpi-label-4">Apply</div>
+           <div class="kpi-card__value" id="kpi-4">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-4">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#06d6a0">
+           <div class="kpi-card__label" id="kpi-label-5">Sessions</div>
+           <div class="kpi-card__value" id="kpi-5">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-5">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#fb8500">
+           <div class="kpi-card__label" id="kpi-label-6">Click Rate</div>
+           <div class="kpi-card__value" id="kpi-6">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-6">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#e63946">
+           <div class="kpi-card__label" id="kpi-label-7">Apply Rate</div>
+           <div class="kpi-card__value" id="kpi-7">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-7">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#118ab2">
+           <div class="kpi-card__label" id="kpi-label-8">Mobile %</div>
+           <div class="kpi-card__value" id="kpi-8">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-8">&nbsp;</div>
+         </article>
+       </section>
+
+       <section class="chart-grid">
+         <article class="panel chart-panel">
+           <div class="panel__header">
+             <h2 id="chart1-title">趨勢圖</h2>
+             <p id="chart1-desc">每日流量趨勢</p>
+           </div>
+           <div class="chart-canvas-wrap">
+             <canvas id="chart1"></canvas>
+           </div>
+         </article>
+
+         <article class="panel chart-panel">
+           <div class="panel__header">
+             <h2 id="chart2-title">分佈圖</h2>
+             <p id="chart2-desc">裝置、來源、功能類別</p>
+           </div>
+           <div class="chart-canvas-wrap">
+             <canvas id="chart2"></canvas>
+           </div>
+         </article>
+
+         <article id="chart3-panel" class="panel chart-panel">
+           <div class="panel__header">
+             <h2 id="chart3-title">排行圖</h2>
+             <p id="chart3-desc">Top feature / 互動排行</p>
+           </div>
+           <div class="chart-canvas-wrap">
+             <canvas id="chart3"></canvas>
+           </div>
+         </article>
+       </section>
+
+       <article id="table1-panel" class="panel table-panel">
+         <div class="panel__header">
+           <h2 id="table1-title">排行表</h2>
+           <p id="table1-desc"></p>
+         </div>
+         <div class="table-wrap">
+           <table>
+             <thead id="table1-head">
+               <tr><th>#</th><th>名稱</th><th>數值</th><th></th><th>佔比</th></tr>
+             </thead>
+             <tbody id="table1-body">
+               <tr><td colspan="5" class="empty-cell">尚未載入資料</td></tr>
+             </tbody>
+           </table>
+         </div>
+       </article>
+
+       <article id="table2-panel" class="panel table-panel hidden">
+         <div class="panel__header">
+           <h2 id="table2-title">表格 2</h2>
+           <p id="table2-desc"></p>
+         </div>
+         <div class="table-wrap">
+           <table>
+             <thead id="table2-head">
+               <tr><th>#</th><th>名稱</th><th>數值</th><th></th><th>佔比</th></tr>
+             </thead>
+             <tbody id="table2-body">
+               <tr><td colspan="5" class="empty-cell">尚未載入資料</td></tr>
+             </tbody>
+           </table>
+         </div>
+       </article>
+
+       <article id="table3-panel" class="panel table-panel hidden">
+         <div class="panel__header">
+           <h2 id="table3-title">表格 3</h2>
+           <p id="table3-desc"></p>
+         </div>
+         <div class="table-wrap">
+           <table>
+             <thead id="table3-head">
+               <tr><th>#</th><th>名稱</th><th>數值</th><th></th><th>佔比</th></tr>
+             </thead>
+             <tbody id="table3-body">
+               <tr><td colspan="5" class="empty-cell">尚未載入資料</td></tr>
+             </tbody>
+           </table>
+         </div>
+       </article>
+
+       <article id="table4-panel" class="panel table-panel hidden">
+         <div class="panel__header">
+           <h2 id="table4-title">表格 4</h2>
+           <p id="table4-desc"></p>
+         </div>
+         <div class="table-wrap">
+           <table>
+             <thead id="table4-head">
+               <tr><th>#</th><th>名稱</th><th>數值</th><th></th><th>佔比</th></tr>
+             </thead>
+             <tbody id="table4-body">
+               <tr><td colspan="5" class="empty-cell">尚未載入資料</td></tr>
+             </tbody>
+           </table>
+         </div>
+       </article>
+
+     </div>
+   </div>
+ </main>
+
+ <script type="module" src="../app.js"></script>
 </body>
 </html>

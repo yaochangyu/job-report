@@ -84,6 +84,10 @@ const VIEW_META = {
   },
 };
 
+function isValidViewMode(viewMode) {
+  return Boolean(viewMode && viewMode in VIEW_META);
+}
+
 function setText(id, value) {
   const node = document.getElementById(id);
   if (node) {
@@ -194,6 +198,7 @@ async function runQuery(state, filters) {
   }
 
   try {
+    syncUrlParams(filters);
     const result = await executeViewQueries(runtime.conn, filters);
     state.lastQuery = result.summary;
     state.queryResult = summarizeQueryResult(result.outputs);
@@ -214,13 +219,45 @@ async function runQuery(state, filters) {
   }
 }
 
-function hydrateDefaultDates() {
+function buildDefaultFilters() {
   const today = new Date();
   const from = new Date(today);
   from.setDate(today.getDate() - 6);
+  return {
+    dateFrom: from.toISOString().slice(0, 10),
+    dateTo: today.toISOString().slice(0, 10),
+    pagePath: "",
+  };
+}
 
-  document.getElementById("date-from").value = from.toISOString().slice(0, 10);
-  document.getElementById("date-to").value = today.toISOString().slice(0, 10);
+function readInitialFilters(viewMode) {
+  const params = new URLSearchParams(window.location.search);
+  const defaults = buildDefaultFilters();
+  return {
+    dateFrom: params.get("date_from") || defaults.dateFrom,
+    dateTo: params.get("date_to") || defaults.dateTo,
+    pagePath: params.get("page_path") || defaults.pagePath,
+    viewMode,
+  };
+}
+
+function syncUrlParams(filters) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("view", filters.viewMode);
+  url.searchParams.set("date_from", filters.dateFrom);
+  url.searchParams.set("date_to", filters.dateTo);
+  if (filters.pagePath) url.searchParams.set("page_path", filters.pagePath);
+  else url.searchParams.delete("page_path");
+  history.replaceState(null, "", `${url.pathname}${url.search}`);
+}
+
+function resolveInitialViewMode() {
+  const params = new URLSearchParams(window.location.search);
+  const viewFromUrl = params.get("view");
+  if (isValidViewMode(viewFromUrl)) return viewFromUrl;
+  const bodyView = document.body.dataset.initialView;
+  if (isValidViewMode(bodyView)) return bodyView;
+  return "overview";
 }
 
 function bindThemeToggle(state) {
@@ -240,8 +277,6 @@ function bindSidebar(state) {
     button.addEventListener("click", async () => {
       state.selectedViewMode = button.dataset.viewMode;
       renderViewMeta(state);
-      // URL hash 同步，讓分享連結可直接開對應視角
-      history.replaceState(null, "", `?view=${state.selectedViewMode}`);
       const form = getQueryForm();
 
       if (state.lastSuccessfulFilters) {
@@ -323,19 +358,13 @@ async function buildEventsView(conn, registeredFiles) {
 
 async function bootstrap() {
   const state = { ...defaultState };
-
-  // URL ?view= 參數：直接開對應視角
-  const urlParams = new URLSearchParams(window.location.search);
-  const viewFromUrl = urlParams.get("view");
-  if (viewFromUrl && viewFromUrl in VIEW_META) {
-    state.selectedViewMode = viewFromUrl;
-  }
+  state.selectedViewMode = resolveInitialViewMode();
 
   const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
   const savedSidebarState = localStorage.getItem(SIDEBAR_STORAGE_KEY);
   applyTheme(savedTheme === "dark" ? "dark" : "light", state);
   applySidebarState(savedSidebarState === "true", state);
-  hydrateDefaultDates();
+  applyFiltersToForm(readInitialFilters(state.selectedViewMode));
   bindThemeToggle(state);
   bindSidebarToggle(state);
   bindSidebar(state);
@@ -363,6 +392,15 @@ async function bootstrap() {
     state.lastQuery = registeredFiles.length
       ? `DuckDB 已載入 ${registeredFiles.length} 個日期分區`
       : "manifest 已載入，但目前沒有可查詢的 Parquet 檔";
+
+    // DuckDB 載入完成後自動執行查詢
+    if (runtime.hasEventsView) {
+      renderState(state);
+      const form = document.getElementById("query-form");
+      const filters = collectFormFilters(form, state.selectedViewMode);
+      await runQuery(state, filters);
+      return;
+    }
   } catch (error) {
     state.lastQuery = error instanceof Error ? error.message : String(error);
   }

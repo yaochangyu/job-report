@@ -1,331 +1,295 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>應徵轉換分析 — Apply Conversion</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
-      background: #f0f2f5; color: #1a1a2e; min-height: 100vh;
-    }
-    header {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
-      color: #fff; padding: 36px 48px 28px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    }
-    header h1 { font-size: 1.8rem; font-weight: 700; }
-    header p  { margin-top: 6px; font-size: 0.9rem; opacity: 0.65; }
-    .badge {
-      display: inline-block; margin-top: 12px;
-      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 20px; padding: 4px 14px; font-size: 0.8rem;
-    }
-    main { max-width: 1200px; margin: 0 auto; padding: 36px 24px 60px; }
-    .kpi-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 16px; margin-bottom: 36px;
-    }
-    .kpi-card {
-      background: #fff; border-radius: 14px; padding: 24px 20px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.07); border-top: 4px solid var(--accent);
-    }
-    .kpi-card .label { font-size: 0.78rem; color: #888; text-transform: uppercase; letter-spacing: 0.8px; }
-    .kpi-card .value { font-size: 2rem; font-weight: 800; color: var(--accent); margin-top: 6px; }
-    .kpi-card .sub   { font-size: 0.8rem; color: #aaa; margin-top: 4px; }
-    .chart-grid {
-      display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
-      gap: 24px; margin-bottom: 28px;
-    }
-    .card {
-      background: #fff; border-radius: 14px; padding: 28px 24px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-    }
-    .card h2 { font-size: 1rem; font-weight: 700; color: #333; margin-bottom: 4px; }
-    .card .subtitle { font-size: 0.8rem; color: #999; margin-bottom: 20px; }
-    .chart-wrap { position: relative; height: 320px; }
-    .chart-wrap-tall { position: relative; height: 380px; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
-    thead th {
-      background: #f7f8fa; padding: 10px 14px; text-align: left;
-      font-weight: 600; color: #555; border-bottom: 2px solid #e8e8e8;
-    }
-    tbody tr:nth-child(odd) { background: #fafafa; }
-    tbody tr:hover { background: #f0f4ff; }
-    tbody td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; }
-    .rank { color: #bbb; font-weight: 700; font-size: 0.85rem; }
-    .bar-cell { width: 160px; }
-    .bar-bg { background: #eef0f4; border-radius: 4px; height: 8px; overflow: hidden; }
-    .bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #4361ee, #7209b7); }
-    .pct { color: #4361ee; font-weight: 700; }
-    footer { text-align: center; font-size: 0.78rem; color: #bbb; padding: 24px 0 12px; }
-</style>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ <title>jobbank-web 數據報告</title>
+ <link rel="stylesheet" href="../app.css" />
 </head>
-<body>
-<header>
-  <h1>應徵轉換分析 — Apply Conversion</h1>
-  <p>資料來源：operation-logs（Elasticsearch） · 查詢區間：2026-04-08T00:00:00+08:00 ～ 2026-04-14T23:59:59+08:00</p>
-  <span class="badge">產生時間：2026-04-14 15:18:26 +08:00</span>
-</header>
-<main>
-  <div class="kpi-grid">
-    <div class="kpi-card" style="--accent:#f72585">
-      <div class="label">總應徵數</div>
-      <div class="value">106,709</div>
-      <div class="sub">action=apply 事件數</div>
-    </div>
-    <div class="kpi-card" style="--accent:#fb8500">
-      <div class="label">每日平均應徵</div>
-      <div class="value">15,244</div>
-      <div class="sub">區間內日平均</div>
-    </div>
-    <div class="kpi-card" style="--accent:#118ab2">
-      <div class="label">職缺頁瀏覽</div>
-      <div class="value">1,835,392</div>
-      <div class="sub">job-page view 事件數</div>
-    </div>
-    <div class="kpi-card" style="--accent:#4361ee">
-      <div class="label">應徵轉換率</div>
-      <div class="value">5.81%</div>
-      <div class="sub">Apply / Job Page View</div>
-    </div>  </div>  <div class="chart-grid">
-  <div class="card">
-    <h2>應徵每日趨勢</h2>
-    <div class="subtitle">職缺頁瀏覽 + 應徵數（右 Y 軸）+ 轉換率（右 Y 軸）</div>
-    <div class="chart-wrap-tall"><canvas id="applyTrend"></canvas></div>
-  </div>
-  <div class="card">
-    <h2>轉換漏斗</h2>
-    <div class="subtitle">各環節事件數（非 session-based）</div>
-    <div class="chart-wrap"><canvas id="funnelChart"></canvas></div>
-  </div>  </div>  <div class="chart-grid">
-  <div class="card">
-    <h2>應徵來源分佈</h2>
-    <div class="subtitle">metadata.source 分佈</div>
-    <div class="chart-wrap"><canvas id="sourcePie"></canvas></div>
-  </div>
-  <div class="card">
-    <h2>應徵裝置分佈</h2>
-    <div class="subtitle">mobile vs desktop</div>
-    <div class="chart-wrap"><canvas id="deviceBar"></canvas></div>
-  </div>  </div>
-  <div class="card" style="margin-bottom:24px">
-    <h2>應徵裝置詳細</h2>
-    <div class="subtitle">共 106,709 筆</div>
-    <table>
-      <thead><tr><th>#</th><th>裝置</th><th>應徵數</th><th>佔比</th></tr></thead>
-      <tbody><tr><td class="rank">1</td><td>mobile</td><td>68,737</td><td class="pct">64.4%</td></tr><tr><td class="rank">2</td><td>desktop</td><td>37,972</td><td class="pct">35.6%</td></tr></tbody>
-    </table>
-  </div>
-  <div class="card" style="margin-bottom:24px">
-    <h2>應徵 OS 分佈</h2>
-    <div class="subtitle">共 106,709 筆</div>
-    <table>
-      <thead><tr><th>#</th><th>OS</th><th>應徵數</th><th>佔比</th></tr></thead>
-      <tbody><tr><td class="rank">1</td><td>Android</td><td>44,442</td><td class="pct">41.6%</td></tr><tr><td class="rank">2</td><td>Windows</td><td>32,976</td><td class="pct">30.9%</td></tr><tr><td class="rank">3</td><td>iPhone</td><td>24,568</td><td class="pct">23.0%</td></tr><tr><td class="rank">4</td><td>macOS</td><td>1,352</td><td class="pct">1.3%</td></tr><tr><td class="rank">5</td><td>MacIntel</td><td>1,330</td><td class="pct">1.2%</td></tr><tr><td class="rank">6</td><td>Win32</td><td>631</td><td class="pct">0.6%</td></tr><tr><td class="rank">7</td><td>Linux</td><td>617</td><td class="pct">0.6%</td></tr><tr><td class="rank">8</td><td>iPad</td><td>488</td><td class="pct">0.5%</td></tr><tr><td class="rank">9</td><td>Linux x86_64</td><td>114</td><td class="pct">0.1%</td></tr><tr><td class="rank">10</td><td></td><td>83</td><td class="pct">0.1%</td></tr><tr><td class="rank">11</td><td>Linux armv81</td><td>59</td><td class="pct">0.1%</td></tr><tr><td class="rank">12</td><td>Chrome OS</td><td>22</td><td class="pct">0.0%</td></tr><tr><td class="rank">13</td><td>Linux armv8l</td><td>17</td><td class="pct">0.0%</td></tr><tr><td class="rank">14</td><td>Linux aarch64</td><td>10</td><td class="pct">0.0%</td></tr></tbody>
-    </table>
-  </div>  <div class="chart-grid">
-  <div class="card">
-    <h2>應徵時段分佈</h2>
-    <div class="subtitle">每小時平均應徵數（台灣時區）</div>
-    <div class="chart-wrap"><canvas id="applyHourly"></canvas></div>
-  </div>  </div>
-  <div class="card" style="margin-bottom:24px">
-    <h2>應徵來源詳細數據</h2>
-    <div class="subtitle">共 106,709 筆</div>
-    <table>
-      <thead><tr><th>#</th><th>來源</th><th>應徵數</th><th>視覺</th><th>佔比</th></tr></thead>
-      <tbody>
-        <tr>
-          <td class="rank">1</td>
-          <td>job-detail</td>
-          <td>66,299</td>
-          <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:62.1%"></div></div>
-          </td>
-          <td class="pct">62.1%</td>
-        </tr>
-        <tr>
-          <td class="rank">2</td>
-          <td>search</td>
-          <td>25,688</td>
-          <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:24.1%"></div></div>
-          </td>
-          <td class="pct">24.1%</td>
-        </tr>
-        <tr>
-          <td class="rank">3</td>
-          <td>corp</td>
-          <td>14,210</td>
-          <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:13.3%"></div></div>
-          </td>
-          <td class="pct">13.3%</td>
-        </tr>
-        <tr>
-          <td class="rank">4</td>
-          <td>job-pair</td>
-          <td>479</td>
-          <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:0.4%"></div></div>
-          </td>
-          <td class="pct">0.4%</td>
-        </tr>
-        <tr>
-          <td class="rank">5</td>
-          <td>welcome</td>
-          <td>33</td>
-          <td class="bar-cell">
-            <div class="bar-bg"><div class="bar-fill" style="width:0.0%"></div></div>
-          </td>
-          <td class="pct">0.0%</td>
-        </tr></tbody>
-    </table>
-  </div>
-<script>
-  // ── 應徵每日趨勢
-  new Chart(document.getElementById('applyTrend'), {
-    type: 'line',
-    data: {
-      labels: ["2026-04-08", "2026-04-09", "2026-04-10", "2026-04-11", "2026-04-12", "2026-04-13", "2026-04-14"],
-      datasets: [
-        {
-          label: '職缺頁瀏覽',
-          data: [322769, 321270, 283679, 198560, 218402, 322760, 167952],
-          borderColor: '#118ab2', backgroundColor: 'rgba(17,138,178,0.08)',
-          fill: true, tension: 0.3, yAxisID: 'y'
-        },
-        {
-          label: '應徵數',
-          data: [19141, 19029, 17316, 10153, 11384, 19314, 10372],
-          borderColor: '#f72585', backgroundColor: 'rgba(247,37,133,0.1)',
-          fill: true, tension: 0.3, yAxisID: 'y1'
-        },
-        {
-          label: '轉換率 %',
-          data: [5.93, 5.92, 6.1, 5.11, 5.21, 5.98, 6.18],
-          borderColor: '#fb8500', borderDash: [6,3],
-          fill: false, tension: 0.3, yAxisID: 'y1'
-        }
-      ]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      scales: {
-        y:  { position: 'left',  title: { display: true, text: '職缺頁瀏覽數' } },
-        y1: { position: 'right', grid: { drawOnChartArea: false },
-               title: { display: true, text: '應徵數 / 轉換率 %' } }
-      },
-      plugins: { legend: { position: 'bottom' } }
-    }
-  });
+<body data-initial-view="apply">
 
-  // ── 漏斗圖（水平 Bar）
-  new Chart(document.getElementById('funnelChart'), {
-    type: 'bar',
-    data: {
-      labels: ["首頁瀏覽", "搜尋結果頁瀏覽", "職缺詳情頁瀏覽", "應徵送出"],
-      datasets: [{
-        label: '事件數',
-        data: [329692, 676401, 1835392, 106709],
-        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0"],
-        borderRadius: 6
-      }]
-    },
-    options: {
-      indexAxis: 'y',
-      responsive: true, maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false },
-        tooltip: { callbacks: {
-          label: ctx => {
-            const top = 329692;
-            const pct = top ? (ctx.parsed.x / top * 100).toFixed(1) : '0.0';
-            return ` ${ctx.parsed.x.toLocaleString()} 次（相對首步驟 ${pct}%）`;
-          }
-        } }
-      },
-      scales: {
-        x: { title: { display: true, text: '事件數（非 session-based）' } },
-        y: { grid: { display: false } }
-      }
-    }
-  });
+ <header class="hero">
+   <div class="hero__content">
+     <div class="hero__topbar">
+       <div>
+         <p class="hero__eyebrow">DuckDB-WASM Analytics</p>
+         <h1>📈 jobbank-web 數據報告</h1>
+         <p class="hero__desc">資料來源：operation-logs（Elasticsearch）· DuckDB-WASM 即時查詢</p>
+       </div>
+       <button id="theme-toggle" class="theme-toggle" type="button">切換暗黑版</button>
+     </div>
+   </div>
+ </header>
 
-  // ── 應徵來源 Doughnut
-  new Chart(document.getElementById('sourcePie'), {
-    type: 'doughnut',
-    data: {
-      labels: ["job-detail", "search", "corp", "job-pair", "welcome"],
-      datasets: [{
-        data: [66299, 25688, 14210, 479, 33],
-        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500"],
-        borderWidth: 2, borderColor: '#fff'
-      }]
-    },
-    options: {
-      cutout: '62%',
-      plugins: {
-        legend: { position: 'right', labels: { font: { size: 13 }, padding: 10 } },
-        tooltip: { callbacks: {
-          label: ctx => {
-            const t = 106709;
-            return ` ${ctx.label}：${ctx.parsed.toLocaleString()} 次（${(ctx.parsed/t*100).toFixed(1)}%）`;
-          }
-        } }
-      }
-    }
-  });
+ <main id="page-layout" class="page-layout">
 
-  // ── 應徵裝置 Bar
-  new Chart(document.getElementById('deviceBar'), {
-    type: 'bar',
-    data: {
-      labels: ["mobile", "desktop"],
-      datasets: [{
-        label: '應徵數',
-        data: [68737, 37972],
-        backgroundColor: ["#4361ee", "#7209b7"],
-        borderRadius: 6
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: { title: { display: true, text: '應徵數' } }
-      }
-    }
-  });
+   <aside class="sidebar panel">
+     <div class="sidebar__header">
+       <div>
+         <h2>分析角度</h2>
+         <p>切換報表視角</p>
+       </div>
+       <button
+         id="sidebar-toggle"
+         class="sidebar__toggle"
+         type="button"
+         aria-expanded="true"
+         aria-label="收合側邊導覽"
+       >
+         <span id="sidebar-toggle-icon">◀</span>
+       </button>
+     </div>
 
-  // ── 每小時應徵
-  new Chart(document.getElementById('applyHourly'), {
-    type: 'bar',
-    data: {
-      labels: ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"],
-      datasets: [{
-        label: '平均應徵數',
-        data: [452, 305, 198, 175, 117, 131, 254, 399, 681, 844, 1088, 1077, 1017, 1069, 1129, 950, 899, 701, 658, 601, 668, 670, 633, 531],
-        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff", "#8338ec", "#ff006e", "#ffbe0b", "#80b918", "#00b4d8", "#e63946", "#457b9d", "#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff", "#8338ec", "#ff006e", "#ffbe0b"],
-        borderRadius: 4
-      }]
-    },
-    options: {
-      responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { title: { display: true, text: '小時（台灣時區）' } },
-        y: { title: { display: true, text: '平均應徵數' } }
-      }
-    }
-  });
-</script>
+     <nav class="sidebar__nav" aria-label="分析角度導覽">
+       <button class="sidebar__nav-item is-active" type="button" data-view-mode="overview">
+         <span class="sidebar__icon">📊</span>
+         <span>
+           <strong>整體概覽</strong>
+           <small>Traffic Overview</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="search">
+         <span class="sidebar__icon">🔍</span>
+         <span>
+           <strong>搜尋行為</strong>
+           <small>Search Behavior</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="apply">
+         <span class="sidebar__icon">🎯</span>
+         <span>
+           <strong>應徵轉換</strong>
+           <small>Apply Conversion</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="feature">
+         <span class="sidebar__icon">⚡</span>
+         <span>
+           <strong>功能互動</strong>
+           <small>Feature Engagement</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="device">
+         <span class="sidebar__icon">📱</span>
+         <span>
+           <strong>裝置平台</strong>
+           <small>Device &amp; Platform</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="ranking">
+         <span class="sidebar__icon">🏆</span>
+         <span>
+           <strong>頁面排行</strong>
+           <small>Page Ranking</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="navigation">
+         <span class="sidebar__icon">🔀</span>
+         <span>
+           <strong>頁面導航</strong>
+           <small>Page Navigation</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="heatmap">
+         <span class="sidebar__icon">🔥</span>
+         <span>
+           <strong>點擊熱點</strong>
+           <small>Page Click Heatmap</small>
+         </span>
+       </button>
+     </nav>
+   </aside>
 
-</main>
-<footer>Generated 2026-04-14 15:18:26 +08:00 · operation-logs</footer>
+   <div class="right-col">
+
+     <div class="filter-wrap">
+       <section class="panel filter-panel">
+         <div class="panel__header">
+           <h2>查詢條件</h2>
+           <p>所有分析視角共用同一組日期與頁面條件。</p>
+         </div>
+         <form id="query-form" class="filters">
+           <label>
+             <span>起始日期</span>
+             <input id="date-from" name="date_from" type="date" />
+           </label>
+           <label>
+             <span>結束日期</span>
+             <input id="date-to" name="date_to" type="date" />
+           </label>
+           <label id="filter-page-path-wrap" class="filter-field--hidden">
+             <span>頁面路徑（選填）</span>
+             <input id="page-path" name="page_path" type="text" placeholder="/job/123" />
+           </label>
+           <div class="filter-actions">
+             <span>&nbsp;</span>
+             <button id="run-query" type="submit">執行查詢</button>
+           </div>
+         </form>
+         <p class="query-status" id="query-status"></p>
+       </section>
+     </div>
+
+     <div class="content">
+
+       <section class="panel view-panel">
+         <div class="panel__header view-panel__heading">
+           <div>
+             <p class="view-panel__eyebrow">Current View</p>
+             <h2 id="current-view-title">整體概覽</h2>
+           </div>
+           <p id="current-view-subtitle" class="view-panel__subtitle">Traffic Overview</p>
+         </div>
+         <p id="current-view-desc" class="panel__desc">觀察整體 KPI、趨勢與主要流量分佈。</p>
+       </section>
+
+       <section class="kpi-grid">
+         <article class="kpi-card" style="--kpi-color:#4361ee">
+           <div class="kpi-card__label" id="kpi-label-1">總事件</div>
+           <div class="kpi-card__value" id="kpi-1">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-1">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#118ab2">
+           <div class="kpi-card__label" id="kpi-label-2">View</div>
+           <div class="kpi-card__value" id="kpi-2">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-2">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#7209b7">
+           <div class="kpi-card__label" id="kpi-label-3">Click</div>
+           <div class="kpi-card__value" id="kpi-3">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-3">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#f72585">
+           <div class="kpi-card__label" id="kpi-label-4">Apply</div>
+           <div class="kpi-card__value" id="kpi-4">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-4">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#06d6a0">
+           <div class="kpi-card__label" id="kpi-label-5">Sessions</div>
+           <div class="kpi-card__value" id="kpi-5">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-5">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#fb8500">
+           <div class="kpi-card__label" id="kpi-label-6">Click Rate</div>
+           <div class="kpi-card__value" id="kpi-6">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-6">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#e63946">
+           <div class="kpi-card__label" id="kpi-label-7">Apply Rate</div>
+           <div class="kpi-card__value" id="kpi-7">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-7">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#118ab2">
+           <div class="kpi-card__label" id="kpi-label-8">Mobile %</div>
+           <div class="kpi-card__value" id="kpi-8">--</div>
+           <div class="kpi-card__sub" id="kpi-sub-8">&nbsp;</div>
+         </article>
+       </section>
+
+       <section class="chart-grid">
+         <article class="panel chart-panel">
+           <div class="panel__header">
+             <h2 id="chart1-title">趨勢圖</h2>
+             <p id="chart1-desc">每日流量趨勢</p>
+           </div>
+           <div class="chart-canvas-wrap">
+             <canvas id="chart1"></canvas>
+           </div>
+         </article>
+
+         <article class="panel chart-panel">
+           <div class="panel__header">
+             <h2 id="chart2-title">分佈圖</h2>
+             <p id="chart2-desc">裝置、來源、功能類別</p>
+           </div>
+           <div class="chart-canvas-wrap">
+             <canvas id="chart2"></canvas>
+           </div>
+         </article>
+
+         <article id="chart3-panel" class="panel chart-panel">
+           <div class="panel__header">
+             <h2 id="chart3-title">排行圖</h2>
+             <p id="chart3-desc">Top feature / 互動排行</p>
+           </div>
+           <div class="chart-canvas-wrap">
+             <canvas id="chart3"></canvas>
+           </div>
+         </article>
+       </section>
+
+       <article id="table1-panel" class="panel table-panel">
+         <div class="panel__header">
+           <h2 id="table1-title">排行表</h2>
+           <p id="table1-desc"></p>
+         </div>
+         <div class="table-wrap">
+           <table>
+             <thead id="table1-head">
+               <tr><th>#</th><th>名稱</th><th>數值</th><th></th><th>佔比</th></tr>
+             </thead>
+             <tbody id="table1-body">
+               <tr><td colspan="5" class="empty-cell">尚未載入資料</td></tr>
+             </tbody>
+           </table>
+         </div>
+       </article>
+
+       <article id="table2-panel" class="panel table-panel hidden">
+         <div class="panel__header">
+           <h2 id="table2-title">表格 2</h2>
+           <p id="table2-desc"></p>
+         </div>
+         <div class="table-wrap">
+           <table>
+             <thead id="table2-head">
+               <tr><th>#</th><th>名稱</th><th>數值</th><th></th><th>佔比</th></tr>
+             </thead>
+             <tbody id="table2-body">
+               <tr><td colspan="5" class="empty-cell">尚未載入資料</td></tr>
+             </tbody>
+           </table>
+         </div>
+       </article>
+
+       <article id="table3-panel" class="panel table-panel hidden">
+         <div class="panel__header">
+           <h2 id="table3-title">表格 3</h2>
+           <p id="table3-desc"></p>
+         </div>
+         <div class="table-wrap">
+           <table>
+             <thead id="table3-head">
+               <tr><th>#</th><th>名稱</th><th>數值</th><th></th><th>佔比</th></tr>
+             </thead>
+             <tbody id="table3-body">
+               <tr><td colspan="5" class="empty-cell">尚未載入資料</td></tr>
+             </tbody>
+           </table>
+         </div>
+       </article>
+
+       <article id="table4-panel" class="panel table-panel hidden">
+         <div class="panel__header">
+           <h2 id="table4-title">表格 4</h2>
+           <p id="table4-desc"></p>
+         </div>
+         <div class="table-wrap">
+           <table>
+             <thead id="table4-head">
+               <tr><th>#</th><th>名稱</th><th>數值</th><th></th><th>佔比</th></tr>
+             </thead>
+             <tbody id="table4-body">
+               <tr><td colspan="5" class="empty-cell">尚未載入資料</td></tr>
+             </tbody>
+           </table>
+         </div>
+       </article>
+
+     </div>
+   </div>
+ </main>
+
+ <script type="module" src="../app.js"></script>
 </body>
 </html>
