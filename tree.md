@@ -8,6 +8,7 @@ job-report-1/
 │   ├── __init__.py
 │   ├── data_pipeline.py               # T1/T2/T3 資料管線契約與路徑定義
 │   ├── es_client.py                    # Grafana _msearch 共用封裝
+│   ├── raw_events.py                  # T1 raw 事件欄位契約與正規化工具
 │   ├── html_template.py                # HTML header/footer/style 共用模板
 │   └── chart_helpers.py               # Chart.js 輔助函式
 ├── output/
@@ -33,6 +34,7 @@ job-report-1/
 ├── click_heatmap_config.json          # 頁面 URL + featureId → 元素位置 對應表
 ├── build_frontend_bundle.py           # 將 v1-1 前端資產與 dataset 複製到 output/
 ├── deploy.sh                          # 一鍵產生報告並部署到 GitHub Pages
+├── extract_raw_events.py              # 從 ES 抽取 T1 raw 事件 parquet
 ├── frontend/
 │   ├── app.css                        # v1-1 共用前端樣式
 │   ├── app.js                         # v1-1 SPA 入口互動邏輯
