@@ -2,144 +2,62 @@
 """
 category_tab_report.py
 ─────────────────────
-從 Elasticsearch（透過 Grafana Proxy）查詢 metadata.categoryTab 分佈，
-並產生 HTML 圖表報告。
+從 T1 raw parquet 讀取 metadata.categoryTab 分佈，並產生 HTML 圖表報告。
 
 執行方式：
-    python3 category_tab_report.py
-    python3 category_tab_report.py --days 1
-    python3 category_tab_report.py --from "2026-04-01" --to "2026-04-10"
-    python3 category_tab_report.py --output /tmp/report
+    uv run python category_tab_report.py
+    uv run python category_tab_report.py --days 1
+    uv run python category_tab_report.py --from 2026-04-01 --to 2026-04-10
+    uv run python category_tab_report.py --output /tmp/report
 """
 
-import argparse
+from __future__ import annotations
+
 import json
-import os
-import sys
-import urllib.request
-import urllib.error
-import base64
-from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
-# ── 設定 ──────────────────────────────────────────────────────────────────────
-GRAFANA_URL      = "https://grafana.web.internal"
-GRAFANA_USER     = "esodev"
-GRAFANA_PASSWORD = "2KqHmF6x"
-DATASOURCE_UID   = "af55vm1ovng1sb"
-ES_INDEX         = "operation-logs"
-OUTPUT_DIR = Path(__file__).parent
+from common.es_client import ES_INDEX, generated_now, parse_args
+from common.t1_reader import load_t1_raw_dataframe, resolve_date_window
+
+OUTPUT_DIR = Path(__file__).parent / "output" / "category-tab"
 
 EXPLORE_FEATURES = [
     "explore-jobs-organic",
     "explore-jobs-organic-corp",
 ]
 
-# ── Grafana _msearch ──────────────────────────────────────────────────────────
+PALETTE = [
+    "#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500",
+    "#118ab2", "#3a86ff", "#8338ec", "#ff006e", "#ffbe0b",
+    "#80b918", "#00b4d8", "#e63946", "#457b9d",
+]
 
-def msearch(index: str, body: dict) -> dict:
-    url = f"{GRAFANA_URL}/api/datasources/proxy/uid/{DATASOURCE_UID}/_msearch"
-    ndjson = (
-        json.dumps({"index": index}) + "\n" +
-        json.dumps(body) + "\n"
-    ).encode("utf-8")
 
-    token = base64.b64encode(f"{GRAFANA_USER}:{GRAFANA_PASSWORD}".encode()).decode()
-    req = urllib.request.Request(
-        url,
-        data=ndjson,
-        headers={
-            "Content-Type": "application/x-ndjson",
-            "Authorization": f"Basic {token}",
-        },
-        method="POST",
+def query_category_tab(date_from: str, date_to: str) -> dict[str, list[dict]]:
+    """回傳 { featureId: [ {tab, count}, ... ] }。"""
+    df = load_t1_raw_dataframe(
+        date_from,
+        date_to,
+        columns=["system", "feature_id", "category_tab"],
     )
-
-    import ssl
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
-
-    with urllib.request.urlopen(req, context=ctx, timeout=30) as resp:
-        return json.loads(resp.read())
-
-
-# ── 查詢邏輯 ──────────────────────────────────────────────────────────────────
-
-def query_category_tab(time_from: str, time_to: str) -> dict[str, list[dict]]:
-    """
-    回傳 { featureId: [ {tab, count}, ... ] }
-    """
-    body = {
-        "size": 0,
-        "query": {
-            "bool": {
-                "must": [
-                    {"range": {"@timestamp": {"gte": time_from, "lte": time_to}}},
-                    {"terms": {"featureId": EXPLORE_FEATURES}},
-                ]
-            }
-        },
-        "aggs": {
-            "by_feature": {
-                "terms": {"field": "featureId", "size": 20},
-                "aggs": {
-                    "category_tab": {
-                        "terms": {
-                            "script": {
-                                "source": (
-                                    "def meta = params._source.get('metadata'); "
-                                    "if (meta != null) { return meta.get('categoryTab'); } "
-                                    "return null;"
-                                ),
-                                "lang": "painless",
-                            },
-                            "size": 50,
-                            "missing": "(無)",
-                        }
-                    }
-                },
-            }
-        },
-    }
-
-    resp = msearch(ES_INDEX, body)
-    r = resp["responses"][0]
-    if "error" in r:
-        print(f"[ERROR] ES 回傳錯誤：{r['error']['reason']}", file=sys.stderr)
-        sys.exit(1)
+    df = df[
+        df["system"].eq("jobbank-web")
+        & df["feature_id"].isin(EXPLORE_FEATURES)
+        & df["category_tab"].notna()
+    ].copy()
 
     result: dict[str, list[dict]] = {}
-    for feature_bucket in r["aggregations"]["by_feature"]["buckets"]:
-        feature_id = feature_bucket["key"]
-        tabs = [
-            {"tab": b["key"], "count": b["doc_count"]}
-            for b in feature_bucket["category_tab"]["buckets"]
-            if b["key"] != "(無)"
-        ]
-        tabs.sort(key=lambda x: x["count"], reverse=True)
-        result[feature_id] = tabs
-
-    # 確保 EXPLORE_FEATURES 順序一致
-    return {fid: result.get(fid, []) for fid in EXPLORE_FEATURES}
-
-
-def query_total_docs(time_from: str, time_to: str) -> int:
-    body = {
-        "size": 0,
-        "query": {"range": {"@timestamp": {"gte": time_from, "lte": time_to}}},
-    }
-    resp = msearch(ES_INDEX, body)
-    return resp["responses"][0]["hits"]["total"]["value"]
-
-
-# ── HTML 產生 ─────────────────────────────────────────────────────────────────
-
-PALETTE = [
-    "#4361ee","#7209b7","#f72585","#06d6a0","#fb8500",
-    "#118ab2","#3a86ff","#8338ec","#ff006e","#ffbe0b",
-    "#80b918","#00b4d8","#e63946","#457b9d",
-]
+    for feature_id in EXPLORE_FEATURES:
+        feature_df = df[df["feature_id"].eq(feature_id)]
+        tabs = (
+            feature_df["category_tab"]
+            .value_counts()
+            .rename_axis("tab")
+            .reset_index(name="count")
+            .sort_values(["count", "tab"], ascending=[False, True])
+        )
+        result[feature_id] = tabs.to_dict(orient="records")
+    return result
 
 
 def _js_array(data: list[dict], key: str) -> str:
@@ -175,17 +93,17 @@ def generate_html(
     time_to: str,
     generated_at: str,
 ) -> str:
-    organic      = data.get("explore-jobs-organic", [])
-    corp         = data.get("explore-jobs-organic-corp", [])
-    total_org    = sum(d["count"] for d in organic)
-    total_corp   = sum(d["count"] for d in corp)
-    ai_org       = next((d["count"] for d in organic if d["tab"] == "AI 推薦"), 0)
-    ai_corp      = next((d["count"] for d in corp    if d["tab"] == "AI 推薦"), 0)
-    ai_org_pct   = f"{ai_org / total_org * 100:.1f}" if total_org else "0"
-    ai_corp_pct  = f"{ai_corp / total_corp * 100:.1f}" if total_corp else "0"
-    tab_kinds    = len({d["tab"] for d in organic})
-    other_org    = total_org - ai_org
-    other_corp   = total_corp - ai_corp
+    organic = data.get("explore-jobs-organic", [])
+    corp = data.get("explore-jobs-organic-corp", [])
+    total_org = sum(d["count"] for d in organic)
+    total_corp = sum(d["count"] for d in corp)
+    ai_org = next((d["count"] for d in organic if d["tab"] == "AI 推薦"), 0)
+    ai_corp = next((d["count"] for d in corp if d["tab"] == "AI 推薦"), 0)
+    ai_org_pct = f"{ai_org / total_org * 100:.1f}" if total_org else "0"
+    ai_corp_pct = f"{ai_corp / total_corp * 100:.1f}" if total_corp else "0"
+    tab_kinds = len({d["tab"] for d in organic})
+    other_org = total_org - ai_org
+    other_corp = total_corp - ai_corp
 
     organic_labels = _js_array(organic, "tab")
     organic_counts = _js_array(organic, "count")
@@ -265,7 +183,7 @@ def generate_html(
 <body>
 <header>
   <h1>🔍 探索職缺 — CategoryTab 點擊分析</h1>
-  <p>資料來源：{ES_INDEX}（Elasticsearch） · 查詢區間：{time_from} ～ {time_to}</p>
+  <p>資料來源：{ES_INDEX}（T1 raw parquet） · 查詢區間：{time_from} ～ {time_to}</p>
   <span class="badge">⏱ 產生時間：{generated_at}</span>
 </header>
 <main>
@@ -339,7 +257,6 @@ def generate_html(
 <script>
   const totalOrg  = {total_org};
   const totalCorp = {total_corp};
-  const palette   = {json.dumps(PALETTE)};
 
   new Chart(document.getElementById('donut1'), {{
     type: 'doughnut',
@@ -422,44 +339,17 @@ def generate_html(
 </html>"""
 
 
-# ── 主程式 ────────────────────────────────────────────────────────────────────
-
-def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="產生 metadata.categoryTab 分析報告")
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument("--days",  type=int, default=None, help="查詢近 N 天（預設：當日）")
-    group.add_argument("--from",  dest="time_from", default=None, help="起始時間，例如 2026-04-01")
-    parser.add_argument("--to",   dest="time_to",   default=None, help="結束時間，例如 2026-04-10（搭配 --from 使用）")
-    parser.add_argument("--output", default=str(OUTPUT_DIR), help=f"輸出目錄（預設：{OUTPUT_DIR}）")
-    return parser.parse_args()
-
-
-def resolve_time_range(args: argparse.Namespace) -> tuple[str, str]:
-    if args.time_from:
-        time_from = args.time_from if "T" in args.time_from else args.time_from + "T00:00:00Z"
-        time_to   = (args.time_to + "T23:59:59Z") if args.time_to else "now"
-    elif args.days:
-        time_from = f"now-{args.days}d"
-        time_to   = "now"
-    else:
-        # 預設：當日 00:00 ～ now
-        today = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d")
-        time_from = today + "T00:00:00+08:00"
-        time_to   = "now"
-    return time_from, time_to
-
-
 def main() -> None:
-    args = parse_args()
-    time_from, time_to = resolve_time_range(args)
-    output_dir = Path(args.output)
+    args = parse_args("產生 metadata.categoryTab 分析報告")
+    date_from, date_to = resolve_date_window(args.days, args.time_from, args.time_to)
+    output_dir = Path(args.output) if args.output else OUTPUT_DIR
     output_dir.mkdir(parents=True, exist_ok=True)
 
-    print(f"[INFO] 查詢區間：{time_from} ～ {time_to}")
+    print(f"[INFO] 查詢區間：{date_from} ～ {date_to}")
     print(f"[INFO] 輸出目錄：{output_dir}")
 
-    print("[INFO] 查詢 categoryTab 分佈...")
-    data = query_category_tab(time_from, time_to)
+    print("[INFO] 讀取 T1 raw categoryTab 分佈...")
+    data = query_category_tab(date_from, date_to)
 
     for fid, tabs in data.items():
         total = sum(t["count"] for t in tabs)
@@ -468,9 +358,7 @@ def main() -> None:
             pct = t["count"] / total * 100 if total else 0
             print(f"    {t['tab']:12s}  {t['count']:6,}  ({pct:.1f}%)")
 
-    generated_at = datetime.now(timezone(timedelta(hours=8))).strftime("%Y-%m-%d %H:%M:%S +08:00")
-    html = generate_html(data, time_from, time_to, generated_at)
-
+    html = generate_html(data, date_from, date_to, generated_now())
     out_file = output_dir / "index.html"
     out_file.write_text(html, encoding="utf-8")
     print(f"\n[OK] 報告已產生：{out_file}")
