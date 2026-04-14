@@ -29,6 +29,18 @@ const defaultState = {
 const THEME_STORAGE_KEY = "job-report-theme";
 const SIDEBAR_STORAGE_KEY = "job-report-sidebar-collapsed";
 
+// 各視角是否顯示「頁面路徑」欄位
+const VIEW_FILTER_FIELDS = {
+  overview:   { pagePath: true  },
+  search:     { pagePath: false },
+  apply:      { pagePath: false },
+  feature:    { pagePath: false },
+  device:     { pagePath: false },
+  ranking:    { pagePath: true  },
+  navigation: { pagePath: true  },
+  heatmap:    { pagePath: true  },
+};
+
 const VIEW_META = {
   overview: {
     title: "整體概覽",
@@ -115,6 +127,8 @@ function renderViewMeta(state) {
     button.classList.toggle("is-active", active);
     button.setAttribute("aria-current", active ? "page" : "false");
   });
+
+  updateFilterFields(state.selectedViewMode);
 }
 
 function summarizeQueryResult(outputs) {
@@ -126,46 +140,15 @@ function summarizeQueryResult(outputs) {
 }
 
 function renderState(state) {
-  setText("manifest-status", state.manifestLoaded ? "已載入" : "尚未載入");
-  setText("duckdb-status", state.duckdbReady ? "已初始化" : "尚未初始化");
-  setText("query-summary", state.lastQuery || "尚未執行");
-  setText("loaded-dates", String(state.registeredDates.length));
-  setText("loaded-rows", state.rowCount == null ? "--" : String(state.rowCount));
-  setText("query-log", safeJson({
-    manifestLoaded: state.manifestLoaded,
-    duckdbReady: state.duckdbReady,
-    registeredDates: state.registeredDates,
-    rowCount: state.rowCount,
-    lastQuery: state.lastQuery,
-    queryResult: state.queryResult,
-  }));
+  // 只更新右側 query-status 顯示
+  const parts = [];
+  if (!state.manifestLoaded) parts.push("資料載入中…");
+  else if (!state.duckdbReady) parts.push("DuckDB 初始化中…");
+  else if (state.rowCount != null) parts.push(`已載入 ${state.registeredDates.length} 個日期分區 · ${state.rowCount.toLocaleString()} 筆`);
+  if (state.lastQuery) parts.push(state.lastQuery);
+  setText("query-status", parts.join("  ·  "));
 }
 
-function renderPrimaryTable(rows) {
-  const body = document.getElementById("primary-table-body");
-  if (!rows.length) {
-    body.innerHTML = '<tr><td colspan="4" class="empty-cell">查詢沒有結果</td></tr>';
-    return;
-  }
-
-  body.innerHTML = rows
-    .slice(0, 12)
-    .map((row, index) => {
-      const entries = Object.entries(row);
-      const [firstKey, firstValue] = entries[0] || ["name", "-"];
-      const [secondKey, secondValue] = entries[1] || ["value", "-"];
-      const [thirdKey, thirdValue] = entries[2] || ["extra", "-"];
-      return `
-        <tr>
-          <td>${index + 1}</td>
-          <td>${firstKey}: ${String(firstValue ?? "-")}</td>
-          <td>${secondKey}: ${String(secondValue ?? "-")}</td>
-          <td>${thirdKey}: ${String(thirdValue ?? "-")}</td>
-        </tr>
-      `;
-    })
-    .join("");
-}
 
 function getQueryForm() {
   return document.getElementById("query-form");
@@ -182,17 +165,29 @@ function collectFormFilters(form, viewMode) {
   };
 }
 
+function updateFilterFields(viewMode) {
+  const config = VIEW_FILTER_FIELDS[viewMode] || { pagePath: true };
+  const wrap = document.getElementById("filter-page-path-wrap");
+  if (wrap) {
+    wrap.classList.toggle("filter-field--hidden", !config.pagePath);
+    // 視角不支援 pagePath 時清空值，避免帶入查詢
+    if (!config.pagePath) {
+      const input = document.getElementById("page-path");
+      if (input) input.value = "";
+    }
+  }
+}
+
 function applyFiltersToForm(filters) {
-  document.getElementById("date-from").value = filters.dateFrom;
-  document.getElementById("date-to").value = filters.dateTo;
-  document.getElementById("page-path").value = filters.pagePath;
+  document.getElementById("date-from").value  = filters.dateFrom;
+  document.getElementById("date-to").value    = filters.dateTo;
+  document.getElementById("page-path").value  = filters.pagePath;
 }
 
 async function runQuery(state, filters) {
   if (!runtime.conn || !runtime.hasEventsView) {
     state.lastQuery = "目前沒有 events view，可先執行 extract_events.py 匯出 Parquet";
     state.queryResult = null;
-    renderPrimaryTable([]);
     resetDashboard();
     renderState(state);
     return false;
@@ -204,16 +199,15 @@ async function runQuery(state, filters) {
     state.queryResult = summarizeQueryResult(result.outputs);
     state.lastSuccessfulFilters = {
       dateFrom: filters.dateFrom,
-      dateTo: filters.dateTo,
+      dateTo:   filters.dateTo,
       pagePath: filters.pagePath,
     };
-    renderPrimaryTable(renderDashboard(filters.viewMode, result.outputs));
+    renderDashboard(filters.viewMode, result.outputs);
     renderState(state);
     return true;
   } catch (error) {
     state.lastQuery = error instanceof Error ? error.message : String(error);
     state.queryResult = null;
-    renderPrimaryTable([]);
     resetDashboard();
     renderState(state);
     return false;
@@ -246,6 +240,8 @@ function bindSidebar(state) {
     button.addEventListener("click", async () => {
       state.selectedViewMode = button.dataset.viewMode;
       renderViewMeta(state);
+      // URL hash 同步，讓分享連結可直接開對應視角
+      history.replaceState(null, "", `?view=${state.selectedViewMode}`);
       const form = getQueryForm();
 
       if (state.lastSuccessfulFilters) {
@@ -327,6 +323,14 @@ async function buildEventsView(conn, registeredFiles) {
 
 async function bootstrap() {
   const state = { ...defaultState };
+
+  // URL ?view= 參數：直接開對應視角
+  const urlParams = new URLSearchParams(window.location.search);
+  const viewFromUrl = urlParams.get("view");
+  if (viewFromUrl && viewFromUrl in VIEW_META) {
+    state.selectedViewMode = viewFromUrl;
+  }
+
   const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
   const savedSidebarState = localStorage.getItem(SIDEBAR_STORAGE_KEY);
   applyTheme(savedTheme === "dark" ? "dark" : "light", state);
@@ -337,7 +341,6 @@ async function bootstrap() {
   bindSidebar(state);
   bindQueryForm(state);
   renderViewMeta(state);
-  renderPrimaryTable([]);
   resetDashboard();
   renderState(state);
 
@@ -368,5 +371,5 @@ async function bootstrap() {
 }
 
 bootstrap().catch((error) => {
-  setText("query-log", `Bootstrap 失敗：${error instanceof Error ? error.message : String(error)}`);
+  setText("query-status", `Bootstrap 失敗：${error instanceof Error ? error.message : String(error)}`);
 });

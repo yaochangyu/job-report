@@ -1,142 +1,304 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>jobbank-web 數據報告導覽</title>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
-      background: #f0f2f5; color: #1a1a2e; min-height: 100vh;
-    }
-    header {
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
-      color: #fff; padding: 48px 48px 36px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-    }
-    header h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; }
-    header .meta { margin-top: 8px; font-size: 0.9rem; opacity: 0.65; }
-    .badge-row { margin-top: 14px; display: flex; gap: 10px; flex-wrap: wrap; }
-    .pill {
-      display: inline-block;
-      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 20px; padding: 4px 14px; font-size: 0.82rem;
-    }
-    main { max-width: 1100px; margin: 0 auto; padding: 40px 24px 60px; }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 20px;
-    }
-    .report-card {
-      display: flex; align-items: flex-start; gap: 16px;
-      background: #fff; border-radius: 16px; padding: 24px 20px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
-      border-left: 5px solid var(--accent);
-      text-decoration: none; color: inherit;
-      transition: transform 0.15s, box-shadow 0.15s;
-      position: relative;
-    }
-    .report-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
-    .card-icon { font-size: 2.2rem; flex-shrink: 0; margin-top: 2px; }
-    .card-body { flex: 1; }
-    .card-title { font-size: 1.1rem; font-weight: 700; color: var(--accent); }
-    .card-subtitle { font-size: 0.78rem; color: #aaa; margin-top: 2px; letter-spacing: 0.5px; }
-    .card-desc { font-size: 0.85rem; color: #666; margin-top: 8px; line-height: 1.5; }
-    .badge { position: absolute; top: 14px; right: 16px; font-size: 0.75rem; padding: 3px 10px; border-radius: 12px; }
-    .badge.ok { background: #e8f9f2; color: #1a8a5a; border: 1px solid #b7e7d3; }
-    .badge.err { background: #fdecea; color: #c0392b; border: 1px solid #f5b7b1; }
-    footer { text-align: center; font-size: 0.78rem; color: #bbb; padding: 24px 0 12px; }
-  </style>
+ <meta charset="UTF-8" />
+ <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+ <title>jobbank-web 數據報告</title>
+ <link rel="stylesheet" href="./app.css" />
 </head>
 <body>
-<header>
-  <h1>📈 jobbank-web 數據報告</h1>
-  <div class="meta">資料來源：operation-logs（Elasticsearch）· 查詢區間：2026-04-14T00:00:00+08:00 ～ now</div>
-  <div class="badge-row">
-    <span class="pill">共 8 份報告</span>
-    <span class="pill">✓ 8 份完成</span>
-    <span class="pill">產生時間：2026-04-14 10:19:10 +08:00</span>
-  </div>
-</header>
-<main>
-  <div class="grid">
-    
-    <a href="traffic-overview/index.html" class="report-card" style="--accent:#4361ee;" target="_blank">
-      <div class="card-icon">📊</div>
-      <div class="card-body">
-        <div class="card-title">整體流量概覽</div>
-        <div class="card-subtitle">Traffic Overview</div>
-        <div class="card-desc">KPI 指標、每日流量趨勢、每小時分佈、裝置與 OS 分佈</div>
-      </div>
-      <span class="badge ok">✓ 完成</span>
-    </a>
-    <a href="search-behavior/index.html" class="report-card" style="--accent:#7209b7;" target="_blank">
-      <div class="card-icon">🔍</div>
-      <div class="card-body">
-        <div class="card-title">搜尋行為分析</div>
-        <div class="card-subtitle">Search Behavior</div>
-        <div class="card-desc">AI vs 一般搜尋趨勢、搜尋結果頁分佈、AI 互動方式、快速篩選</div>
-      </div>
-      <span class="badge ok">✓ 完成</span>
-    </a>
-    <a href="apply-conversion/index.html" class="report-card" style="--accent:#f72585;" target="_blank">
-      <div class="card-icon">🎯</div>
-      <div class="card-body">
-        <div class="card-title">應徵轉換分析</div>
-        <div class="card-subtitle">Apply Conversion</div>
-        <div class="card-desc">應徵漏斗、每日趨勢、來源分佈、裝置與時段分析</div>
-      </div>
-      <span class="badge ok">✓ 完成</span>
-    </a>
-    <a href="feature-engagement/index.html" class="report-card" style="--accent:#06d6a0;" target="_blank">
-      <div class="card-icon">⚡</div>
-      <div class="card-body">
-        <div class="card-title">功能互動分析</div>
-        <div class="card-subtitle">Feature Engagement</div>
-        <div class="card-desc">探索職缺/企業、身份辨識、產業 Tab、新聞互動</div>
-      </div>
-      <span class="badge ok">✓ 完成</span>
-    </a>
-    <a href="device-platform/index.html" class="report-card" style="--accent:#fb8500;" target="_blank">
-      <div class="card-icon">📱</div>
-      <div class="card-body">
-        <div class="card-title">裝置與平台分析</div>
-        <div class="card-subtitle">Device & Platform</div>
-        <div class="card-desc">Mobile/Desktop 趨勢、OS 與瀏覽器分佈、裝置行為交叉</div>
-      </div>
-      <span class="badge ok">✓ 完成</span>
-    </a>
-    <a href="page-ranking/index.html" class="report-card" style="--accent:#118ab2;" target="_blank">
-      <div class="card-icon">🏆</div>
-      <div class="card-body">
-        <div class="card-title">頁面流量排行</div>
-        <div class="card-subtitle">Page Ranking</div>
-        <div class="card-desc">featureId 排行 Top 20、功能類別佔比分析</div>
-      </div>
-      <span class="badge ok">✓ 完成</span>
-    </a>
-    <a href="page-navigation/index.html" class="report-card" style="--accent:#8338ec;" target="_blank">
-      <div class="card-icon">🔀</div>
-      <div class="card-body">
-        <div class="card-title">頁面導航鏈路</div>
-        <div class="card-subtitle">Page Navigation Flow</div>
-        <div class="card-desc">頁面轉換路徑排行、各頁面來源/目標、初始進入分佈</div>
-      </div>
-      <span class="badge ok">✓ 完成</span>
-    </a>
-    <a href="click-heatmap/index.html" class="report-card" style="--accent:#e63946;" target="_blank">
-      <div class="card-icon">🔥</div>
-      <div class="card-body">
-        <div class="card-title">頁面點擊熱點</div>
-        <div class="card-subtitle">Page Click Heatmap</div>
-        <div class="card-desc">Clarity 風格截圖疊加，呈現各頁面按鈕/連結的點擊次數</div>
-      </div>
-      <span class="badge ok">✓ 完成</span>
-    </a>
-  </div>
-</main>
-<footer>Generated 2026-04-14 10:19:10 +08:00 · operation-logs</footer>
+
+ <header class="hero">
+   <div class="hero__content">
+     <div class="hero__topbar">
+       <div>
+         <p class="hero__eyebrow">DuckDB-WASM Analytics</p>
+         <h1>📈 jobbank-web 數據報告</h1>
+         <p class="hero__desc">資料來源：operation-logs（Elasticsearch）· DuckDB-WASM 即時查詢</p>
+       </div>
+       <button id="theme-toggle" class="theme-toggle" type="button">切換暗黑版</button>
+     </div>
+   </div>
+ </header>
+
+ <main id="page-layout" class="page-layout">
+
+   <!-- 左側 Sidebar：分析角度 -->
+   <aside class="sidebar panel">
+     <div class="sidebar__header">
+       <div>
+         <h2>分析角度</h2>
+         <p>切換報表視角</p>
+       </div>
+       <button
+         id="sidebar-toggle"
+         class="sidebar__toggle"
+         type="button"
+         aria-expanded="true"
+         aria-label="收合側邊導覽"
+       >
+         <span id="sidebar-toggle-icon">◀</span>
+       </button>
+     </div>
+
+     <nav class="sidebar__nav" aria-label="分析角度導覽">
+       <button class="sidebar__nav-item is-active" type="button" data-view-mode="overview">
+         <span class="sidebar__icon">📊</span>
+         <span>
+           <strong>整體概覽</strong>
+           <small>Traffic Overview</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="search">
+         <span class="sidebar__icon">🔍</span>
+         <span>
+           <strong>搜尋行為</strong>
+           <small>Search Behavior</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="apply">
+         <span class="sidebar__icon">🎯</span>
+         <span>
+           <strong>應徵轉換</strong>
+           <small>Apply Conversion</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="feature">
+         <span class="sidebar__icon">⚡</span>
+         <span>
+           <strong>功能互動</strong>
+           <small>Feature Engagement</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="device">
+         <span class="sidebar__icon">📱</span>
+         <span>
+           <strong>裝置平台</strong>
+           <small>Device &amp; Platform</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="ranking">
+         <span class="sidebar__icon">🏆</span>
+         <span>
+           <strong>頁面排行</strong>
+           <small>Page Ranking</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="navigation">
+         <span class="sidebar__icon">🔀</span>
+         <span>
+           <strong>頁面導航</strong>
+           <small>Page Navigation</small>
+         </span>
+       </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="heatmap">
+         <span class="sidebar__icon">🔥</span>
+         <span>
+           <strong>點擊熱點</strong>
+           <small>Page Click Heatmap</small>
+         </span>
+       </button>
+     </nav>
+   </aside>
+
+   <!-- 右側主內容 -->
+   <div class="right-col">
+
+     <!-- 查詢條件（與右側內容同寬） -->
+     <div class="filter-wrap">
+       <section class="panel filter-panel">
+         <div class="panel__header">
+           <h2>查詢條件</h2>
+           <p>所有分析視角共用同一組日期與頁面條件。</p>
+         </div>
+         <form id="query-form" class="filters">
+           <label>
+             <span>起始日期</span>
+             <input id="date-from" name="date_from" type="date" />
+           </label>
+           <label>
+             <span>結束日期</span>
+             <input id="date-to" name="date_to" type="date" />
+           </label>
+           <label id="filter-page-path-wrap" class="filter-field--hidden">
+             <span>頁面路徑（選填）</span>
+             <input id="page-path" name="page_path" type="text" placeholder="/job/123" />
+           </label>
+           <div class="filter-actions">
+             <span>&nbsp;</span>
+             <button id="run-query" type="submit">執行查詢</button>
+           </div>
+         </form>
+         <p class="query-status" id="query-status"></p>
+       </section>
+     </div>
+
+     <!-- 主內容 -->
+     <div class="content">
+
+       <!-- 目前視角標題 -->
+       <section class="panel view-panel">
+         <div class="panel__header view-panel__heading">
+           <div>
+             <p class="view-panel__eyebrow">Current View</p>
+             <h2 id="current-view-title">整體概覽</h2>
+           </div>
+           <p id="current-view-subtitle" class="view-panel__subtitle">Traffic Overview</p>
+         </div>
+         <p id="current-view-desc" class="panel__desc">觀察整體 KPI、趨勢與主要流量分佈。</p>
+       </section>
+
+       <!-- KPI Cards (id: kpi-1 ~ kpi-8) -->
+       <section class="kpi-grid">
+         <article class="kpi-card" style="--kpi-color:#4361ee">
+           <div class="kpi-card__label" id="kpi-label-1">總事件</div>
+           <div class="kpi-card__value" id="kpi-1">--</div>
+           <div class="kpi-card__sub"   id="kpi-sub-1">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#118ab2">
+           <div class="kpi-card__label" id="kpi-label-2">View</div>
+           <div class="kpi-card__value" id="kpi-2">--</div>
+           <div class="kpi-card__sub"   id="kpi-sub-2">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#7209b7">
+           <div class="kpi-card__label" id="kpi-label-3">Click</div>
+           <div class="kpi-card__value" id="kpi-3">--</div>
+           <div class="kpi-card__sub"   id="kpi-sub-3">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#f72585">
+           <div class="kpi-card__label" id="kpi-label-4">Apply</div>
+           <div class="kpi-card__value" id="kpi-4">--</div>
+           <div class="kpi-card__sub"   id="kpi-sub-4">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#06d6a0">
+           <div class="kpi-card__label" id="kpi-label-5">Sessions</div>
+           <div class="kpi-card__value" id="kpi-5">--</div>
+           <div class="kpi-card__sub"   id="kpi-sub-5">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#fb8500">
+           <div class="kpi-card__label" id="kpi-label-6">Click Rate</div>
+           <div class="kpi-card__value" id="kpi-6">--</div>
+           <div class="kpi-card__sub"   id="kpi-sub-6">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#e63946">
+           <div class="kpi-card__label" id="kpi-label-7">Apply Rate</div>
+           <div class="kpi-card__value" id="kpi-7">--</div>
+           <div class="kpi-card__sub"   id="kpi-sub-7">&nbsp;</div>
+         </article>
+         <article class="kpi-card" style="--kpi-color:#118ab2">
+           <div class="kpi-card__label" id="kpi-label-8">Mobile %</div>
+           <div class="kpi-card__value" id="kpi-8">--</div>
+           <div class="kpi-card__sub"   id="kpi-sub-8">&nbsp;</div>
+         </article>
+       </section>
+
+       <!-- 圖表區 (chart1 / chart2 / chart3) -->
+       <section class="chart-grid">
+         <article class="panel chart-panel">
+           <div class="panel__header">
+             <h2 id="chart1-title">趨勢圖</h2>
+             <p id="chart1-desc">每日流量趨勢</p>
+           </div>
+           <div class="chart-canvas-wrap">
+             <canvas id="chart1"></canvas>
+           </div>
+         </article>
+
+         <article class="panel chart-panel">
+           <div class="panel__header">
+             <h2 id="chart2-title">分佈圖</h2>
+             <p id="chart2-desc">裝置、來源、功能類別</p>
+           </div>
+           <div class="chart-canvas-wrap">
+             <canvas id="chart2"></canvas>
+           </div>
+         </article>
+
+         <article id="chart3-panel" class="panel chart-panel">
+           <div class="panel__header">
+             <h2 id="chart3-title">排行圖</h2>
+             <p id="chart3-desc">Top feature / 互動排行</p>
+           </div>
+           <div class="chart-canvas-wrap">
+             <canvas id="chart3"></canvas>
+           </div>
+         </article>
+       </section>
+
+       <!-- 表格區 (table1 ~ table4) -->
+
+       <article id="table1-panel" class="panel table-panel">
+         <div class="panel__header">
+           <h2 id="table1-title">排行表</h2>
+           <p id="table1-desc"></p>
+         </div>
+         <div class="table-wrap">
+           <table>
+             <thead id="table1-head">
+               <tr><th>#</th><th>名稱</th><th>數值</th><th></th><th>佔比</th></tr>
+             </thead>
+             <tbody id="table1-body">
+               <tr><td colspan="5" class="empty-cell">尚未載入資料</td></tr>
+             </tbody>
+           </table>
+         </div>
+       </article>
+
+       <article id="table2-panel" class="panel table-panel hidden">
+         <div class="panel__header">
+           <h2 id="table2-title">表格 2</h2>
+           <p id="table2-desc"></p>
+         </div>
+         <div class="table-wrap">
+           <table>
+             <thead id="table2-head">
+               <tr><th>#</th><th>名稱</th><th>數值</th><th></th><th>佔比</th></tr>
+             </thead>
+             <tbody id="table2-body">
+               <tr><td colspan="5" class="empty-cell">尚未載入資料</td></tr>
+             </tbody>
+           </table>
+         </div>
+       </article>
+
+       <article id="table3-panel" class="panel table-panel hidden">
+         <div class="panel__header">
+           <h2 id="table3-title">表格 3</h2>
+           <p id="table3-desc"></p>
+         </div>
+         <div class="table-wrap">
+           <table>
+             <thead id="table3-head">
+               <tr><th>#</th><th>名稱</th><th>數值</th><th></th><th>佔比</th></tr>
+             </thead>
+             <tbody id="table3-body">
+               <tr><td colspan="5" class="empty-cell">尚未載入資料</td></tr>
+             </tbody>
+           </table>
+         </div>
+       </article>
+
+       <article id="table4-panel" class="panel table-panel hidden">
+         <div class="panel__header">
+           <h2 id="table4-title">表格 4</h2>
+           <p id="table4-desc"></p>
+         </div>
+         <div class="table-wrap">
+           <table>
+             <thead id="table4-head">
+               <tr><th>#</th><th>名稱</th><th>數值</th><th></th><th>佔比</th></tr>
+             </thead>
+             <tbody id="table4-body">
+               <tr><td colspan="5" class="empty-cell">尚未載入資料</td></tr>
+             </tbody>
+           </table>
+         </div>
+       </article>
+
+     </div><!-- /content -->
+   </div><!-- /right-col -->
+ </main>
+
+ <script type="module" src="./app.js"></script>
 </body>
 </html>
