@@ -3,6 +3,7 @@
 ```
 job-report-1/
 ├── .archive/
+│   ├── report-data-pipeline.plan.md   # ✅ 已完成：三層資料管線重構計畫
 │   └── v1-2-ui-sync.plan.md           # ✅ 已完成：v1-2 UI 對齊 v1-1 的實作計畫
 ├── common/
 │   ├── __init__.py
@@ -68,7 +69,6 @@ job-report-1/
 ├── run_click_heatmap_pipeline.py      # click-heatmap 的 extract→transform→render PoC
 ├── grafana-dashboard.plan.md          # Dashboard 實作計畫（Grafana JSON 匯出待完成）
 ├── run_feature_engagement_pipeline.py # feature-engagement 的 extract→transform→render PoC
-├── report-data-pipeline.plan.md       # ES→raw→report→html 三層資料管線重構計畫
 ├── archive/
 │   └── page-click-analysis.plan.md   # ✅ 已完成：Dashboard 8 實作計畫
 ├── pyproject.toml                     # uv 專案設定
