@@ -2,6 +2,8 @@
 
 ```
 job-report-1/
+├── .archive/
+│   └── v1-2-ui-sync.plan.md           # ✅ 已完成：v1-2 UI 對齊 v1-1 的實作計畫
 ├── common/
 │   ├── __init__.py
 │   ├── es_client.py                    # Grafana _msearch 共用封裝
@@ -28,7 +30,14 @@ job-report-1/
 ├── click_heatmap_report.py            # Dashboard 8：頁面點擊熱點分析
 ├── click_heatmap_discover.py          # 輔助：自動探索頁面可點擊元素
 ├── click_heatmap_config.json          # 頁面 URL + featureId → 元素位置 對應表
+├── build_frontend_bundle.py           # 將 v1-1 前端資產與 dataset 複製到 output/
 ├── deploy.sh                          # 一鍵產生報告並部署到 GitHub Pages
+├── frontend/
+│   ├── app.css                        # v1-1 共用前端樣式
+│   ├── app.js                         # v1-1 SPA 入口互動邏輯
+│   ├── dashboard-renderers.js         # v1-1 圖表與表格渲染邏輯
+│   ├── index.html                     # v1-1 主入口頁
+│   └── query-definitions.js           # v1-1 DuckDB 查詢定義
 ├── run_all.py                         # 一鍵執行所有報告 + 產生導覽頁
 ├── grafana-dashboard.plan.md          # Dashboard 實作計畫（Grafana JSON 匯出待完成）
 ├── archive/
