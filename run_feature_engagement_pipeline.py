@@ -23,6 +23,7 @@ def parse_args() -> argparse.Namespace:
     group.add_argument("--from", dest="date_from", default=None, help="起始日期 YYYY-MM-DD")
     parser.add_argument("--to", dest="date_to", default=None, help="結束日期 YYYY-MM-DD")
     parser.add_argument("--keep-existing", action="store_true", help="T1 已存在時跳過重抓")
+    parser.add_argument("--skip-extract", action="store_true", help="略過 T1 extract，直接使用既有 raw parquet")
     parser.add_argument("--output", default=None, help="T3 HTML 輸出目錄")
     return parser.parse_args()
 
@@ -32,8 +33,12 @@ def main() -> None:
     date_from, date_to = resolve_date_window(args.days, args.date_from, args.date_to)
     print(f"[PIPELINE] feature-engagement：{date_from} ~ {date_to}")
 
-    print("[STEP] T1 extract")
-    extract_raw_events(date_from, date_to, keep_existing=args.keep_existing)
+    if args.skip_extract:
+        print("[STEP] T1 extract")
+        print("  → 已略過，直接使用既有 raw parquet")
+    else:
+        print("[STEP] T1 extract")
+        extract_raw_events(date_from, date_to, keep_existing=args.keep_existing)
 
     print("[STEP] T2 transform")
     t2_dir = build_feature_engagement_t2(date_from, date_to)
