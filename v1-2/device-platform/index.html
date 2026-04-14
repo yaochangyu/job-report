@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>裝置與平台分析 — Device & Platform</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
+      background: #f0f2f5; color: #1a1a2e; min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+      color: #fff; padding: 36px 48px 28px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    header h1 { font-size: 1.8rem; font-weight: 700; }
+    header p  { margin-top: 6px; font-size: 0.9rem; opacity: 0.65; }
+    .badge {
+      display: inline-block; margin-top: 12px;
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px; padding: 4px 14px; font-size: 0.8rem;
+    }
+    main { max-width: 1200px; margin: 0 auto; padding: 36px 24px 60px; }
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px; margin-bottom: 36px;
+    }
+    .kpi-card {
+      background: #fff; border-radius: 14px; padding: 24px 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07); border-top: 4px solid var(--accent);
+    }
+    .kpi-card .label { font-size: 0.78rem; color: #888; text-transform: uppercase; letter-spacing: 0.8px; }
+    .kpi-card .value { font-size: 2rem; font-weight: 800; color: var(--accent); margin-top: 6px; }
+    .kpi-card .sub   { font-size: 0.8rem; color: #aaa; margin-top: 4px; }
+    .chart-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+      gap: 24px; margin-bottom: 28px;
+    }
+    .card {
+      background: #fff; border-radius: 14px; padding: 28px 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+    .card h2 { font-size: 1rem; font-weight: 700; color: #333; margin-bottom: 4px; }
+    .card .subtitle { font-size: 0.8rem; color: #999; margin-bottom: 20px; }
+    .chart-wrap { position: relative; height: 320px; }
+    .chart-wrap-tall { position: relative; height: 380px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead th {
+      background: #f7f8fa; padding: 10px 14px; text-align: left;
+      font-weight: 600; color: #555; border-bottom: 2px solid #e8e8e8;
+    }
+    tbody tr:nth-child(odd) { background: #fafafa; }
+    tbody tr:hover { background: #f0f4ff; }
+    tbody td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; }
+    .rank { color: #bbb; font-weight: 700; font-size: 0.85rem; }
+    .bar-cell { width: 160px; }
+    .bar-bg { background: #eef0f4; border-radius: 4px; height: 8px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #4361ee, #7209b7); }
+    .pct { color: #4361ee; font-weight: 700; }
+    footer { text-align: center; font-size: 0.78rem; color: #bbb; padding: 24px 0 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>裝置與平台分析 — Device & Platform</h1>
+  <p>資料來源：operation-logs（Elasticsearch） · 查詢區間：2026-04-14T00:00:00+08:00 ～ now</p>
+  <span class="badge">產生時間：2026-04-14 10:18:14 +08:00</span>
+</header>
+<main>
+  <div class="kpi-grid">
+    <div class="kpi-card" style="--accent:#4361ee">
+      <div class="label">Mobile 事件數</div>
+      <div class="value">88,438</div>
+      <div class="sub">佔 59.7%</div>
+    </div>
+    <div class="kpi-card" style="--accent:#118ab2">
+      <div class="label">Desktop 事件數</div>
+      <div class="value">59,756</div>
+      <div class="sub">佔 40.3%</div>
+    </div>
+    <div class="kpi-card" style="--accent:#7209b7">
+      <div class="label">OS 種類</div>
+      <div class="value">15</div>
+      <div class="sub">排名 Top 種</div>
+    </div>
+    <div class="kpi-card" style="--accent:#f72585">
+      <div class="label">瀏覽器種類</div>
+      <div class="value">10</div>
+      <div class="sub">排名 Top 種</div>
+    </div>  </div>  <div class="chart-grid">
+  <div class="card">
+    <h2>裝置類型每日趨勢</h2>
+    <div class="subtitle">mobile vs desktop 事件數 + mobile 佔比（右 Y 軸）</div>
+    <div class="chart-wrap-tall"><canvas id="deviceDaily"></canvas></div>
+  </div>
+  <div class="card">
+    <h2>OS 分佈</h2>
+    <div class="subtitle">Top 15 作業系統</div>
+    <div class="chart-wrap"><canvas id="osDist"></canvas></div>
+  </div>  </div>  <div class="chart-grid">
+  <div class="card">
+    <h2>瀏覽器分佈</h2>
+    <div class="subtitle">Top 10 瀏覽器</div>
+    <div class="chart-wrap"><canvas id="browserBar"></canvas></div>
+  </div>
+  <div class="card">
+    <h2>裝置 × 行為（view/click/apply）</h2>
+    <div class="subtitle">各裝置事件量比較</div>
+    <div class="chart-wrap"><canvas id="deviceBehavior"></canvas></div>
+  </div>  </div>
+  <div class="card" style="margin-bottom:24px">
+    <h2>OS 詳細數據</h2>
+    <div class="subtitle">共 148,193 筆</div>
+    <table>
+      <thead><tr><th>#</th><th>OS</th><th>事件數</th><th>視覺</th><th>佔比</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="rank">1</td>
+          <td>Android</td>
+          <td>49,923</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:33.7%"></div></div>
+          </td>
+          <td class="pct">33.7%</td>
+        </tr>
+        <tr>
+          <td class="rank">2</td>
+          <td>iPhone</td>
+          <td>38,536</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:26.0%"></div></div>
+          </td>
+          <td class="pct">26.0%</td>
+        </tr>
+        <tr>
+          <td class="rank">3</td>
+          <td>Windows</td>
+          <td>37,041</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:25.0%"></div></div>
+          </td>
+          <td class="pct">25.0%</td>
+        </tr>
+        <tr>
+          <td class="rank">4</td>
+          <td></td>
+          <td>14,742</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:9.9%"></div></div>
+          </td>
+          <td class="pct">9.9%</td>
+        </tr>
+        <tr>
+          <td class="rank">5</td>
+          <td>macOS</td>
+          <td>2,878</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:1.9%"></div></div>
+          </td>
+          <td class="pct">1.9%</td>
+        </tr>
+        <tr>
+          <td class="rank">6</td>
+          <td>MacIntel</td>
+          <td>1,612</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:1.1%"></div></div>
+          </td>
+          <td class="pct">1.1%</td>
+        </tr>
+        <tr>
+          <td class="rank">7</td>
+          <td>Linux</td>
+          <td>1,154</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:0.8%"></div></div>
+          </td>
+          <td class="pct">0.8%</td>
+        </tr>
+        <tr>
+          <td class="rank">8</td>
+          <td>iPad</td>
+          <td>1,035</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:0.7%"></div></div>
+          </td>
+          <td class="pct">0.7%</td>
+        </tr>
+        <tr>
+          <td class="rank">9</td>
+          <td>Win32</td>
+          <td>887</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:0.6%"></div></div>
+          </td>
+          <td class="pct">0.6%</td>
+        </tr>
+        <tr>
+          <td class="rank">10</td>
+          <td>Linux x86_64</td>
+          <td>149</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:0.1%"></div></div>
+          </td>
+          <td class="pct">0.1%</td>
+        </tr>
+        <tr>
+          <td class="rank">11</td>
+          <td>Linux armv81</td>
+          <td>89</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:0.1%"></div></div>
+          </td>
+          <td class="pct">0.1%</td>
+        </tr>
+        <tr>
+          <td class="rank">12</td>
+          <td>Linux aarch64</td>
+          <td>54</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:0.0%"></div></div>
+          </td>
+          <td class="pct">0.0%</td>
+        </tr>
+        <tr>
+          <td class="rank">13</td>
+          <td>Chrome OS</td>
+          <td>38</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:0.0%"></div></div>
+          </td>
+          <td class="pct">0.0%</td>
+        </tr>
+        <tr>
+          <td class="rank">14</td>
+          <td>iOS</td>
+          <td>36</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:0.0%"></div></div>
+          </td>
+          <td class="pct">0.0%</td>
+        </tr>
+        <tr>
+          <td class="rank">15</td>
+          <td>Linux armv8l</td>
+          <td>19</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:0.0%"></div></div>
+          </td>
+          <td class="pct">0.0%</td>
+        </tr></tbody>
+    </table>
+  </div>
+  <div class="card" style="margin-bottom:24px">
+    <h2>瀏覽器詳細數據</h2>
+    <div class="subtitle">共 147,995 筆</div>
+    <table>
+      <thead><tr><th>#</th><th>瀏覽器</th><th>事件數</th><th>視覺</th><th>佔比</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="rank">1</td>
+          <td>Chromium</td>
+          <td>67,337</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:45.5%"></div></div>
+          </td>
+          <td class="pct">45.5%</td>
+        </tr>
+        <tr>
+          <td class="rank">2</td>
+          <td>Netscape</td>
+          <td>57,190</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:38.6%"></div></div>
+          </td>
+          <td class="pct">38.6%</td>
+        </tr>
+        <tr>
+          <td class="rank">3</td>
+          <td>Google Chrome</td>
+          <td>21,048</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:14.2%"></div></div>
+          </td>
+          <td class="pct">14.2%</td>
+        </tr>
+        <tr>
+          <td class="rank">4</td>
+          <td>Android WebView</td>
+          <td>751</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:0.5%"></div></div>
+          </td>
+          <td class="pct">0.5%</td>
+        </tr>
+        <tr>
+          <td class="rank">5</td>
+          <td>Microsoft Edge</td>
+          <td>624</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:0.4%"></div></div>
+          </td>
+          <td class="pct">0.4%</td>
+        </tr>
+        <tr>
+          <td class="rank">6</td>
+          <td>Brave</td>
+          <td>362</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:0.2%"></div></div>
+          </td>
+          <td class="pct">0.2%</td>
+        </tr>
+        <tr>
+          <td class="rank">7</td>
+          <td>Samsung Internet</td>
+          <td>254</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:0.2%"></div></div>
+          </td>
+          <td class="pct">0.2%</td>
+        </tr>
+        <tr>
+          <td class="rank">8</td>
+          <td>HeadlessChrome</td>
+          <td>247</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:0.2%"></div></div>
+          </td>
+          <td class="pct">0.2%</td>
+        </tr>
+        <tr>
+          <td class="rank">9</td>
+          <td>Opera</td>
+          <td>112</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:0.1%"></div></div>
+          </td>
+          <td class="pct">0.1%</td>
+        </tr>
+        <tr>
+          <td class="rank">10</td>
+          <td> Not A;Brand</td>
+          <td>70</td>
+          <td class="bar-cell">
+            <div class="bar-bg"><div class="bar-fill" style="width:0.0%"></div></div>
+          </td>
+          <td class="pct">0.0%</td>
+        </tr></tbody>
+    </table>
+  </div>
+  <div class="card" style="margin-bottom:24px">
+    <h2>裝置 × 行為交叉分析</h2>
+    <div class="subtitle">各裝置 view/click/apply 分佈與應徵轉換率</div>
+    <table>
+      <thead><tr><th>裝置</th><th>總事件</th><th>View</th><th>Click</th><th>Apply</th><th>Apply 轉換率</th></tr></thead>
+      <tbody><tr><td>mobile</td><td>88,438</td><td>76,138</td><td>12,300</td><td>2,787</td><td class="pct">5.55%</td></tr><tr><td>desktop</td><td>59,756</td><td>50,354</td><td>9,402</td><td>1,382</td><td class="pct">5.62%</td></tr></tbody>
+    </table>
+  </div>
+  <div class="card" style="margin-bottom:24px">
+    <h2>OS × 行為交叉分析</h2>
+    <div class="subtitle">各 OS view/click/apply 分佈</div>
+    <table>
+      <thead><tr><th>OS</th><th>總事件</th><th>View</th><th>Click</th><th>Apply</th></tr></thead>
+      <tbody><tr><td>Android</td><td>49,923</td><td>42,713</td><td>7,210</td><td>1,822</td></tr><tr><td>iPhone</td><td>38,536</td><td>33,409</td><td>5,127</td><td>971</td></tr><tr><td>Windows</td><td>37,041</td><td>29,150</td><td>7,891</td><td>1,113</td></tr><tr><td></td><td>14,742</td><td>14,738</td><td>4</td><td>3</td></tr><tr><td>macOS</td><td>2,878</td><td>2,628</td><td>250</td><td>51</td></tr><tr><td>MacIntel</td><td>1,612</td><td>1,278</td><td>334</td><td>58</td></tr><tr><td>Linux</td><td>1,154</td><td>921</td><td>233</td><td>13</td></tr><tr><td>iPad</td><td>1,035</td><td>680</td><td>355</td><td>27</td></tr><tr><td>Win32</td><td>887</td><td>704</td><td>183</td><td>30</td></tr><tr><td>Linux x86_64</td><td>149</td><td>68</td><td>81</td><td>77</td></tr></tbody>
+    </table>
+  </div>
+<script>
+  // ── 裝置每日趨勢
+  new Chart(document.getElementById('deviceDaily'), {
+    type: 'line',
+    data: {
+      labels: ["2026-04-14"],
+      datasets: [
+        {
+          label: 'Mobile',
+          data: [88438],
+          borderColor: '#4361ee', backgroundColor: 'rgba(67,97,238,0.1)',
+          fill: true, tension: 0.3, yAxisID: 'y'
+        },
+        {
+          label: 'Desktop',
+          data: [59756],
+          borderColor: '#118ab2', backgroundColor: 'rgba(17,138,178,0.08)',
+          fill: true, tension: 0.3, yAxisID: 'y'
+        },
+        {
+          label: 'Mobile 佔比 %',
+          data: [59.7],
+          borderColor: '#fb8500', borderDash: [6,3],
+          fill: false, tension: 0.3, yAxisID: 'y1'
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        y:  { position: 'left',  title: { display: true, text: '事件數' } },
+        y1: { position: 'right', grid: { drawOnChartArea: false },
+               title: { display: true, text: 'Mobile 佔比 %' }, min: 0, max: 100 }
+      },
+      plugins: { legend: { position: 'bottom' } }
+    }
+  });
+
+  // ── OS 分佈 Doughnut
+  new Chart(document.getElementById('osDist'), {
+    type: 'doughnut',
+    data: {
+      labels: ["Android", "iPhone", "Windows", "", "macOS", "MacIntel", "Linux", "iPad", "Win32", "Linux x86_64", "Linux armv81", "Linux aarch64", "Chrome OS", "iOS", "Linux armv8l"],
+      datasets: [{
+        data: [49923, 38536, 37041, 14742, 2878, 1612, 1154, 1035, 887, 149, 89, 54, 38, 36, 19],
+        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff", "#8338ec", "#ff006e", "#ffbe0b", "#80b918", "#00b4d8", "#e63946", "#457b9d", "#4361ee"],
+        borderWidth: 2, borderColor: '#fff'
+      }]
+    },
+    options: {
+      cutout: '55%',
+      plugins: {
+        legend: { position: 'right', labels: { font: { size: 12 }, padding: 8 } },
+        tooltip: { callbacks: {
+          label: ctx => {
+            const t = 148193;
+            return ` ${ctx.label}：${ctx.parsed.toLocaleString()}（${(ctx.parsed/t*100).toFixed(1)}%）`;
+          }
+        } }
+      }
+    }
+  });
+
+  // ── 瀏覽器 Horizontal Bar
+  new Chart(document.getElementById('browserBar'), {
+    type: 'bar',
+    data: {
+      labels: ["Chromium", "Netscape", "Google Chrome", "Android WebView", "Microsoft Edge", "Brave", "Samsung Internet", "HeadlessChrome", "Opera", " Not A;Brand"],
+      datasets: [{
+        label: '事件數',
+        data: [67337, 57190, 21048, 751, 624, 362, 254, 247, 112, 70],
+        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff", "#8338ec", "#ff006e", "#ffbe0b"],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { title: { display: true, text: '事件數' } },
+        y: { grid: { display: false } }
+      }
+    }
+  });
+
+  // ── 裝置行為 Grouped Bar
+  new Chart(document.getElementById('deviceBehavior'), {
+    type: 'bar',
+    data: {
+      labels: ["mobile", "desktop"],
+      datasets: [
+        {
+          label: 'View',
+          data: [76138, 50354],
+          backgroundColor: '#4361ee', borderRadius: 4
+        },
+        {
+          label: 'Click',
+          data: [12300, 9402],
+          backgroundColor: '#7209b7', borderRadius: 4
+        },
+        {
+          label: 'Apply',
+          data: [2787, 1382],
+          backgroundColor: '#f72585', borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'bottom' } },
+      scales: {
+        y: { title: { display: true, text: '事件數' } }
+      }
+    }
+  });
+</script>
+
+</main>
+<footer>Generated 2026-04-14 10:18:14 +08:00 · operation-logs</footer>
+</body>
+</html>

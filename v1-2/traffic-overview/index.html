@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>整體流量概覽 — Traffic Overview</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Noto Sans TC", sans-serif;
+      background: #f0f2f5; color: #1a1a2e; min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+      color: #fff; padding: 36px 48px 28px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+    header h1 { font-size: 1.8rem; font-weight: 700; }
+    header p  { margin-top: 6px; font-size: 0.9rem; opacity: 0.65; }
+    .badge {
+      display: inline-block; margin-top: 12px;
+      background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px; padding: 4px 14px; font-size: 0.8rem;
+    }
+    main { max-width: 1200px; margin: 0 auto; padding: 36px 24px 60px; }
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px; margin-bottom: 36px;
+    }
+    .kpi-card {
+      background: #fff; border-radius: 14px; padding: 24px 20px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07); border-top: 4px solid var(--accent);
+    }
+    .kpi-card .label { font-size: 0.78rem; color: #888; text-transform: uppercase; letter-spacing: 0.8px; }
+    .kpi-card .value { font-size: 2rem; font-weight: 800; color: var(--accent); margin-top: 6px; }
+    .kpi-card .sub   { font-size: 0.8rem; color: #aaa; margin-top: 4px; }
+    .chart-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+      gap: 24px; margin-bottom: 28px;
+    }
+    .card {
+      background: #fff; border-radius: 14px; padding: 28px 24px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.07);
+    }
+    .card h2 { font-size: 1rem; font-weight: 700; color: #333; margin-bottom: 4px; }
+    .card .subtitle { font-size: 0.8rem; color: #999; margin-bottom: 20px; }
+    .chart-wrap { position: relative; height: 320px; }
+    .chart-wrap-tall { position: relative; height: 380px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead th {
+      background: #f7f8fa; padding: 10px 14px; text-align: left;
+      font-weight: 600; color: #555; border-bottom: 2px solid #e8e8e8;
+    }
+    tbody tr:nth-child(odd) { background: #fafafa; }
+    tbody tr:hover { background: #f0f4ff; }
+    tbody td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; }
+    .rank { color: #bbb; font-weight: 700; font-size: 0.85rem; }
+    .bar-cell { width: 160px; }
+    .bar-bg { background: #eef0f4; border-radius: 4px; height: 8px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #4361ee, #7209b7); }
+    .pct { color: #4361ee; font-weight: 700; }
+    footer { text-align: center; font-size: 0.78rem; color: #bbb; padding: 24px 0 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>整體流量概覽 — Traffic Overview</h1>
+  <p>資料來源：operation-logs（Elasticsearch） · 查詢區間：2026-04-14T00:00:00+08:00 ～ now</p>
+  <span class="badge">產生時間：2026-04-14 10:18:13 +08:00</span>
+</header>
+<main>
+  <div class="kpi-grid">
+    <div class="kpi-card" style="--accent:#4361ee">
+      <div class="label">總事件數</div>
+      <div class="value">148,107</div>
+      <div class="sub">View + Click</div>
+    </div>
+    <div class="kpi-card" style="--accent:#118ab2">
+      <div class="label">View</div>
+      <div class="value">126,426</div>
+      <div class="sub">佔 85.4%</div>
+    </div>
+    <div class="kpi-card" style="--accent:#7209b7">
+      <div class="label">Click</div>
+      <div class="value">21,681</div>
+      <div class="sub">佔 14.6%</div>
+    </div>
+    <div class="kpi-card" style="--accent:#f72585">
+      <div class="label">Apply</div>
+      <div class="value">4,166</div>
+      <div class="sub">轉換率 3.30%（Apply / Job Page View）</div>
+    </div>
+    <div class="kpi-card" style="--accent:#06d6a0">
+      <div class="label">Unique Sessions</div>
+      <div class="value">46,176</div>
+      <div class="sub">依 sessionId 去重</div>
+    </div>
+    <div class="kpi-card" style="--accent:#fb8500">
+      <div class="label">Click Rate</div>
+      <div class="value">14.64%</div>
+      <div class="sub">Click / 總事件數</div>
+    </div>
+    <div class="kpi-card" style="--accent:#e63946">
+      <div class="label">Apply Rate</div>
+      <div class="value">3.30%</div>
+      <div class="sub">Apply / 總事件數中的 View</div>
+    </div>  </div>  <div class="chart-grid">
+  <div class="card">
+    <h2>每日流量趨勢</h2>
+    <div class="subtitle">View / Click / Apply（右 Y 軸）+ Unique Sessions</div>
+    <div class="chart-wrap"><canvas id="dailyTrend"></canvas></div>
+  </div>  </div>  <div class="chart-grid">
+  <div class="card">
+    <h2>每小時流量分佈</h2>
+    <div class="subtitle">平均事件數（台灣時區 0-23 時）</div>
+    <div class="chart-wrap"><canvas id="hourlyDist"></canvas></div>
+  </div>  </div>  <div class="chart-grid">
+  <div class="card">
+    <h2>裝置分佈</h2>
+    <div class="subtitle">Mobile vs Desktop</div>
+    <div class="chart-wrap"><canvas id="devicePie"></canvas></div>
+  </div>
+  <div class="card">
+    <h2>OS 分佈</h2>
+    <div class="subtitle">Top 16 作業系統</div>
+    <div class="chart-wrap"><canvas id="osPie"></canvas></div>
+  </div>  </div>
+  <div class="card" style="margin-bottom:24px">
+    <h2>OS 詳細數據</h2>
+    <div class="subtitle">共 148,107 筆</div>
+    <table>
+      <thead><tr><th>#</th><th>OS</th><th>事件數</th><th>佔比</th></tr></thead>
+      <tbody><tr><td class="rank">1</td><td>Android</td><td>49,894</td><td class="pct">33.7%</td></tr><tr><td class="rank">2</td><td>iPhone</td><td>38,516</td><td class="pct">26.0%</td></tr><tr><td class="rank">3</td><td>Windows</td><td>37,011</td><td class="pct">25.0%</td></tr><tr><td class="rank">4</td><td></td><td>14,741</td><td class="pct">10.0%</td></tr><tr><td class="rank">5</td><td>macOS</td><td>2,878</td><td class="pct">1.9%</td></tr><tr><td class="rank">6</td><td>MacIntel</td><td>1,606</td><td class="pct">1.1%</td></tr><tr><td class="rank">7</td><td>Linux</td><td>1,153</td><td class="pct">0.8%</td></tr><tr><td class="rank">8</td><td>iPad</td><td>1,035</td><td class="pct">0.7%</td></tr><tr><td class="rank">9</td><td>Win32</td><td>887</td><td class="pct">0.6%</td></tr><tr><td class="rank">10</td><td>Linux x86_64</td><td>149</td><td class="pct">0.1%</td></tr><tr><td class="rank">11</td><td>Linux armv81</td><td>89</td><td class="pct">0.1%</td></tr><tr><td class="rank">12</td><td>Linux aarch64</td><td>54</td><td class="pct">0.0%</td></tr><tr><td class="rank">13</td><td>Chrome OS</td><td>38</td><td class="pct">0.0%</td></tr><tr><td class="rank">14</td><td>iOS</td><td>36</td><td class="pct">0.0%</td></tr><tr><td class="rank">15</td><td>Linux armv8l</td><td>19</td><td class="pct">0.0%</td></tr><tr><td class="rank">16</td><td>Unknown</td><td>1</td><td class="pct">0.0%</td></tr></tbody>
+    </table>
+  </div>
+  <div class="card" style="margin-bottom:24px">
+    <h2>瀏覽器 Top 10</h2>
+    <div class="subtitle">共 147,908 筆</div>
+    <table>
+      <thead><tr><th>#</th><th>瀏覽器</th><th>事件數</th><th>佔比</th></tr></thead>
+      <tbody><tr><td class="rank">1</td><td>Chromium</td><td>67,292</td><td class="pct">45.5%</td></tr><tr><td class="rank">2</td><td>Netscape</td><td>57,163</td><td class="pct">38.6%</td></tr><tr><td class="rank">3</td><td>Google Chrome</td><td>21,034</td><td class="pct">14.2%</td></tr><tr><td class="rank">4</td><td>Android WebView</td><td>751</td><td class="pct">0.5%</td></tr><tr><td class="rank">5</td><td>Microsoft Edge</td><td>624</td><td class="pct">0.4%</td></tr><tr><td class="rank">6</td><td>Brave</td><td>362</td><td class="pct">0.2%</td></tr><tr><td class="rank">7</td><td>Samsung Internet</td><td>254</td><td class="pct">0.2%</td></tr><tr><td class="rank">8</td><td>HeadlessChrome</td><td>247</td><td class="pct">0.2%</td></tr><tr><td class="rank">9</td><td>Opera</td><td>111</td><td class="pct">0.1%</td></tr><tr><td class="rank">10</td><td> Not A;Brand</td><td>70</td><td class="pct">0.0%</td></tr></tbody>
+    </table>
+  </div>
+<script>
+  // ── 每日流量趨勢（Dual Y-Axis）
+  new Chart(document.getElementById('dailyTrend'), {
+    type: 'line',
+    data: {
+      labels: ["2026-04-14"],
+      datasets: [
+        {
+          label: 'View',
+          data: [126426],
+          borderColor: '#118ab2', backgroundColor: 'rgba(17,138,178,0.1)',
+          fill: true, tension: 0.3, yAxisID: 'y'
+        },
+        {
+          label: 'Click',
+          data: [21681],
+          borderColor: '#7209b7', backgroundColor: 'rgba(114,9,183,0.1)',
+          fill: true, tension: 0.3, yAxisID: 'y'
+        },
+        {
+          label: 'Apply',
+          data: [4166],
+          borderColor: '#f72585', backgroundColor: 'rgba(247,37,133,0.1)',
+          fill: true, tension: 0.3, yAxisID: 'y1'
+        },
+        {
+          label: 'Unique Sessions',
+          data: [46176],
+          borderColor: '#06d6a0', borderDash: [6,3],
+          fill: false, tension: 0.3, yAxisID: 'y'
+        }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      scales: {
+        y:  { position: 'left',  grid: { color: '#f0f0f0' }, title: { display: true, text: '事件數' } },
+        y1: { position: 'right', grid: { drawOnChartArea: false }, title: { display: true, text: 'Apply 數' } }
+      },
+      plugins: { legend: { position: 'bottom' } }
+    }
+  });
+
+  // ── 每小時分佈
+  new Chart(document.getElementById('hourlyDist'), {
+    type: 'bar',
+    data: {
+      labels: ["00", "01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", "21", "22", "23"],
+      datasets: [{
+        label: '平均事件數',
+        data: [18184, 12927, 7140, 6989, 5993, 6499, 9185, 14796, 24053, 31745, 10596, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff", "#8338ec", "#ff006e", "#ffbe0b", "#80b918", "#00b4d8", "#e63946", "#457b9d", "#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff", "#8338ec", "#ff006e", "#ffbe0b"],
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, title: { display: true, text: '小時（台灣時區）' } },
+        y: { grid: { color: '#f0f0f0' }, title: { display: true, text: '平均事件數' } }
+      }
+    }
+  });
+
+  // ── 裝置分佈 Doughnut
+  new Chart(document.getElementById('devicePie'), {
+    type: 'doughnut',
+    data: {
+      labels: ["mobile", "desktop"],
+      datasets: [{
+        data: [88389, 59718],
+        backgroundColor: ["#4361ee", "#7209b7"],
+        borderWidth: 2, borderColor: '#fff'
+      }]
+    },
+    options: {
+      cutout: '62%',
+      plugins: {
+        legend: { position: 'right', labels: { font: { size: 12 }, padding: 10 } },
+        tooltip: { callbacks: {
+          label: ctx => {
+            const t = 148107;
+            return ` ${ctx.label}：${ctx.parsed.toLocaleString()} 次（${(ctx.parsed/t*100).toFixed(1)}%）`;
+          }
+        } }
+      }
+    }
+  });
+
+  // ── OS 分佈 Doughnut
+  const osLabels = ["Android", "iPhone", "Windows", "", "macOS", "MacIntel", "Linux", "iPad", "Win32", "Linux x86_64", "Linux armv81", "Linux aarch64", "Chrome OS", "iOS", "Linux armv8l", "Unknown"];
+  const osValues = [49894, 38516, 37011, 14741, 2878, 1606, 1153, 1035, 887, 149, 89, 54, 38, 36, 19, 1];
+  new Chart(document.getElementById('osPie'), {
+    type: 'doughnut',
+    data: {
+      labels: osLabels,
+      datasets: [{
+        data: osValues,
+        backgroundColor: ["#4361ee", "#7209b7", "#f72585", "#06d6a0", "#fb8500", "#118ab2", "#3a86ff", "#8338ec", "#ff006e", "#ffbe0b", "#80b918", "#00b4d8", "#e63946", "#457b9d", "#4361ee", "#7209b7"],
+        borderWidth: 2, borderColor: '#fff'
+      }]
+    },
+    options: {
+      cutout: '62%',
+      plugins: {
+        legend: { position: 'right', labels: { font: { size: 12 }, padding: 10 } },
+        tooltip: { callbacks: {
+          label: ctx => {
+            const t = 148107;
+            return ` ${ctx.label}：${ctx.parsed.toLocaleString()} 次（${(ctx.parsed/t*100).toFixed(1)}%）`;
+          }
+        } }
+      }
+    }
+  });
+</script>
+
+</main>
+<footer>Generated 2026-04-14 10:18:13 +08:00 · operation-logs</footer>
+</body>
+</html>
