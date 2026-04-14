@@ -2,7 +2,7 @@
 """
 run_all.py
 ──────────
-一鍵執行所有報告腳本，並產生 output/index.html 導覽頁面。
+一鍵執行三層資料管線，並產生 output/index.html 導覽頁面。
 
 執行方式：
     uv run python run_all.py
@@ -10,20 +10,20 @@ run_all.py
     uv run python run_all.py --from 2026-04-01 --to 2026-04-10
 """
 
+import shutil
 import subprocess
 import sys
 import time
 from pathlib import Path
-
-from build_frontend_bundle import build_frontend_bundle
-from common.es_client import parse_args, resolve_time_range, generated_now, TW
-from datetime import datetime
+from common.es_client import parse_args, generated_now
+from common.t1_reader import resolve_date_window
+from extract_raw_events import extract_raw_events
 
 OUTPUT_DIR = Path(__file__).parent / "output"
 
 REPORTS = [
     {
-        "script": "traffic_overview_report.py",
+        "script": "run_traffic_overview_pipeline.py",
         "title": "整體流量概覽",
         "subtitle": "Traffic Overview",
         "desc": "KPI 指標、每日流量趨勢、每小時分佈、裝置與 OS 分佈",
@@ -32,7 +32,7 @@ REPORTS = [
         "color": "#4361ee",
     },
     {
-        "script": "search_behavior_report.py",
+        "script": "run_search_behavior_pipeline.py",
         "title": "搜尋行為分析",
         "subtitle": "Search Behavior",
         "desc": "AI vs 一般搜尋趨勢、搜尋結果頁分佈、AI 互動方式、快速篩選",
@@ -41,7 +41,7 @@ REPORTS = [
         "color": "#7209b7",
     },
     {
-        "script": "apply_conversion_report.py",
+        "script": "run_apply_conversion_pipeline.py",
         "title": "應徵轉換分析",
         "subtitle": "Apply Conversion",
         "desc": "應徵漏斗、每日趨勢、來源分佈、裝置與時段分析",
@@ -50,7 +50,7 @@ REPORTS = [
         "color": "#f72585",
     },
     {
-        "script": "feature_engagement_report.py",
+        "script": "run_feature_engagement_pipeline.py",
         "title": "功能互動分析",
         "subtitle": "Feature Engagement",
         "desc": "探索職缺/企業、身份辨識、產業 Tab、新聞互動",
@@ -59,7 +59,7 @@ REPORTS = [
         "color": "#06d6a0",
     },
     {
-        "script": "device_platform_report.py",
+        "script": "run_device_platform_pipeline.py",
         "title": "裝置與平台分析",
         "subtitle": "Device & Platform",
         "desc": "Mobile/Desktop 趨勢、OS 與瀏覽器分佈、裝置行為交叉",
@@ -68,7 +68,7 @@ REPORTS = [
         "color": "#fb8500",
     },
     {
-        "script": "page_ranking_report.py",
+        "script": "run_page_ranking_pipeline.py",
         "title": "頁面流量排行",
         "subtitle": "Page Ranking",
         "desc": "featureId 排行 Top 20、功能類別佔比分析",
@@ -77,7 +77,7 @@ REPORTS = [
         "color": "#118ab2",
     },
     {
-        "script": "page_navigation_report.py",
+        "script": "run_page_navigation_pipeline.py",
         "title": "頁面導航鏈路",
         "subtitle": "Page Navigation Flow",
         "desc": "頁面轉換路徑排行、各頁面來源/目標、初始進入分佈",
@@ -86,7 +86,7 @@ REPORTS = [
         "color": "#8338ec",
     },
     {
-        "script": "click_heatmap_report.py",
+        "script": "run_click_heatmap_pipeline.py",
         "title": "頁面點擊熱點",
         "subtitle": "Page Click Heatmap",
         "desc": "Clarity 風格截圖疊加，呈現各頁面按鈕/連結的點擊次數",
@@ -207,18 +207,16 @@ def run_report(script: str, extra_args: list[str]) -> tuple[bool, float]:
 
 def main() -> None:
     args = parse_args("一鍵執行所有報告並產生導覽頁面")
-    time_from, time_to = resolve_time_range(args)
+    date_from, date_to = resolve_date_window(args.days, args.time_from, args.time_to)
 
-    # 組合傳遞給子腳本的額外參數
-    extra_args: list[str] = []
-    if args.time_from:
-        extra_args += ["--from", args.time_from]
-        if args.time_to:
-            extra_args += ["--to", args.time_to]
-    elif args.days:
-        extra_args += ["--days", str(args.days)]
+    if OUTPUT_DIR.exists():
+        shutil.rmtree(OUTPUT_DIR)
 
-    print(f"[INFO] 查詢區間：{time_from} ～ {time_to}")
+    extra_args = ["--from", date_from, "--to", date_to, "--keep-existing"]
+
+    print(f"[INFO] 查詢區間：{date_from} ～ {date_to}")
+    print("[INFO] 先抽取 T1 raw 資料...")
+    extract_raw_events(date_from, date_to)
     print(f"[INFO] 開始執行 {len(REPORTS)} 份報告...\n")
 
     results = []
@@ -240,13 +238,11 @@ def main() -> None:
 
     # 產生導覽頁面
     gen_at = generated_now()
-    nav_html = build_nav_html(results, time_from, time_to, gen_at)
+    nav_html = build_nav_html(results, date_from, date_to, gen_at)
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     nav_file = OUTPUT_DIR / "index.html"
     nav_file.write_text(nav_html, encoding="utf-8")
     print(f"[OK] 導覽頁面已產生：{nav_file}")
-    build_frontend_bundle()
-    print(f"[OK] 已套用 v1-1 UI 版型：{OUTPUT_DIR}")
 
 
 if __name__ == "__main__":

@@ -47,7 +47,7 @@ output/
     - 業務欄位：`source`、`category_tab`、`identity_type`、`industry_tab`
   - **為什麼需要這一步**：raw 層若沒有穩定欄位契約，後面每份報表都要自己補 mapping，會讓維護成本失控。
 
-- [ ] **Step 4 — 將各報表重構為讀取 raw parquet，而非直接查 ES**
+- [x] **Step 4 — 將各報表重構為讀取 raw parquet，而非直接查 ES**
   - 調整各報表產生器，改成從本地 `dataset/raw/` 讀資料。
   - 每份報表只保留自己的查詢邏輯與指標計算，不再關心 ES 查詢細節。
   - **為什麼需要這一步**：這一步會把「資料取得」與「資料分析」分離，讓報表邏輯變得可重跑、可測、可離線執行。
@@ -61,7 +61,7 @@ output/
     - [x] **Step 4.7 — feature-engagement 改讀 T1 raw parquet**
     - [x] **Step 4.8 — click-heatmap 改讀 T1 raw parquet**
 
-- [ ] **Step 5 — 為每份報表輸出 report parquet**
+- [x] **Step 5 — 為每份報表輸出 report parquet**
   - 各報表分析完成後，將輸出寫入 `dataset/report/<report-name>/`。
   - 每份報表只存自己需要的結果欄位，不攜帶多餘明細。
   - **為什麼需要這一步**：前端與 HTML 產生器應該吃小而穩定的報表資料，而不是整包原始事件 parquet。
@@ -75,7 +75,7 @@ output/
     - [x] **Step 5.7 — feature-engagement 輸出 T2 report parquet**
     - [x] **Step 5.8 — click-heatmap 輸出 T2 report parquet**
 
-- [ ] **Step 6 — 定義各報表的 report parquet schema**
+- [x] **Step 6 — 定義各報表的 report parquet schema**
   - 逐一列出各報表最終會輸出的表結構，例如：
     - KPI
     - 趨勢資料
@@ -93,7 +93,7 @@ output/
     - [x] **Step 6.7 — 定義 feature-engagement 的 T2 schema 與 manifest**
     - [x] **Step 6.8 — 定義 click-heatmap 的 T2 schema 與 manifest**
 
-- [ ] **Step 7 — 重構 HTML 產生器只讀 report parquet**
+- [x] **Step 7 — 重構 HTML 產生器只讀 report parquet**
   - 讓 HTML 產生器從 `dataset/report/` 讀取資料，不直接碰 raw parquet。
   - 視需求決定是：
     - 直接在後端產生完成版 HTML，或
@@ -109,7 +109,7 @@ output/
     - [x] **Step 7.7 — feature-engagement 從 T2 產出 HTML**
     - [x] **Step 7.8 — click-heatmap 從 T2 產出 HTML**
 
-- [ ] **Step 8 — 重整 `run_all.py` 與部署流程**
+- [x] **Step 8 — 重整 `run_all.py` 與部署流程**
   - 將流程拆成清楚的三段：
     - `extract`
     - `transform`
@@ -135,7 +135,7 @@ output/
     - 檔案路徑
   - **為什麼需要這一步**：資料層一旦分層，manifest 會是流程串接、錯誤追查與版本相容性的關鍵基礎。
 
-- [ ] **Step 10 — build 驗證與測試策略**
+- [x] **Step 10 — build 驗證與測試策略**
   - build 驗證整條流程可執行，包含抽取、分析、HTML 產出與部署內容。
   - 盤點是否有既有測試可跑；若要執行測試，再由你確認。
   - **為什麼需要這一步**：這次重構會動到資料入口、分析邏輯與輸出格式，若沒有整體驗證，很容易局部成功、整體失敗。
