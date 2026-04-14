@@ -9,20 +9,8 @@ TMP_DIR=$(mktemp -d)
 TO_DATE=$(date +%F)
 FROM_DATE=$(date -d "$((DAYS - 1)) days ago" +%F)
 
-echo "▶ 匯出 Parquet dataset（${FROM_DATE} ~ ${TO_DATE}）..."
-if [ -f "$(dirname "$0")/extract_events.py" ]; then
-    echo "[INFO] 使用新版 extract_events.py"
-    uv run python "$(dirname "$0")/extract_events.py" --from "$FROM_DATE" --to "$TO_DATE"
-elif [ -f "$(dirname "$0")/extract_all.py" ]; then
-    echo "[INFO] 使用舊版 extract_all.py"
-    uv run python "$(dirname "$0")/extract_all.py" --mode daily --from "$FROM_DATE" --to "$TO_DATE"
-else
-    echo "❌ 找不到資料擷取腳本 (extract_events.py 或 extract_all.py)"
-    exit 1
-fi
-
 echo "▶ 組裝網站報告..."
-uv run python "$(dirname "$0")/run_all.py"
+uv run python "$(dirname "$0")/run_all.py" --from "$FROM_DATE" --to "$TO_DATE"
 
 echo "▶ 部署到 GitHub Pages..."
 git init "$TMP_DIR"
