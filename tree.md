@@ -6,6 +6,7 @@ job-report-1/
 │   └── v1-2-ui-sync.plan.md           # ✅ 已完成：v1-2 UI 對齊 v1-1 的實作計畫
 ├── common/
 │   ├── __init__.py
+│   ├── data_pipeline.py               # T1/T2/T3 資料管線契約與路徑定義
 │   ├── es_client.py                    # Grafana _msearch 共用封裝
 │   ├── html_template.py                # HTML header/footer/style 共用模板
 │   └── chart_helpers.py               # Chart.js 輔助函式
@@ -40,6 +41,7 @@ job-report-1/
 │   └── query-definitions.js           # v1-1 DuckDB 查詢定義
 ├── run_all.py                         # 一鍵執行所有報告 + 產生導覽頁
 ├── grafana-dashboard.plan.md          # Dashboard 實作計畫（Grafana JSON 匯出待完成）
+├── report-data-pipeline.plan.md       # ES→raw→report→html 三層資料管線重構計畫
 ├── archive/
 │   └── page-click-analysis.plan.md   # ✅ 已完成：Dashboard 8 實作計畫
 ├── pyproject.toml                     # uv 專案設定
