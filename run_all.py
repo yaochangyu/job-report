@@ -15,6 +15,7 @@ import sys
 import time
 from pathlib import Path
 
+from build_frontend_bundle import build_frontend_bundle
 from common.es_client import parse_args, resolve_time_range, generated_now, TW
 from datetime import datetime
 
@@ -244,6 +245,8 @@ def main() -> None:
     nav_file = OUTPUT_DIR / "index.html"
     nav_file.write_text(nav_html, encoding="utf-8")
     print(f"[OK] 導覽頁面已產生：{nav_file}")
+    build_frontend_bundle()
+    print(f"[OK] 已套用 v1-1 UI 版型：{OUTPUT_DIR}")
 
 
 if __name__ == "__main__":

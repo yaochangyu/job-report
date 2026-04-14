@@ -31,14 +31,14 @@ git -C "$TMP_DIR" fetch origin gh-pages --depth=1 || echo "gh-pages branch not f
 git -C "$TMP_DIR" checkout gh-pages || git -C "$TMP_DIR" checkout -b gh-pages
 
 echo "▶ 清理 gh-pages 根目錄雜物..."
-find "$TMP_DIR" -maxdepth 1 -not -name "." -not -name ".git" -not -name "v*" -not -name "index.html" -exec rm -rf {} +
+find "$TMP_DIR" -mindepth 1 -maxdepth 1 -not -name ".git" -not -name "v*" -not -name "index.html" -exec rm -rf {} +
 
 if [ -n "$VERSION" ]; then
     TARGET_DIR="$TMP_DIR/$VERSION"
     echo "▶ 部署到版本目錄: $VERSION"
     mkdir -p "$TARGET_DIR"
     cp -r "$OUTPUT_DIR/." "$TARGET_DIR/"
-    
+
     # 產生根目錄導向 index.html
     cat <<EEOF > "$TMP_DIR/index.html"
 <!DOCTYPE html>
