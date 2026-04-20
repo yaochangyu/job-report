@@ -31,12 +31,12 @@ const SIDEBAR_STORAGE_KEY = "job-report-sidebar-collapsed";
 
 // 各視角是否顯示「頁面路徑」欄位
 const VIEW_FILTER_FIELDS = {
-  overview:   { pagePath: true  },
+  overview:   { pagePath: false },
   search:     { pagePath: false },
   apply:      { pagePath: false },
   feature:    { pagePath: false },
   device:     { pagePath: false },
-  ranking:    { pagePath: true  },
+  ranking:    { pagePath: false },
   navigation: { pagePath: true  },
   heatmap:    { pagePath: true  },
 };

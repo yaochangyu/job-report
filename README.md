@@ -134,14 +134,13 @@ output/
 
 ## 前端查詢策略
 
-`query-definitions.js` 中每個 dashboard 都有兩條路徑：
+`query-definitions.js` 中每個 dashboard 直接讀取 T2 預聚合 Parquet，無 T1 fallback。`f.datasetRoot` 未設定時拋出錯誤（代表 manifest.json 載入失敗）。
 
-| 條件 | 使用路徑 | 說明 |
-|------|----------|------|
-| `f.datasetRoot` 有值（已部署） | **T2 路徑** | 直接讀 T2 Parquet，KB 級，快速 |
-| `f.datasetRoot` 為 null | **T1 fallback** | 查詢本機 `events` view，適合本機開發 |
-
-例外：`overview`、`ranking` 視角有 pagePath 篩選時，T2 是整體聚合無法過濾，自動退回 T1。
+| 視角 | 支援 pagePath 篩選 | 說明 |
+|------|-------------------|------|
+| overview / ranking | ✗ | T2 是跨所有頁面的整體聚合，無法 per-page 過濾 |
+| navigation / heatmap | ✓ | T2 保留 page 維度，可用 pagePath 過濾 |
+| 其他視角 | ✗ | 無 pagePath 欄位 |
 
 ## 環境需求
 
