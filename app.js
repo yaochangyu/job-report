@@ -188,7 +188,11 @@ function applyFiltersToForm(filters) {
   document.getElementById("page-path").value  = filters.pagePath;
 }
 
+let _queryInFlight = false;
+
 async function runQuery(state, filters) {
+  if (_queryInFlight) return false;
+
   if (!runtime.conn || !runtime.hasEventsView) {
     state.lastQuery = "目前沒有 events view，可先執行 extract_events.py 匯出 Parquet";
     state.queryResult = null;
@@ -197,6 +201,8 @@ async function runQuery(state, filters) {
     return false;
   }
 
+  _queryInFlight = true;
+  setQueryRunning(true);
   try {
     syncUrlParams(filters);
     const result = await executeViewQueries(runtime.conn, filters);
@@ -216,7 +222,16 @@ async function runQuery(state, filters) {
     resetDashboard();
     renderState(state);
     return false;
+  } finally {
+    _queryInFlight = false;
+    setQueryRunning(false);
   }
+}
+
+function setQueryRunning(running) {
+  document.getElementById("page-layout")?.classList.toggle("is-querying", running);
+  const btn = document.getElementById("run-query");
+  if (btn) btn.disabled = running;
 }
 
 function buildDefaultFilters() {

@@ -156,6 +156,10 @@ def build_shell_html(asset_prefix: str = ".", initial_view: str = "overview") ->
      </div>
 
      <div class="content">
+       <div class="content-overlay" aria-hidden="true">
+         <div class="spinner"></div>
+         <span class="overlay-label">查詢中…</span>
+       </div>
 
        <section class="panel view-panel">
          <div class="panel__header view-panel__heading">

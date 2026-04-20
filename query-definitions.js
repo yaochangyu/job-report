@@ -389,69 +389,49 @@ function navigationPlan(f) {
   const pageFilter = f.pagePath ? `AND (page_path = ${quote(f.pagePath)} OR previous_page = ${quote(f.pagePath)})` : "";
   return {
     summary: `頁面導航：${f.dateFrom} ~ ${f.dateTo}${f.pagePath ? ` / ${f.pagePath}` : ""}`,
+    // 將 window function 物化一次，避免 5 個查詢各自重跑全表排序
+    prepare: `
+      CREATE OR REPLACE TEMP TABLE __nav AS
+      SELECT page_path,
+        LAG(page_path)  OVER (PARTITION BY session_id ORDER BY occurred_at) AS previous_page,
+        LEAD(page_path) OVER (PARTITION BY session_id ORDER BY occurred_at) AS next_page
+      FROM events
+      WHERE ${dateClause(f)} AND event_type = 'view' AND session_id IS NOT NULL AND page_path IS NOT NULL
+    `,
+    teardown: `DROP TABLE IF EXISTS __nav`,
     queries: {
       kpi: `
-        WITH nav AS (
-          SELECT session_id, page_path,
-            LAG(page_path) OVER (PARTITION BY session_id ORDER BY occurred_at) AS previous_page
-          FROM events
-          WHERE ${dateClause(f)} AND event_type = 'view' AND session_id IS NOT NULL AND page_path IS NOT NULL
-        )
         SELECT
           COUNT(*) FILTER (WHERE previous_page IS NOT NULL ${pageFilter}) AS nav_total,
           COUNT(*) FILTER (WHERE previous_page IS NULL) AS entry_total,
           COUNT(DISTINCT page_path) AS page_count
-        FROM nav
+        FROM __nav
       `,
       entry_dist: `
-        WITH nav AS (
-          SELECT page_path,
-            LAG(page_path) OVER (PARTITION BY session_id ORDER BY occurred_at) AS previous_page
-          FROM events
-          WHERE ${dateClause(f)} AND event_type = 'view' AND session_id IS NOT NULL AND page_path IS NOT NULL
-        )
         SELECT page_path AS name, COUNT(*) AS count
-        FROM nav WHERE previous_page IS NULL
+        FROM __nav WHERE previous_page IS NULL
         GROUP BY 1 ORDER BY count DESC LIMIT 15
       `,
       transition_ranking: `
-        WITH nav AS (
-          SELECT page_path,
-            LAG(page_path) OVER (PARTITION BY session_id ORDER BY occurred_at) AS previous_page
-          FROM events
-          WHERE ${dateClause(f)} AND event_type = 'view' AND session_id IS NOT NULL AND page_path IS NOT NULL
-        )
         SELECT previous_page AS from_page, page_path AS to_page, COUNT(*) AS count
-        FROM nav WHERE previous_page IS NOT NULL AND previous_page <> page_path
+        FROM __nav WHERE previous_page IS NOT NULL AND previous_page <> page_path
           ${pageFilter}
         GROUP BY 1, 2 ORDER BY count DESC LIMIT 30
       `,
       page_sources: `
-        WITH nav AS (
-          SELECT page_path,
-            LAG(page_path) OVER (PARTITION BY session_id ORDER BY occurred_at) AS previous_page
-          FROM events
-          WHERE ${dateClause(f)} AND event_type = 'view' AND session_id IS NOT NULL AND page_path IS NOT NULL
-        ),
-        ranked AS (
+        WITH ranked AS (
           SELECT page_path AS target, previous_page AS source, COUNT(*) AS cnt,
             ROW_NUMBER() OVER (PARTITION BY page_path ORDER BY COUNT(*) DESC) AS rn
-          FROM nav WHERE previous_page IS NOT NULL AND previous_page <> page_path
+          FROM __nav WHERE previous_page IS NOT NULL AND previous_page <> page_path
           GROUP BY 1, 2
         )
         SELECT target, source, cnt AS count FROM ranked WHERE rn <= 5 ORDER BY target, rn
       `,
       page_targets: `
-        WITH nav AS (
-          SELECT page_path,
-            LEAD(page_path) OVER (PARTITION BY session_id ORDER BY occurred_at) AS next_page
-          FROM events
-          WHERE ${dateClause(f)} AND event_type = 'view' AND session_id IS NOT NULL AND page_path IS NOT NULL
-        ),
-        ranked AS (
+        WITH ranked AS (
           SELECT page_path AS source, next_page AS target, COUNT(*) AS cnt,
             ROW_NUMBER() OVER (PARTITION BY page_path ORDER BY COUNT(*) DESC) AS rn
-          FROM nav WHERE next_page IS NOT NULL AND next_page <> page_path
+          FROM __nav WHERE next_page IS NOT NULL AND next_page <> page_path
           GROUP BY 1, 2
         )
         SELECT source, target, cnt AS count FROM ranked WHERE rn <= 5 ORDER BY source, rn
@@ -517,10 +497,15 @@ export function buildQueryPlan(filters) {
 
 export async function executeViewQueries(conn, filters) {
   const plan = buildQueryPlan(filters);
+  if (plan.prepare) await conn.query(plan.prepare);
   const outputs = [];
-  for (const [name, sql] of Object.entries(plan.queries)) {
-    const result = await conn.query(sql);
-    outputs.push({ name, sql: sql.trim(), rows: result.toArray() });
+  try {
+    for (const [name, sql] of Object.entries(plan.queries)) {
+      const result = await conn.query(sql);
+      outputs.push({ name, sql: sql.trim(), rows: result.toArray() });
+    }
+  } finally {
+    if (plan.teardown) await conn.query(plan.teardown);
   }
   return { summary: plan.summary, outputs };
 }
