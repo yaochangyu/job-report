@@ -206,8 +206,11 @@ async function runQuery(state, filters) {
   setQueryRunning(true);
   try {
     syncUrlParams(filters);
-    const registerFile = async (alias, url) =>
-      runtime.db.registerFileURL(alias, url, duckdb.DuckDBDataProtocol.HTTP, false);
+    const registerFile = async (alias, url) => {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error(`${resp.status} ${url}`);
+      await runtime.db.registerFileBuffer(alias, new Uint8Array(await resp.arrayBuffer()));
+    };
     const result = await executeViewQueries(runtime.conn, filters, registerFile);
     state.lastQuery = result.summary;
     state.queryResult = summarizeQueryResult(result.outputs);
