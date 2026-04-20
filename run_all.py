@@ -10,13 +10,15 @@ run_all.py
     uv run python run_all.py --from 2026-04-01 --to 2026-04-10
 """
 
+import json
 import os
 import shutil
 import subprocess
 import sys
 import time
 from pathlib import Path
-from common.es_client import parse_args
+from common.data_pipeline import T1_RAW_MANIFEST_PATH
+from common.es_client import generated_now, parse_args
 from common.frontend_shell import FRONTEND_ASSETS, build_shell_html
 from common.t1_reader import resolve_date_window
 from extract_raw_events import extract_raw_events
@@ -115,9 +117,28 @@ def copy_frontend_bundle(output_dir: Path) -> None:
         shutil.copy2(ROOT_DIR / asset_name, output_dir / asset_name)
 
     dataset_output = output_dir / "dataset"
-    if dataset_output.exists():
-        shutil.rmtree(dataset_output)
-    shutil.copytree(DATASET_DIR, dataset_output)
+    dataset_output.mkdir(parents=True, exist_ok=True)
+
+    # app.js needs manifest.json to discover datasetRoot; read dates from T1 manifest
+    available_dates: list[str] = []
+    if T1_RAW_MANIFEST_PATH.exists():
+        raw = json.loads(T1_RAW_MANIFEST_PATH.read_text(encoding="utf-8"))
+        available_dates = raw.get("available_dates", [])
+    (dataset_output / "manifest.json").write_text(
+        json.dumps(
+            {"available_dates": sorted(available_dates), "generated_at": generated_now()},
+            ensure_ascii=False, indent=2,
+        ) + "\n",
+        encoding="utf-8",
+    )
+
+    # Copy only T2 report parquet files — all dashboards read T2, T1 raw is not deployed
+    report_src = DATASET_DIR / "report"
+    if report_src.exists():
+        report_dst = dataset_output / "report"
+        if report_dst.exists():
+            shutil.rmtree(report_dst)
+        shutil.copytree(report_src, report_dst)
 
 
 def build_shell_pages(output_dir: Path, reports: list[dict]) -> None:

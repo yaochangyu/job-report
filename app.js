@@ -148,7 +148,7 @@ function renderState(state) {
   const parts = [];
   if (!state.manifestLoaded) parts.push("資料載入中…");
   else if (!state.duckdbReady) parts.push("DuckDB 初始化中…");
-  else if (state.rowCount != null) parts.push(`已載入 ${state.registeredDates.length} 個日期分區 · ${state.rowCount.toLocaleString()} 筆`);
+  else if (state.registeredDates.length > 0) parts.push(`已載入 ${state.registeredDates.length} 個日期分區`);
   if (state.lastQuery) parts.push(state.lastQuery);
   setText("query-status", parts.join("  ·  "));
 }
@@ -403,22 +403,15 @@ async function bootstrap() {
     runtime.conn = duckdbRuntime.conn;
     renderState(state);
 
-    const registeredFiles = await registerParquetFiles(runtime.db, manifest);
-    state.registeredDates = registeredFiles.map((entry) => entry.date);
-    state.rowCount = await buildEventsView(runtime.conn, registeredFiles);
-    runtime.hasEventsView = registeredFiles.length > 0;
-    state.lastQuery = registeredFiles.length
-      ? `DuckDB 已載入 ${registeredFiles.length} 個日期分區`
-      : "manifest 已載入，但目前沒有可查詢的 Parquet 檔";
+    // T2 資料透過 datasetRoot 提供，不需要載入 T1 raw parquet
+    runtime.hasEventsView = true;
+    state.lastQuery = `DuckDB 已就緒（T2）`;
 
-    // DuckDB 載入完成後自動執行查詢
-    if (runtime.hasEventsView) {
-      renderState(state);
-      const form = document.getElementById("query-form");
-      const filters = collectFormFilters(form, state.selectedViewMode);
-      await runQuery(state, filters);
-      return;
-    }
+    renderState(state);
+    const form = document.getElementById("query-form");
+    const filters = collectFormFilters(form, state.selectedViewMode);
+    await runQuery(state, filters);
+    return;
   } catch (error) {
     state.lastQuery = error instanceof Error ? error.message : String(error);
   }
