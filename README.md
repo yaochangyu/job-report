@@ -63,39 +63,33 @@ dataset/manifest/t1-raw-manifest.json
 
 每份報表各自的 `build_*_t2.py` 讀取 T1 Parquet，依報表需求計算聚合，輸出多個主題的 Parquet 檔。**這是瀏覽器端實際讀取的資料**，體積小（KB 級），DuckDB-WASM 可快速載入。
 
-**存放位置：**
+**存放位置（僅列前端實際 fetch 的檔案）：**
 ```
 dataset/report/
-  traffic-overview/
-    range=2025-01-01_2025-01-31/
-      kpi.parquet          # 單列 KPI（total/views/clicks/applies/sessions/rates）
-      daily.parquet        # 每日彙總
-      hourly.parquet       # 每小時平均
-      device_type.parquet  # 裝置分佈（name, count）
-      os.parquet           # OS 分佈
-      browser.parquet      # 瀏覽器分佈
+  traffic-overview/range=.../
+    kpi.parquet          # 單列 KPI（total/views/clicks/applies/sessions）
+    daily.parquet        # 每日彙總
+    device_type.parquet  # 裝置分佈（name, count）
+    os.parquet           # OS 分佈
+    browser.parquet      # 瀏覽器分佈
   search-behavior/range=.../
-    summary.parquet        # 各搜尋類型總計
+    summary.parquet        # 各搜尋類型總計（search_page/general/ai/quick）
     feature_counts.parquet # featureId × count
     daily_trend.parquet    # 每日 general/ai 趨勢
     search_page_dist.parquet
-    ai_interaction.parquet
-    quick_overview.parquet
-    quick_daily.parquet
   apply-conversion/range=.../
-    kpi.parquet / source.parquet / daily.parquet
-    funnel.parquet / device.parquet / os.parquet / hourly.parquet
+    kpi.parquet / daily.parquet / funnel.parquet
+    device.parquet / os.parquet / source.parquet
   feature-engagement/range=.../
     explore_jobs_features.parquet / explore_jobs_category_tabs.parquet
-    explore_jobs_identity_types.parquet / explore_jobs_daily.parquet
-    explore_corp_features.parquet / explore_corp_industry_tabs.parquet
+    explore_corp_features.parquet
     identity_main.parquet / identity_all.parquet
-    news_features.parquet / news_categories.parquet
+    news_features.parquet
   device-platform/range=.../
-    summary.parquet / device_total.parquet / daily.parquet
+    summary.parquet / daily.parquet
     os.parquet / browser.parquet / device_behavior.parquet / os_behavior.parquet
   page-ranking/range=.../
-    summary.parquet / features.parquet / categories.parquet
+    summary.parquet / features.parquet
   page-navigation/range=.../
     summary.parquet / nav_pairs.parquet / entry_pages.parquet
     page_sources.parquet / page_destinations.parquet
@@ -233,7 +227,7 @@ bash deploy.sh 7 v1-2
 ├── app.js                   # 前端殼啟動邏輯（T2 路徑，registerFileBuffer 並行載入）
 ├── app.css                  # 前端殼樣式
 ├── dashboard-renderers.js   # 各 dashboard 前端 renderer
-├── query-definitions.js     # DuckDB 前端查詢定義（T2/T1 雙路徑）
+├── query-definitions.js     # DuckDB 前端查詢定義（純 T2，無 fallback）
 ├── site-manifest.json       # 站點資產與資料集 manifest
 │
 ├── deploy.sh                # 一鍵部署至 GitHub Pages
