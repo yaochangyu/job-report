@@ -166,6 +166,7 @@ function collectFormFilters(form, viewMode) {
     dateTo: payload.date_to,
     pagePath: payload.page_path?.trim() || "",
     viewMode,
+    datasetRoot: runtime.datasetRoot?.href ?? null,
   };
 }
 
@@ -205,7 +206,9 @@ async function runQuery(state, filters) {
   setQueryRunning(true);
   try {
     syncUrlParams(filters);
-    const result = await executeViewQueries(runtime.conn, filters);
+    const registerFile = async (alias, url) =>
+      runtime.db.registerFileURL(alias, url, duckdb.DuckDBDataProtocol.HTTP, false);
+    const result = await executeViewQueries(runtime.conn, filters, registerFile);
     state.lastQuery = result.summary;
     state.queryResult = summarizeQueryResult(result.outputs);
     state.lastSuccessfulFilters = {

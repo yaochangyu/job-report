@@ -386,10 +386,56 @@ function rankingPlan(f) {
 // 表格: 各頁面Top來源、各頁面Top目標、完整轉換路徑排行
 // ════════════════════════════════════════════════════════════════
 function navigationPlan(f) {
+  // 有 datasetRoot 時直接讀 T2 預聚合 parquet，跳過 T1 window function
+  if (f.datasetRoot) {
+    const base = `${f.datasetRoot}report/page-navigation/range=${f.dateFrom}_${f.dateTo}/`;
+    const t2 = (file) => `'__nav_${file}'`;
+    const pageWhere  = f.pagePath ? `WHERE page = ${quote(f.pagePath)}` : "";
+    const pairWhere  = f.pagePath ? `WHERE "from" = ${quote(f.pagePath)} OR "to" = ${quote(f.pagePath)}` : "";
+    return {
+      summary: `頁面導航（T2）：${f.dateFrom} ~ ${f.dateTo}${f.pagePath ? ` / ${f.pagePath}` : ""}`,
+      registerFiles: [
+        { alias: "__nav_summary.parquet",          url: `${base}summary.parquet` },
+        { alias: "__nav_nav_pairs.parquet",         url: `${base}nav_pairs.parquet` },
+        { alias: "__nav_entry_pages.parquet",       url: `${base}entry_pages.parquet` },
+        { alias: "__nav_page_sources.parquet",      url: `${base}page_sources.parquet` },
+        { alias: "__nav_page_destinations.parquet", url: `${base}page_destinations.parquet` },
+      ],
+      queries: {
+        kpi: `
+          SELECT total_nav AS nav_total, entry_total, tracked_pages AS page_count
+          FROM read_parquet([${t2("summary.parquet")}])
+        `,
+        entry_dist: `
+          SELECT name, count FROM read_parquet([${t2("entry_pages.parquet")}])
+          ORDER BY count DESC LIMIT 15
+        `,
+        transition_ranking: `
+          SELECT "from" AS from_page, "to" AS to_page, count
+          FROM read_parquet([${t2("nav_pairs.parquet")}])
+          ${pairWhere}
+          ORDER BY count DESC LIMIT 30
+        `,
+        page_sources: `
+          SELECT page AS target, name AS source, count
+          FROM read_parquet([${t2("page_sources.parquet")}])
+          ${pageWhere}
+          ORDER BY target, rank
+        `,
+        page_targets: `
+          SELECT page AS source, name AS target, count
+          FROM read_parquet([${t2("page_destinations.parquet")}])
+          ${pageWhere}
+          ORDER BY source, rank
+        `,
+      },
+    };
+  }
+
+  // fallback：無 datasetRoot 時用 T1（temp table 物化避免重複掃描）
   const pageFilter = f.pagePath ? `AND (page_path = ${quote(f.pagePath)} OR previous_page = ${quote(f.pagePath)})` : "";
   return {
     summary: `頁面導航：${f.dateFrom} ~ ${f.dateTo}${f.pagePath ? ` / ${f.pagePath}` : ""}`,
-    // 將 window function 物化一次，避免 5 個查詢各自重跑全表排序
     prepare: `
       CREATE OR REPLACE TEMP TABLE __nav AS
       SELECT page_path,
@@ -414,8 +460,7 @@ function navigationPlan(f) {
       `,
       transition_ranking: `
         SELECT previous_page AS from_page, page_path AS to_page, COUNT(*) AS count
-        FROM __nav WHERE previous_page IS NOT NULL AND previous_page <> page_path
-          ${pageFilter}
+        FROM __nav WHERE previous_page IS NOT NULL AND previous_page <> page_path ${pageFilter}
         GROUP BY 1, 2 ORDER BY count DESC LIMIT 30
       `,
       page_sources: `
@@ -495,8 +540,13 @@ export function buildQueryPlan(filters) {
   return (planBuilders[filters.viewMode] ?? overviewPlan)(filters);
 }
 
-export async function executeViewQueries(conn, filters) {
+export async function executeViewQueries(conn, filters, registerFile = null) {
   const plan = buildQueryPlan(filters);
+  if (plan.registerFiles && registerFile) {
+    for (const { alias, url } of plan.registerFiles) {
+      try { await registerFile(alias, url); } catch (_) {}
+    }
+  }
   if (plan.prepare) await conn.query(plan.prepare);
   const outputs = [];
   try {
