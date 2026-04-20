@@ -718,9 +718,9 @@ export function buildQueryPlan(filters) {
 export async function executeViewQueries(conn, filters, registerFile = null) {
   const plan = buildQueryPlan(filters);
   if (plan.registerFiles && registerFile) {
-    for (const { alias, url } of plan.registerFiles) {
-      try { await registerFile(alias, url); } catch (_) {}
-    }
+    await Promise.all(
+      plan.registerFiles.map(({ alias, url }) => registerFile(alias, url).catch(() => {}))
+    );
   }
   if (plan.prepare) await conn.query(plan.prepare);
   const outputs = [];
