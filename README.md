@@ -17,7 +17,7 @@ dataset/report/<報表名>/range=from_to/*.parquet  ← T2 聚合結果
 output/<報表名>/index.html                        ← T3 靜態報表頁
 ```
 
-所有報表輸出至 `output/`，透過 `deploy.sh` 推送至 GitHub Pages，前端使用 DuckDB-WASM 在瀏覽器直接查詢，無需後端服務。
+所有報表輸出至 `output/`，透過 `deploy.sh` 推送至 GitHub Pages。頁面本身是前端殼（空 HTML），`app.js` 啟動後以 HTTP 抓取同目錄下的 Parquet 檔，由 DuckDB-WASM 在瀏覽器動態查詢渲染，無需後端服務。
 
 ## 報表清單
 
@@ -79,9 +79,9 @@ dataset/report/
   （各報表同理）
 ```
 
-### T3 — 靜態報表頁
+### T3 — 報表頁（前端殼 + DuckDB-WASM）
 
-`render_*_t3.py` 讀取 T2 Parquet，將數據燒進 HTML（以 JS 陣列內嵌），搭配共用前端殼（`app.js` + `app.css` + DuckDB-WASM）產生完整報表頁。
+`render_*_t3.py` 讀取 T2 Parquet 產生中間 HTML，但 `run_all.py` 最後會呼叫 `build_shell_pages()` 將輸出覆蓋為前端殼。實際部署的 `index.html` 是空殼，資料在瀏覽器端由 `app.js` 透過 DuckDB-WASM 以 HTTP 動態讀取 Parquet 並渲染圖表。
 
 **存放位置：**
 ```
