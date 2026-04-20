@@ -87,6 +87,33 @@ body {
   grid-template-columns: 88px minmax(0, 1fr);
 }
 
+/* ── Content area + loading overlay ── */
+.content { position: relative; }
+.content-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 100;
+  background: rgba(var(--bg-rgb, 248 249 252), 0.75);
+  backdrop-filter: blur(2px);
+  border-radius: 14px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 14px;
+}
+.page-layout.is-querying .content-overlay { display: flex; }
+.page-layout.is-querying .sidebar__nav-item { pointer-events: none; opacity: 0.6; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner {
+  width: 36px; height: 36px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+.overlay-label { font-size: 0.9rem; color: var(--muted); }
+
 /* ── Panel base ── */
 .panel {
   background: var(--panel);
