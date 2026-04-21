@@ -37,7 +37,7 @@ def build_shell_html(asset_prefix: str = ".", initial_view: str = "overview") ->
    <div class="hero__content">
      <div class="hero__topbar">
        <div>
-         <p class="hero__eyebrow">DuckDB-WASM Analytics</p>
+         <p class="hero__eyebrow">DuckDB-WASM Analytics <span id="branch-badge" class="branch-badge"></span></p>
          <h1>📈 jobbank-web 數據報告</h1>
          <p class="hero__desc">資料來源：operation-logs（Elasticsearch）· DuckDB-WASM 即時查詢</p>
        </div>
