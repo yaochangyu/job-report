@@ -2,6 +2,10 @@
 
 1111人力銀行前端行為分析報告系統。從 Elasticsearch 抽取使用者事件，經三層資料管線處理，產出可部署至 GitHub Pages 的靜態分析報表。
 
+**已部署網址：**
+- 最新版：`https://yaochangyu.github.io/job-report/v1-2/`
+- 根目錄：`https://yaochangyu.github.io/job-report/`
+
 ## 架構概覽
 
 ```
