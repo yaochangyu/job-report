@@ -149,10 +149,10 @@ GROUP BY "from", "to" ORDER BY count DESC
 ### Layer 1 — T1：小改動，修正 manifest 更新方式
 
 **`extract_raw_events.py`**
-- [ ] 確認 `--from today --to today` 模式可單獨執行
-- [ ] 保留現有覆寫日檔行為（同日重跑仍直接覆寫 parquet）
-- [ ] `write_manifest()` 改為 merge update，保留其他既有日期 metadata
-- [ ] `available_dates` 需從「既有 T1 manifest + 本次更新日期」共同計算
+- [x] 確認 `--from today --to today` 模式可單獨執行
+- [x] 保留現有覆寫日檔行為（同日重跑仍直接覆寫 parquet）
+- [x] `write_manifest()` 改為 merge update，保留其他既有日期 metadata
+- [x] `available_dates` 需從「既有 T1 manifest + 本次更新日期」共同計算
 
 **驗證 Layer 1**
 - [ ] 先有多天 T1 資料時，再跑單日 `extract`
@@ -164,32 +164,32 @@ GROUP BY "from", "to" ORDER BY count DESC
 ### Layer 2 — T2：8 個 builder 改為 day-keyed
 
 **所有 `build_*_t2.py`：**
-- [ ] 輸出路徑改為 `date=YYYY-MM-DD/`（使用既有 `t2_report_date_dir()`）
-- [ ] 改為逐日迭代：`for date in iter_dates(date_from, date_to):`
-- [ ] KPI / 趨勢核心資料輸出為 `daily_summary.parquet`
-- [ ] 保留各 view 必要的 day-keyed 明細 parquet，不降級成單檔版本
-- [ ] 停產舊的 range-keyed `kpi.parquet`、`daily.parquet`、`hourly.parquet` 等檔案
-- [ ] T2 manifest 結構由 snapshot key 改為 per-date 記錄，或新增 day-keyed 區塊記錄
-- [ ] 提供 frontend manifest 所需的 T2 可查日期來源，避免沿用 T1 `available_dates`
+- [x] 輸出路徑改為 `date=YYYY-MM-DD/`（使用既有 `t2_report_date_dir()`）
+- [x] 改為逐日迭代：`for date in iter_dates(date_from, date_to):`
+- [x] KPI / 趨勢核心資料輸出為 `daily_summary.parquet`
+- [x] 保留各 view 必要的 day-keyed 明細 parquet，不降級成單檔版本
+- [x] 停產舊的 range-keyed `kpi.parquet`、`daily.parquet`、`hourly.parquet` 等檔案
+- [x] T2 manifest 結構由 snapshot key 改為 per-date 記錄（`common/data_pipeline.py` 新增 `update_t2_manifest_dates()`）
+- [x] 提供 frontend manifest 所需的 T2 可查日期來源，避免沿用 T1 `available_dates`
 
 各 builder：
-- [ ] `build_traffic_overview_t2.py`
-- [ ] `build_search_behavior_t2.py`
-- [ ] `build_apply_conversion_t2.py`
-- [ ] `build_feature_engagement_t2.py`
-- [ ] `build_device_platform_t2.py`
-- [ ] `build_page_ranking_t2.py`
-- [ ] `build_page_navigation_t2.py`
-- [ ] `build_click_heatmap_t2.py`
+- [x] `build_traffic_overview_t2.py`
+- [x] `build_search_behavior_t2.py`
+- [x] `build_apply_conversion_t2.py`
+- [x] `build_feature_engagement_t2.py`
+- [x] `build_device_platform_t2.py`
+- [x] `build_page_ranking_t2.py`
+- [x] `build_page_navigation_t2.py`
+- [x] `build_click_heatmap_t2.py`
 
 **`run_all.py`**
-- [ ] `REPORTS` 清單的 `"script"` 欄位由 `run_*_pipeline.py` 改為直接呼叫 `build_*_t2.py`
-- [ ] 維持現有 `--days` / `--from` / `--to` 參數不動
-- [ ] `copy_frontend_bundle()` 可正確複製新的 day-keyed `dataset/report/` 結構
-- [ ] frontend `manifest.json` 的 `available_dates` 改由 T2 day-keyed 實際產出日期產生（非沿用 T1 raw available_dates）
+- [x] `REPORTS` 清單的 `"script"` 欄位由 `run_*_pipeline.py` 改為直接呼叫 `build_*_t2.py`
+- [x] 維持現有 `--days` / `--from` / `--to` 參數不動
+- [x] `copy_frontend_bundle()` 可正確複製新的 day-keyed `dataset/report/` 結構
+- [x] frontend `manifest.json` 的 `available_dates` 改由 T2 day-keyed 實際產出日期產生（非沿用 T1 raw available_dates）
 
 **`run_*_pipeline.py` / `render_*_t3.py`（退出主管線，後續清理）**
-- [ ] `run_all.py` 不再呼叫 `run_*_pipeline.py`
+- [x] `run_all.py` 不再呼叫 `run_*_pipeline.py`
 - [ ] 將 `run_*_pipeline.py` / `render_*_t3.py` 標記 deprecated
 - [ ] 待新 day pipeline 穩定後，再另立清理計畫刪除這批腳本
 
@@ -204,19 +204,19 @@ GROUP BY "from", "to" ORDER BY count DESC
 ### Layer 3 — Frontend：多日 fetch + DuckDB 聚合
 
 **`query-definitions.js`**
-- [ ] 所有 plan 改為按日 fetch `date=YYYY-MM-DD/*.parquet`
-- [ ] 各 view 明確列出「daily_summary + 必要明細檔」的 register 規則
-- [ ] KPI = SUM 所有已載入的 `daily_summary`
-- [ ] 日趨勢 = GROUP BY date（直接讀所有 registered daily summary）
-- [ ] 分布 / 排行 / 導航 / heatmap = 讀多天明細 parquet 後再聚合
-- [ ] 移除舊的 range-keyed `range=${f.dateFrom}_${f.dateTo}/` 邏輯
-- [ ] 不再以 `.catch(() => {})` 靜默吞掉 register failure
+- [x] 所有 plan 改為按日 fetch `date=YYYY-MM-DD/*.parquet`
+- [x] 各 view 明確列出「daily_summary + 必要明細檔」的 register 規則
+- [x] KPI = SUM 所有已載入的 `daily_summary`
+- [x] 日趨勢 = GROUP BY date（直接讀所有 registered daily summary）
+- [x] 分布 / 排行 / 導航 / heatmap = 讀多天明細 parquet 後再聚合
+- [x] 移除舊的 range-keyed `range=${f.dateFrom}_${f.dateTo}/` 邏輯
+- [x] 不再以 `.catch(() => {})` 靜默吞掉 register failure
 
 **`app.js`**
-- [ ] `collectFormFilters()` 以 `enumerateDates(dateFrom, dateTo)` 產生日期陣列，與 frontend manifest 的 T2 `available_dates` 取交集得出 `fetchDates`
-- [ ] fetch 策略：依 view parallel fetch `fetchDates` 所有必要 parquet
-- [ ] 追蹤 `missingDates`（404 的日期）並傳入查詢結果
-- [ ] 查詢完成後若 `missingDates` 非空，於圖表上方注入 warning banner
+- [x] `runQuery()` 以 `enumerateDates(dateFrom, dateTo)` 產生日期陣列，與 frontend manifest 的 T2 `available_dates` 取交集得出 `fetchDates`
+- [x] fetch 策略：依 view parallel fetch `fetchDates` 所有必要 parquet（`Promise.all`）
+- [x] 追蹤 `missingDates`（404 的日期）並傳入查詢結果
+- [x] 查詢完成後若 `missingDates` 非空，於圖表上方注入 warning banner
 
 **驗證 Layer 3**
 - [ ] 選單天（2026-04-20）：圖表顯示當日資料

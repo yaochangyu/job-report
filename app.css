@@ -347,6 +347,22 @@ html[data-theme="dark"] .pct { color: var(--accent); }
 .bar-fill { height: 100%; border-radius: 4px; background: linear-gradient(90deg, #4361ee, #7209b7); }
 .empty-cell { text-align: center; color: var(--muted); padding: 32px 0; }
 
+/* ── Missing dates warning banner ── */
+.missing-dates-banner {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  color: #664d03;
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+  padding: 8px 14px;
+}
+[data-theme="dark"] .missing-dates-banner {
+  background: #3d2f00;
+  border-color: #ffc107;
+  color: #ffe082;
+}
+
 /* ── Utility ── */
 .hidden { display: none !important; }
 

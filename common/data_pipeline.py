@@ -6,6 +6,7 @@ T1 / T2 / T3 三層資料管線的共用契約與路徑定義。
 
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
@@ -107,3 +108,34 @@ def t2_report_range_dir(report_name: str, date_from: str, date_to: str) -> Path:
     """回傳 T2 單一報表指定日期區間目錄。"""
 
     return t2_report_root_dir(report_name) / f"range={date_from}_{date_to}"
+
+
+def update_t2_manifest_dates(report_name: str, dates_written: dict[str, dict]) -> None:
+    """將 per-date T2 報表記錄 merge 進 T2 manifest，保留既有日期資料。"""
+
+    from common.es_client import generated_now  # lazy import to avoid circular
+
+    manifest: dict = {}
+    if T2_REPORT_MANIFEST_PATH.exists():
+        try:
+            manifest = json.loads(T2_REPORT_MANIFEST_PATH.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    reports = manifest.setdefault("reports", {})
+    report_entry = reports.setdefault(report_name, {})
+    existing_dates: dict = report_entry.setdefault("dates", {})
+
+    now = generated_now()
+    for target_date, info in dates_written.items():
+        existing_dates[target_date] = {**info, "updated_at": now}
+
+    report_entry["available_dates"] = sorted(existing_dates.keys())
+
+    manifest["tier"] = "t2-report"
+    manifest["schema_version"] = 1
+    manifest["updated_at"] = now
+    T2_REPORT_MANIFEST_PATH.write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+        encoding="utf-8",
+    )

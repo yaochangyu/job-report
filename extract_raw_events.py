@@ -152,6 +152,16 @@ def write_daily_parquet(target_date: str, rows: list[dict[str, Any]]) -> Path:
 
 
 def write_manifest(results: dict[str, dict[str, Any]]) -> None:
+    existing: dict[str, Any] = {}
+    if T1_RAW_MANIFEST_PATH.exists():
+        try:
+            existing = json.loads(T1_RAW_MANIFEST_PATH.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            pass
+
+    merged_dates: dict[str, Any] = dict(existing.get("dates", {}))
+    merged_dates.update(results)
+
     manifest = {
         "schema_version": RAW_SCHEMA_VERSION,
         "tier": "t1-raw",
@@ -161,8 +171,8 @@ def write_manifest(results: dict[str, dict[str, Any]]) -> None:
         "partition_rule": "date=YYYY-MM-DD",
         "compression": PARQUET_COMPRESSION,
         "row_group_size": PARQUET_ROW_GROUP_SIZE,
-        "available_dates": sorted(results.keys()),
-        "dates": results,
+        "available_dates": sorted(merged_dates.keys()),
+        "dates": merged_dates,
         "updated_at": generated_now(),
     }
     T1_RAW_MANIFEST_PATH.write_text(

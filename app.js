@@ -17,7 +17,7 @@ const defaultState = {
   manifestLoaded: false,
   duckdbReady: false,
   lastQuery: null,
-  registeredDates: [],
+  availableDates: [],
   rowCount: null,
   queryResult: null,
   selectedViewMode: "overview",
@@ -88,6 +88,33 @@ function isValidViewMode(viewMode) {
   return Boolean(viewMode && viewMode in VIEW_META);
 }
 
+function enumerateDates(dateFrom, dateTo) {
+  const dates = [];
+  const end = new Date(dateTo);
+  for (const d = new Date(dateFrom); d <= end; d.setDate(d.getDate() + 1)) {
+    dates.push(d.toISOString().slice(0, 10));
+  }
+  return dates;
+}
+
+function showMissingDatesWarning(missingDates, fetchDates) {
+  let banner = document.getElementById("missing-dates-banner");
+  if (!banner) {
+    banner = document.createElement("div");
+    banner.id = "missing-dates-banner";
+    banner.className = "missing-dates-banner";
+    const kpiGrid = document.querySelector(".kpi-grid");
+    if (kpiGrid) kpiGrid.before(banner);
+  }
+  if (!missingDates || missingDates.length === 0) {
+    banner.hidden = true;
+    return;
+  }
+  const available = (fetchDates?.length || 0) - missingDates.length;
+  banner.hidden = false;
+  banner.textContent = `資料涵蓋 ${available} 天（缺少：${missingDates.join(", ")}）`;
+}
+
 function setText(id, value) {
   const node = document.getElementById(id);
   if (node) {
@@ -144,11 +171,10 @@ function summarizeQueryResult(outputs) {
 }
 
 function renderState(state) {
-  // 只更新右側 query-status 顯示
   const parts = [];
   if (!state.manifestLoaded) parts.push("資料載入中…");
   else if (!state.duckdbReady) parts.push("DuckDB 初始化中…");
-  else if (state.registeredDates.length > 0) parts.push(`已載入 ${state.registeredDates.length} 個日期分區`);
+  else if (state.availableDates.length > 0) parts.push(`T2 可查 ${state.availableDates.length} 天`);
   if (state.lastQuery) parts.push(state.lastQuery);
   setText("query-status", parts.join("  ·  "));
 }
@@ -202,16 +228,29 @@ async function runQuery(state, filters) {
     return false;
   }
 
+  const fetchDates = enumerateDates(filters.dateFrom, filters.dateTo)
+    .filter(d => state.availableDates.includes(d));
+
+  if (!fetchDates.length) {
+    state.lastQuery = "所選日期區間無可用 T2 資料";
+    state.queryResult = null;
+    resetDashboard();
+    showMissingDatesWarning([], []);
+    renderState(state);
+    return false;
+  }
+
   _queryInFlight = true;
   setQueryRunning(true);
   try {
+    const enrichedFilters = { ...filters, fetchDates };
     syncUrlParams(filters);
     const registerFile = async (alias, url) => {
       const resp = await fetch(url);
       if (!resp.ok) throw new Error(`${resp.status} ${url}`);
       await runtime.db.registerFileBuffer(alias, new Uint8Array(await resp.arrayBuffer()));
     };
-    const result = await executeViewQueries(runtime.conn, filters, registerFile);
+    const result = await executeViewQueries(runtime.conn, enrichedFilters, registerFile);
     state.lastQuery = result.summary;
     state.queryResult = summarizeQueryResult(result.outputs);
     state.lastSuccessfulFilters = {
@@ -219,6 +258,7 @@ async function runQuery(state, filters) {
       dateTo:   filters.dateTo,
       pagePath: filters.pagePath,
     };
+    showMissingDatesWarning(result.missingDates, fetchDates);
     renderDashboard(filters.viewMode, result.outputs);
     renderState(state);
     return true;
@@ -226,6 +266,7 @@ async function runQuery(state, filters) {
     state.lastQuery = error instanceof Error ? error.message : String(error);
     state.queryResult = null;
     resetDashboard();
+    showMissingDatesWarning([], []);
     renderState(state);
     return false;
   } finally {
@@ -397,7 +438,7 @@ async function bootstrap() {
   try {
     const manifest = await loadManifest();
     state.manifestLoaded = true;
-    state.registeredDates = manifest.available_dates || [];
+    state.availableDates = manifest.available_dates || [];
     if (manifest.branch) setText("branch-badge", manifest.branch);
     renderState(state);
 
