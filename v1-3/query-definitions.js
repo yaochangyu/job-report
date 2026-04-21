@@ -204,7 +204,14 @@ function devicePlan(f) {
       const osb = fileList(loaded.os_behavior || []);
       if (!ds) return {};
       return {
-        kpi:             `SELECT SUM(mobile) AS mobile_total, SUM(desktop) AS desktop_total FROM read_parquet([${ds}])`,
+        kpi:             `
+          SELECT
+            SUM(mobile) AS mobile_total,
+            SUM(desktop) AS desktop_total,
+            ${os ? `(SELECT COUNT(DISTINCT name) FROM read_parquet([${os}]))` : "0"} AS os_count,
+            ${br ? `(SELECT COUNT(DISTINCT name) FROM read_parquet([${br}]))` : "0"} AS browser_count
+          FROM read_parquet([${ds}])
+        `,
         daily_trend:     `SELECT date, mobile, desktop FROM read_parquet([${ds}]) ORDER BY date`,
         os_dist:         os  ? `SELECT name, SUM(count) AS count FROM read_parquet([${os}]) GROUP BY name ORDER BY count DESC LIMIT 15` : null,
         browser_dist:    br  ? `SELECT name, SUM(count) AS count FROM read_parquet([${br}]) GROUP BY name ORDER BY count DESC LIMIT 10` : null,
@@ -231,10 +238,23 @@ function rankingPlan(f) {
       const ds  = fileList(loaded.daily_summary || []);
       const ft  = fileList(loaded.features || []);
       const cat = fileList(loaded.categories || []);
-      if (!ds) return {};
+      if (!ds && !ft) return {};
       return {
-        kpi: `
-          SELECT SUM(total_events) AS total, SUM(total_features) AS feature_count,
+        kpi: ft ? `
+          WITH feature_agg AS (
+            SELECT featureId, SUM(total) AS total
+            FROM read_parquet([${ft}])
+            GROUP BY featureId
+          )
+          SELECT
+            (SELECT COALESCE(SUM(total), 0) FROM feature_agg) AS total,
+            (SELECT COUNT(*) FROM feature_agg) AS feature_count,
+            (SELECT featureId FROM feature_agg ORDER BY total DESC, featureId LIMIT 1) AS top_feature,
+            (SELECT total FROM feature_agg ORDER BY total DESC, featureId LIMIT 1) AS top_count
+        ` : `
+          SELECT
+            SUM(total_events) AS total,
+            SUM(total_features) AS feature_count,
             FIRST(top_feature_id ORDER BY total_events DESC) AS top_feature,
             MAX(top_feature_total) AS top_count
           FROM read_parquet([${ds}])
@@ -242,7 +262,7 @@ function rankingPlan(f) {
         ranking: ft ? `
           SELECT featureId AS feature_id, SUM(total) AS total, SUM(views) AS views, SUM(clicks) AS clicks, ANY_VALUE(category) AS category
           FROM read_parquet([${ft}])
-          GROUP BY featureId ORDER BY total DESC LIMIT 30
+          GROUP BY featureId ORDER BY total DESC, feature_id
         ` : null,
         categories: cat ? `SELECT name, SUM(count) AS count FROM read_parquet([${cat}]) GROUP BY name ORDER BY count DESC` : null,
       };
@@ -263,6 +283,7 @@ function navigationPlan(f) {
   };
   const pageWhere = f.pagePath ? `WHERE page = ${quote(f.pagePath)}` : "";
   const pairWhere = f.pagePath ? `WHERE "from" = ${quote(f.pagePath)} OR "to" = ${quote(f.pagePath)}` : "";
+  const pageRelationLimit = f.pagePath ? 500 : 300;
   return {
     summary: `頁面導航（T2）：${f.dateFrom} ~ ${f.dateTo}${f.pagePath ? ` / ${f.pagePath}` : ""}`,
     registerFiles: f.fetchDates.flatMap(d => dayFiles("page-navigation", d, roles, f.datasetRoot)),
@@ -274,7 +295,21 @@ function navigationPlan(f) {
       const pd  = fileList(loaded.page_destinations || []);
       if (!ds) return {};
       return {
-        kpi: `SELECT SUM(nav_total) AS nav_total, SUM(entry_total) AS entry_total, SUM(tracked_pages) AS page_count FROM read_parquet([${ds}])`,
+        kpi: `
+          SELECT
+            SUM(nav_total) AS nav_total,
+            SUM(entry_total) AS entry_total,
+            ${
+              ps && pd
+                ? `(SELECT COUNT(DISTINCT page) FROM (
+                    SELECT page FROM read_parquet([${ps}])
+                    UNION
+                    SELECT page FROM read_parquet([${pd}])
+                  ))`
+                : "SUM(tracked_pages)"
+            } AS page_count
+          FROM read_parquet([${ds}])
+        `,
         entry_dist: ep ? `SELECT name, SUM(count) AS count FROM read_parquet([${ep}]) GROUP BY name ORDER BY count DESC LIMIT 15` : null,
         transition_ranking: np ? `
           SELECT "from" AS from_page, "to" AS to_page, SUM(count) AS count
@@ -286,13 +321,13 @@ function navigationPlan(f) {
           SELECT page AS target, name AS source, SUM(count) AS count
           FROM read_parquet([${ps}])
           ${pageWhere}
-          GROUP BY page, name ORDER BY target, count DESC
+          GROUP BY page, name ORDER BY count DESC, target, source LIMIT ${pageRelationLimit}
         ` : null,
         page_targets: pd ? `
           SELECT page AS source, name AS target, SUM(count) AS count
           FROM read_parquet([${pd}])
           ${pageWhere}
-          GROUP BY page, name ORDER BY source, count DESC
+          GROUP BY page, name ORDER BY count DESC, source, target LIMIT ${pageRelationLimit}
         ` : null,
       };
     },
@@ -314,10 +349,23 @@ function heatmapPlan(f) {
     buildQueries(loaded) {
       const ds = fileList(loaded.daily_summary || []);
       const cc = fileList(loaded.click_counts || []);
-      if (!ds) return {};
+      if (!ds && !cc) return {};
       return {
-        kpi: `
-          SELECT SUM(total_clicks) AS total_clicks, SUM(feature_count) AS feature_count,
+        kpi: cc ? `
+          WITH click_agg AS (
+            SELECT feature_id, SUM(count) AS total_count
+            FROM read_parquet([${cc}])
+            GROUP BY feature_id
+          )
+          SELECT
+            (SELECT COALESCE(SUM(count), 0) FROM read_parquet([${cc}])) AS total_clicks,
+            (SELECT COUNT(*) FROM click_agg) AS feature_count,
+            (SELECT feature_id FROM click_agg ORDER BY total_count DESC, feature_id LIMIT 1) AS top_feature,
+            (SELECT total_count FROM click_agg ORDER BY total_count DESC, feature_id LIMIT 1) AS top_count
+        ` : `
+          SELECT
+            SUM(total_clicks) AS total_clicks,
+            SUM(feature_count) AS feature_count,
             FIRST(top_feature_id ORDER BY total_clicks DESC) AS top_feature,
             MAX(top_count) AS top_count
           FROM read_parquet([${ds}])
