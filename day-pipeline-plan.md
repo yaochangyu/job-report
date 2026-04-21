@@ -194,10 +194,10 @@ GROUP BY "from", "to" ORDER BY count DESC
 - [ ] 待新 day pipeline 穩定後，再另立清理計畫刪除這批腳本
 
 **驗證 Layer 2**
-- [ ] 跑 `python run_all.py --days 3`
-- [ ] 每報表都產出 3 個 `date=*/` 分區
-- [ ] 確認每個 view 的 `daily_summary.parquet` 與必要明細 parquet 都存在
-- [ ] 確認欄位正確，無功能所需欄位流失
+- [x] 跑 `python run_all.py --days 3`
+- [x] 每報表都產出 3 個 `date=*/` 分區
+- [x] 確認每個 view 的 `daily_summary.parquet` 與必要明細 parquet 都存在
+- [x] 確認欄位正確，無功能所需欄位流失
 
 ---
 

@@ -10,6 +10,7 @@ run_all.py
     uv run python run_all.py --from 2026-04-01 --to 2026-04-10
 """
 
+import argparse
 import json
 import os
 import shutil
@@ -17,7 +18,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
-from common.es_client import generated_now, parse_args
+from common.es_client import generated_now
 from common.frontend_shell import FRONTEND_ASSETS, build_shell_html
 from common.t1_reader import resolve_date_window
 from extract_raw_events import extract_raw_events
@@ -190,8 +191,18 @@ def run_report(script: str, extra_args: list[str]) -> tuple[bool, float]:
     return result.returncode == 0, round(elapsed, 1)
 
 
+def _parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="一鍵執行所有報告並產生導覽頁面")
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument("--days", type=int, default=None, help="查詢近 N 天（預設：當日）")
+    group.add_argument("--from", dest="time_from", default=None, help="起始日期，例如 2026-04-01")
+    parser.add_argument("--to", dest="time_to", default=None, help="結束日期，例如 2026-04-10")
+    parser.add_argument("--skip-extract", action="store_true", help="跳過 T1 抽取，直接執行 T2")
+    return parser.parse_args()
+
+
 def main() -> None:
-    args = parse_args("一鍵執行所有報告並產生導覽頁面")
+    args = _parse_args()
     date_from, date_to = resolve_date_window(args.days, args.time_from, args.time_to)
 
     if OUTPUT_DIR.exists():
@@ -200,8 +211,11 @@ def main() -> None:
     extra_args = ["--from", date_from, "--to", date_to]
 
     print(f"[INFO] 查詢區間：{date_from} ～ {date_to}")
-    print("[INFO] 先同步 T1 raw 資料（優先重用本地快取）...")
-    extract_raw_events(date_from, date_to, keep_existing=True)
+    if args.skip_extract:
+        print("[INFO] 跳過 T1 抽取（--skip-extract）")
+    else:
+        print("[INFO] 先同步 T1 raw 資料（優先重用本地快取）...")
+        extract_raw_events(date_from, date_to, keep_existing=True)
     print(f"[INFO] 開始執行 {len(REPORTS)} 份報告...\n")
 
     results = []

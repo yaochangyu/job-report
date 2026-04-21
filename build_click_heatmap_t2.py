@@ -40,8 +40,10 @@ def build_click_heatmap_t2(date_from: str, date_to: str) -> list[Path]:
     config = json.loads(CONFIG_PATH.read_text(encoding="utf-8"))
     target_pages = [page["page_path"] for page in config["pages"]]
 
-    columns = ["date", "system", "event_type", "page_path", "feature_id", "feature_name"]
+    columns = ["date", "system", "event_type", "page_path", "feature_id"]
     df = load_t1_raw_dataframe(date_from, date_to, columns=columns)
+    if "feature_name" not in df.columns:
+        df["feature_name"] = ""
     df = df[
         df["system"].eq("jobbank-web")
         & df["event_type"].eq("click")
