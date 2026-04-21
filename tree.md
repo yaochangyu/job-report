@@ -55,6 +55,7 @@ job-report-1/
 ├── build_traffic_overview_t2.py       # 從 T1 產出 traffic-overview 的 T2 parquet
 ├── deploy.sh                          # 一鍵產生報告並部署到 GitHub Pages
 ├── extract_raw_events.py              # 從 ES 抽取 T1 raw 事件 parquet
+├── validate_dashboard_data.py         # 比對 JS 實際查詢結果與 T2 parquet 聚合結果
 ├── render_apply_conversion_t3.py      # 從 T2 產出 apply-conversion HTML
 ├── render_click_heatmap_t3.py         # 從 T2 產出 click-heatmap HTML
 ├── render_device_platform_t3.py       # 從 T2 產出 device-platform HTML

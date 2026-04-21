@@ -51,6 +51,7 @@
 - [x] **驗證 ranking KPI**：直接讀取 `output/dataset/report/page-ranking/...`，確認跨日 distinct `featureId`、Top 1 feature 與總量正確。
 - [x] **驗證 heatmap KPI**：直接讀取 `output/dataset/report/click-heatmap/...`，確認跨日 distinct `feature_id`、Top 1 feature 與總量正確。
 - [x] **驗證 navigation KPI**：直接讀取 `output/dataset/report/page-navigation/...`，確認 `page_count` 來自跨日 distinct page，而不是每日相加。
+- [x] **整理成可重複執行腳本**：新增 `validate_dashboard_data.py`，自動比對瀏覽器內 `executeViewQueries()` 的實際輸出與 parquet 重算結果。
 
 ### 3. UI 手動驗證
 
@@ -65,6 +66,7 @@
 - [x] `dashboard-renderers.js`
 - [x] `query-definitions.js`
 - [x] `build_page_navigation_t2.py`
+- [x] `validate_dashboard_data.py`
 - [x] `tree.md`
 
 ## 驗收清單
