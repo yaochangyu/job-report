@@ -398,6 +398,7 @@ async function bootstrap() {
     const manifest = await loadManifest();
     state.manifestLoaded = true;
     state.registeredDates = manifest.available_dates || [];
+    if (manifest.branch) setText("branch-badge", manifest.branch);
     renderState(state);
 
     const duckdbRuntime = await initDuckDB();
