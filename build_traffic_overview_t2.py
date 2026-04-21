@@ -21,6 +21,7 @@ from common.t1_reader import load_t1_raw_dataframe, resolve_date_window
 
 REPORT_NAME = "traffic-overview"
 DAILY_SUMMARY_FILE = "daily_summary.parquet"
+SESSION_IDS_FILE = "session_ids.parquet"
 DEVICE_FILE = "device_type.parquet"
 OS_FILE = "os.parquet"
 BROWSER_FILE = "browser.parquet"
@@ -59,18 +60,27 @@ def build_traffic_overview_t2(date_from: str, date_to: str) -> list[Path]:
         output_dir = t2_report_date_dir(REPORT_NAME, target_date)
         output_dir.mkdir(parents=True, exist_ok=True)
 
+        total = int(len(day_df))
         views = int((day_df["event_type"] == "view").sum())
         clicks = int((day_df["event_type"] == "click").sum())
         applies = int((day_df["action"] == "apply").sum())
         sessions = int(day_df["session_id"].dropna().nunique())
         pd.DataFrame([{
             "date": target_date,
+            "total": total,
             "views": views,
             "clicks": clicks,
             "applies": applies,
             "sessions": sessions,
         }]).to_parquet(output_dir / DAILY_SUMMARY_FILE, index=False)
 
+        (
+            day_df[["session_id"]]
+            .dropna(subset=["session_id"])
+            .drop_duplicates()
+            .sort_values("session_id")
+            .to_parquet(output_dir / SESSION_IDS_FILE, index=False)
+        )
         _count_by_value(day_df, "device_type").to_parquet(output_dir / DEVICE_FILE, index=False)
         _count_by_value(day_df, "os").to_parquet(output_dir / OS_FILE, index=False)
         _count_by_value(day_df, "browser").to_parquet(output_dir / BROWSER_FILE, index=False)
@@ -80,6 +90,7 @@ def build_traffic_overview_t2(date_from: str, date_to: str) -> list[Path]:
             "root": str(output_dir.relative_to(output_dir.parents[2])),
             "files": {
                 "daily_summary": rel(DAILY_SUMMARY_FILE),
+                "session_ids": rel(SESSION_IDS_FILE),
                 "device_type": rel(DEVICE_FILE),
                 "os": rel(OS_FILE),
                 "browser": rel(BROWSER_FILE),
