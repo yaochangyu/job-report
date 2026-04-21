@@ -4,6 +4,7 @@
 job-report-1/
 ├── .archive/
 │   ├── grafana-dashboard.plan.md      # ✅ 已完成：原始 Dashboard 規劃總計畫
+│   ├── dashboard-fix-plan.md          # ✅ 已完成：dashboard 資料吻合性修正計畫
 │   ├── page-click-analysis.plan.md    # ✅ 已完成：Dashboard 8 實作計畫
 │   ├── project-cleanup.plan.md        # ✅ 已完成：專案垃圾檔 / legacy 清理計畫
 │   ├── report-data-pipeline.plan.md   # ✅ 已完成：三層資料管線重構計畫
@@ -31,7 +32,6 @@ job-report-1/
 ├── category_tab_report.py             # 既有報告（保留）
 ├── app.css                            # v1-2 / GitHub Pages 共用前端殼樣式
 ├── app.js                             # v1-2 / GitHub Pages 共用前端殼啟動邏輯
-├── dashboard-fix-plan.md              # dashboard 資料吻合性修正計畫
 ├── dashboard-renderers.js             # 各 dashboard 視角的前端 renderer
 ├── query-definitions.js               # DuckDB 前端查詢定義
 ├── site-manifest.json                 # 前端站點資產與資料集 manifest
