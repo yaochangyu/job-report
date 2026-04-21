@@ -111,6 +111,15 @@ REPORTS = [
 ]
 
 
+def _get_git_branch() -> str:
+    try:
+        return subprocess.check_output(
+            ["git", "branch", "--show-current"], text=True, stderr=subprocess.DEVNULL
+        ).strip()
+    except Exception:
+        return ""
+
+
 def copy_frontend_bundle(output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     for asset_name in FRONTEND_ASSETS:
@@ -126,7 +135,11 @@ def copy_frontend_bundle(output_dir: Path) -> None:
         available_dates = raw.get("available_dates", [])
     (dataset_output / "manifest.json").write_text(
         json.dumps(
-            {"available_dates": sorted(available_dates), "generated_at": generated_now()},
+            {
+                "available_dates": sorted(available_dates),
+                "generated_at": generated_now(),
+                "branch": _get_git_branch(),
+            },
             ensure_ascii=False, indent=2,
         ) + "\n",
         encoding="utf-8",

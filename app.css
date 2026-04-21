@@ -60,6 +60,18 @@ body {
 }
 .hero h1 { margin: 0; font-size: clamp(1.5rem, 3vw, 1.8rem); font-weight: 700; }
 .hero__desc { margin: 8px 0 0; color: rgba(255,255,255,0.65); font-size: 0.9rem; opacity: 0.65; }
+.branch-badge {
+  display: inline-block;
+  padding: 1px 8px;
+  margin-left: 8px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.35);
+  background: rgba(255,255,255,0.15);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  vertical-align: middle;
+}
+.branch-badge:empty { display: none; }
 
 .theme-toggle {
   min-width: 120px;
