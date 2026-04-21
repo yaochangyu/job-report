@@ -29,6 +29,9 @@ job-report-1/
 │   ├── page-ranking/index.html         # Dashboard 6 報告產出
 │   ├── page-navigation/index.html      # Dashboard 7 報告產出
 │   └── click-heatmap/index.html        # Dashboard 8 報告產出
+├── tests/
+│   └── validation/
+│       └── validate_dashboard_data.py  # 比對 JS 實際查詢結果與 T2 parquet 聚合結果
 ├── category_tab_report.py             # 既有報告（保留）
 ├── app.css                            # v1-2 / GitHub Pages 共用前端殼樣式
 ├── app.js                             # v1-2 / GitHub Pages 共用前端殼啟動邏輯
@@ -55,7 +58,6 @@ job-report-1/
 ├── build_traffic_overview_t2.py       # 從 T1 產出 traffic-overview 的 T2 parquet
 ├── deploy.sh                          # 一鍵產生報告並部署到 GitHub Pages
 ├── extract_raw_events.py              # 從 ES 抽取 T1 raw 事件 parquet
-├── validate_dashboard_data.py         # 比對 JS 實際查詢結果與 T2 parquet 聚合結果
 ├── run_all.py                         # 一鍵執行所有報告 + 產生導覽頁
 ├── pyproject.toml                     # uv 專案設定
 ├── .python-version                    # Python 版本

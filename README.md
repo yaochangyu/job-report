@@ -116,7 +116,6 @@ dataset/report/
 4. 執行跨天 SQL 聚合（`SUM` / `GROUP BY date`）、渲染 Chart.js 圖表與表格
 5. 若部分日期 404，顯示 warning banner「資料涵蓋 N 天（缺少：...）」，其餘日期仍正常查詢
 
-> **注意**：`render_*_t3.py` / `run_*_pipeline.py` 已退出主管線（標記 deprecated），`run_all.py` 直接呼叫 `build_*_t2.py`。
 
 **存放位置：**
 ```
@@ -237,8 +236,6 @@ bash deploy.sh 7 v1-2
 ├── extract_raw_events.py    # T1 抽取
 ├── build_*_t2.py            # T2 day-keyed 聚合（各報表）
 ├── run_all.py               # 一鍵執行所有報表
-├── render_*_t3.py           # [DEPRECATED] T3 渲染，已退出主管線
-├── run_*_pipeline.py        # [DEPRECATED] 舊版完整管線，已退出主管線
 │
 ├── *_report.py              # 各報表的查詢與 HTML 產生邏輯
 ├── click_heatmap_discover.py # 自動探索頁面可點擊元素
@@ -251,6 +248,9 @@ bash deploy.sh 7 v1-2
 ├── site-manifest.json       # 站點資產與資料集 manifest
 │
 ├── deploy.sh                # 一鍵部署至 GitHub Pages
+├── tests/
+│   └── validation/
+│       └── validate_dashboard_data.py # Dashboard 查詢結果與 T2 parquet 一致性驗證
 ├── output/                  # T3 輸出（報表靜態頁面 + T2 Parquet）
 ├── dataset/                 # T1/T2 資料（本地快取，不進版控）
 └── .archive/                # 已完成的設計計畫文件
