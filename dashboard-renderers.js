@@ -379,7 +379,7 @@ function featureRenderer(data) {
   const kpi = data.kpi?.[0] ?? {};
   setKpiCard("1", "探索職缺",  fmt(n(kpi.explore_jobs)),  "organic + corp");
   setKpiCard("2", "探索企業",  fmt(n(kpi.explore_corp)),  "各企業探索入口");
-  setKpiCard("3", "身份辨識",  fmt(n(kpi.identity_total)), "7 種身份類型");
+  setKpiCard("3", "身份辨識",  fmt(n(kpi.identity_total)), "含 identify-* 延伸互動");
   setKpiCard("4", "新聞互動",  fmt(n(kpi.news_total)),    "news-card 點擊");
   setKpiCard("5", "—", "—", "");
   setKpiCard("6", "—", "—", "");
@@ -425,8 +425,8 @@ function deviceRenderer(data) {
 
   setKpiCard("1", "Mobile 事件數", fmt(mobile),  `佔 ${pct(mobilePct)}`);
   setKpiCard("2", "Desktop 事件數", fmt(desktop), `佔 ${pct(100 - mobilePct)}`);
-  setKpiCard("3", "OS 種類",       fmt(n(kpi.os_count)),      "排名 Top 種");
-  setKpiCard("4", "瀏覽器種類",    fmt(n(kpi.browser_count)), "排名 Top 種");
+  setKpiCard("3", "OS 種類",       fmt(n(kpi.os_count)),      "完整 distinct 數");
+  setKpiCard("4", "瀏覽器種類",    fmt(n(kpi.browser_count)), "完整 distinct 數");
   setKpiCard("5", "—", "—", "");
   setKpiCard("6", "—", "—", "");
   setKpiCard("7", "—", "—", "");
@@ -493,7 +493,7 @@ function rankingRenderer(data) {
   const kpi = data.kpi?.[0] ?? {};
   setKpiCard("1", "總事件數",  fmt(n(kpi.total)),         "所有 featureId 合計");
   setKpiCard("2", "功能數量",  fmt(n(kpi.feature_count)), "不重複 featureId 數");
-  setKpiCard("3", "Top 1 功能", String(kpi.top_feature ?? "—"), `${fmt(n(kpi.top_count))} 次`);
+  setKpiCard("3", "Top 1 功能", String(kpi.top_feature ?? "—"), `區間聚合 ${fmt(n(kpi.top_count))} 次`);
   setKpiCard("4", "—", "—", "");
   setKpiCard("5", "—", "—", "");
   setKpiCard("6", "—", "—", "");
@@ -508,10 +508,7 @@ function rankingRenderer(data) {
   ]);
 
   // 圖表 2 — 類別佔比 doughnut
-  const catMap = {};
-  ranking.forEach(r => { catMap[r.category] = (catMap[r.category] ?? 0) + n(r.total); });
-  const catRows = Object.entries(catMap).map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count);
+  const catRows = data.categories ?? [];
   doughnutChart("chart2", catRows);
 
   // 表格 1 — 完整排行 (#, featureId, 總計, View, Click, CTR, 類別)
@@ -535,7 +532,7 @@ function rankingRenderer(data) {
 // ════════════════════════════════════════════════════════════════
 function navigationRenderer(data) {
   const kpi = data.kpi?.[0] ?? {};
-  setKpiCard("1", "導航轉換事件", fmt(n(kpi.nav_total)),   "Top 30 路徑合計");
+  setKpiCard("1", "導航事件總數", fmt(n(kpi.nav_total)),   "全部 from→to 轉換事件");
   setKpiCard("2", "初始進入事件", fmt(n(kpi.entry_total)), "無 previousPageName");
   setKpiCard("3", "追蹤頁面數",  fmt(n(kpi.page_count)),  "有導航記錄的頁面");
   setKpiCard("4", "—", "—", "");
@@ -555,16 +552,18 @@ function navigationRenderer(data) {
   ]);
 
   // 表格 1 — 各頁面 Top 來源
+  const pageSources = (data.page_sources ?? []).slice(0, 100);
   buildTableHead("table1-head", ["目標頁面","來源頁面","次數"]);
-  buildTableBody("table1-body", data.page_sources ?? [], r => `<tr>
+  buildTableBody("table1-body", pageSources, r => `<tr>
     <td>${r.target ?? "—"}</td>
     <td>${r.source ?? "—"}</td>
     <td>${fmt(r.count)}</td>
   </tr>`);
 
   // 表格 2 — 各頁面 Top 目標
+  const pageTargets = (data.page_targets ?? []).slice(0, 100);
   buildTableHead("table2-head", ["來源頁面","目標頁面","次數"]);
-  buildTableBody("table2-body", data.page_targets ?? [], r => `<tr>
+  buildTableBody("table2-body", pageTargets, r => `<tr>
     <td>${r.source ?? "—"}</td>
     <td>${r.target ?? "—"}</td>
     <td>${fmt(r.count)}</td>

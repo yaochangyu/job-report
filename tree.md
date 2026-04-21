@@ -31,6 +31,7 @@ job-report-1/
 ├── category_tab_report.py             # 既有報告（保留）
 ├── app.css                            # v1-2 / GitHub Pages 共用前端殼樣式
 ├── app.js                             # v1-2 / GitHub Pages 共用前端殼啟動邏輯
+├── dashboard-fix-plan.md              # dashboard 資料吻合性修正計畫
 ├── dashboard-renderers.js             # 各 dashboard 視角的前端 renderer
 ├── query-definitions.js               # DuckDB 前端查詢定義
 ├── site-manifest.json                 # 前端站點資產與資料集 manifest

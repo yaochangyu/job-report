@@ -36,3 +36,7 @@ store.db
 .env
 *.env
 .creds
+graphify-out/
+.obsidian/
+.playwright/
+.playwright-cli/

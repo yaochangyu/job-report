@@ -21,6 +21,7 @@ from common.t1_reader import load_t1_raw_dataframe, resolve_date_window
 
 REPORT_NAME = "page-navigation"
 ENTRY_MARKER = "_entry_"
+PAGE_RELATION_LIMIT = 5
 DAILY_SUMMARY_FILE = "daily_summary.parquet"
 NAV_PAIRS_FILE = "nav_pairs.parquet"
 ENTRY_PAGES_FILE = "entry_pages.parquet"
@@ -77,7 +78,7 @@ def build_page_navigation_t2(date_from: str, date_to: str) -> list[Path]:
             .sort_values(["page", "count", "name"], ascending=[True, False, True])
         )
         page_sources["rank"] = page_sources.groupby("page").cumcount() + 1
-        page_sources[page_sources["rank"] <= 5].to_parquet(output_dir / PAGE_SOURCES_FILE, index=False)
+        page_sources[page_sources["rank"] <= PAGE_RELATION_LIMIT].to_parquet(output_dir / PAGE_SOURCES_FILE, index=False)
 
         page_destinations = (
             pair_counts[pair_counts["from"].ne(ENTRY_MARKER)]
@@ -85,7 +86,7 @@ def build_page_navigation_t2(date_from: str, date_to: str) -> list[Path]:
             .sort_values(["page", "count", "name"], ascending=[True, False, True])
         )
         page_destinations["rank"] = page_destinations.groupby("page").cumcount() + 1
-        page_destinations[page_destinations["rank"] <= 5].to_parquet(output_dir / PAGE_DESTINATIONS_FILE, index=False)
+        page_destinations[page_destinations["rank"] <= PAGE_RELATION_LIMIT].to_parquet(output_dir / PAGE_DESTINATIONS_FILE, index=False)
 
         pd.DataFrame([{
             "date": target_date,

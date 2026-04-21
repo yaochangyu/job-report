@@ -191,13 +191,29 @@ def run_report(script: str, extra_args: list[str]) -> tuple[bool, float]:
     return result.returncode == 0, round(elapsed, 1)
 
 
+_ALL_STEPS = ("raw", "report", "html")
+
+
 def _parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="一鍵執行所有報告並產生導覽頁面")
+    parser = argparse.ArgumentParser(
+        description="一鍵執行所有報告並產生導覽頁面",
+        formatter_class=argparse.RawTextHelpFormatter,
+    )
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--days", type=int, default=None, help="查詢近 N 天（預設：當日）")
     group.add_argument("--from", dest="time_from", default=None, help="起始日期，例如 2026-04-01")
     parser.add_argument("--to", dest="time_to", default=None, help="結束日期，例如 2026-04-10")
-    parser.add_argument("--skip-extract", action="store_true", help="跳過 T1 抽取，直接執行 T2")
+    parser.add_argument(
+        "--steps",
+        default=",".join(_ALL_STEPS),
+        help=(
+            "指定要執行的階段，逗號分隔（預設：raw,report,html）\n"
+            "  raw    — 從 Elasticsearch 抽取 T1 原始事件\n"
+            "  report — 建立 T2 day-keyed parquet\n"
+            "  html   — 複製 output/、產生 manifest 與 HTML shell\n"
+            "範例：--steps report,html"
+        ),
+    )
     return parser.parse_args()
 
 
@@ -205,39 +221,47 @@ def main() -> None:
     args = _parse_args()
     date_from, date_to = resolve_date_window(args.days, args.time_from, args.time_to)
 
-    if OUTPUT_DIR.exists():
+    steps = {s.strip() for s in args.steps.split(",")}
+    unknown = steps - set(_ALL_STEPS)
+    if unknown:
+        raise SystemExit(f"[ERROR] 未知的 step：{', '.join(sorted(unknown))}。可用值：{', '.join(_ALL_STEPS)}")
+
+    if "html" in steps and OUTPUT_DIR.exists():
         shutil.rmtree(OUTPUT_DIR)
 
     extra_args = ["--from", date_from, "--to", date_to]
 
     print(f"[INFO] 查詢區間：{date_from} ～ {date_to}")
-    if args.skip_extract:
-        print("[INFO] 跳過 T1 抽取（--skip-extract）")
-    else:
+    print(f"[INFO] 執行階段：{args.steps}")
+
+    if "raw" in steps:
         print("[INFO] 先同步 T1 raw 資料（優先重用本地快取）...")
         extract_raw_events(date_from, date_to, keep_existing=True)
-    print(f"[INFO] 開始執行 {len(REPORTS)} 份報告...\n")
 
     results = []
     total_start = time.time()
 
-    for report in REPORTS:
-        print(f"{'─'*60}")
-        print(f"[{report['icon']}] {report['title']} ({report['subtitle']})")
-        ok, elapsed = run_report(report["script"], extra_args)
-        status = "✓ 完成" if ok else "✗ 失敗"
-        print(f"  → {status}（耗時 {elapsed}s）")
-        results.append({**report, "ok": ok, "elapsed": elapsed})
+    if "report" in steps:
+        print(f"[INFO] 開始執行 {len(REPORTS)} 份報告...\n")
+        for report in REPORTS:
+            print(f"{'─'*60}")
+            print(f"[{report['icon']}] {report['title']} ({report['subtitle']})")
+            ok, elapsed = run_report(report["script"], extra_args)
+            status = "✓ 完成" if ok else "✗ 失敗"
+            print(f"  → {status}（耗時 {elapsed}s）")
+            results.append({**report, "ok": ok, "elapsed": elapsed})
 
     total_elapsed = round(time.time() - total_start, 1)
-    ok_count = sum(1 for r in results if r["ok"])
 
-    print(f"\n{'═'*60}")
-    print(f"[完成] {ok_count}/{len(REPORTS)} 份報告成功，共耗時 {total_elapsed}s")
+    if results:
+        ok_count = sum(1 for r in results if r["ok"])
+        print(f"\n{'═'*60}")
+        print(f"[完成] {ok_count}/{len(REPORTS)} 份報告成功，共耗時 {total_elapsed}s")
 
-    copy_frontend_bundle(OUTPUT_DIR)
-    build_shell_pages(OUTPUT_DIR, REPORTS)
-    print(f"[OK] 前端殼已產生：{OUTPUT_DIR / 'index.html'}")
+    if "html" in steps:
+        copy_frontend_bundle(OUTPUT_DIR)
+        build_shell_pages(OUTPUT_DIR, REPORTS)
+        print(f"[OK] 前端殼已產生：{OUTPUT_DIR / 'index.html'}")
 
 
 if __name__ == "__main__":
