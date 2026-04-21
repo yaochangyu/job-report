@@ -56,23 +56,7 @@ job-report-1/
 ├── deploy.sh                          # 一鍵產生報告並部署到 GitHub Pages
 ├── extract_raw_events.py              # 從 ES 抽取 T1 raw 事件 parquet
 ├── validate_dashboard_data.py         # 比對 JS 實際查詢結果與 T2 parquet 聚合結果
-├── render_apply_conversion_t3.py      # 從 T2 產出 apply-conversion HTML
-├── render_click_heatmap_t3.py         # 從 T2 產出 click-heatmap HTML
-├── render_device_platform_t3.py       # 從 T2 產出 device-platform HTML
-├── render_feature_engagement_t3.py    # 從 T2 產出 feature-engagement HTML
-├── render_page_navigation_t3.py       # 從 T2 產出 page-navigation HTML
-├── render_page_ranking_t3.py          # 從 T2 產出 page-ranking HTML
-├── render_search_behavior_t3.py       # 從 T2 產出 search-behavior HTML
-├── render_traffic_overview_t3.py      # 從 T2 產出 traffic-overview HTML
-├── run_device_platform_pipeline.py    # device-platform 的 extract→transform→render PoC
-├── run_page_navigation_pipeline.py    # page-navigation 的 extract→transform→render PoC
-├── run_page_ranking_pipeline.py       # page-ranking 的 extract→transform→render PoC
-├── run_search_behavior_pipeline.py    # search-behavior 的 extract→transform→render PoC
-├── run_traffic_overview_pipeline.py   # traffic-overview 的 extract→transform→render PoC
 ├── run_all.py                         # 一鍵執行所有報告 + 產生導覽頁
-├── run_apply_conversion_pipeline.py   # apply-conversion 的 extract→transform→render PoC
-├── run_click_heatmap_pipeline.py      # click-heatmap 的 extract→transform→render PoC
-├── run_feature_engagement_pipeline.py # feature-engagement 的 extract→transform→render PoC
 ├── pyproject.toml                     # uv 專案設定
 ├── .python-version                    # Python 版本
 └── tree.md                            # 本檔案
