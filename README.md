@@ -12,16 +12,18 @@
 Elasticsearch (operation-logs)
         │
         ▼  extract_raw_events.py
-dataset/events/date=YYYY-MM-DD/events.parquet   ← T1 原始事件（僅本機）
+dataset/raw/date=YYYY-MM-DD/events.parquet       ← T1 原始事件（僅本機）
         │
-        ▼  build_*_t2.py
-dataset/report/<報表名>/range=from_to/*.parquet  ← T2 聚合結果（部署至 GitHub Pages）
+        ▼  build_*_t2.py  （day-keyed，每天一個分區）
+dataset/report/<報表名>/date=YYYY-MM-DD/
+    daily_summary.parquet                        ← 當日 KPI 摘要（一列）
+    <detail>.parquet                             ← 各 view 必要明細（分佈/排行等）
         │
-        ▼  render_*_t3.py + build_shell_pages()
+        ▼  build_shell_pages()
 output/<報表名>/index.html                        ← T3 前端殼（空 HTML）
 ```
 
-所有報表輸出至 `output/`，透過 `deploy.sh` 推送至 GitHub Pages。頁面本身是前端殼（空 HTML），`app.js` 啟動後以 HTTP 抓取 **T2 預聚合 Parquet**，由 DuckDB-WASM 在瀏覽器動態查詢渲染，無需後端服務。T1 原始事件體積龐大，**不部署**至 GitHub Pages。
+所有報表輸出至 `output/`，透過 `deploy.sh` 推送至 GitHub Pages。頁面本身是前端殼（空 HTML），`app.js` 依使用者選取的日期區間，**逐日 fetch T2 Parquet**，由 DuckDB-WASM 在瀏覽器即時跨天聚合渲染，無需後端服務。T1 原始事件體積龐大，**不部署**至 GitHub Pages。
 
 ## 報表清單
 
@@ -65,50 +67,56 @@ dataset/manifest/t1-raw-manifest.json
 
 ### T2 — 聚合結果（部署至 GitHub Pages）
 
-每份報表各自的 `build_*_t2.py` 讀取 T1 Parquet，依報表需求計算聚合，輸出多個主題的 Parquet 檔。**這是瀏覽器端實際讀取的資料**，體積小（KB 級），DuckDB-WASM 可快速載入。
+每份報表各自的 `build_*_t2.py` 讀取 T1 Parquet，以 **day-keyed** 方式輸出：每個日期獨立一個 `date=YYYY-MM-DD/` 分區。**這是瀏覽器端實際讀取的資料**，體積小（KB 級），DuckDB-WASM 可快速載入。
 
-**存放位置（僅列前端實際 fetch 的檔案）：**
+前端依所選日期區間並行 fetch 所有日期的 Parquet，再以 DuckDB-WASM 跨天 `SUM` / `GROUP BY` 聚合。
+
+**存放位置（每個日期分區內的檔案）：**
 ```
 dataset/report/
-  traffic-overview/range=.../
-    kpi.parquet          # 單列 KPI（total/views/clicks/applies/sessions）
-    daily.parquet        # 每日彙總
-    device_type.parquet  # 裝置分佈（name, count）
-    os.parquet           # OS 分佈
-    browser.parquet      # 瀏覽器分佈
-  search-behavior/range=.../
-    summary.parquet        # 各搜尋類型總計（search_page/general/ai/quick）
-    feature_counts.parquet # featureId × count
-    daily_trend.parquet    # 每日 general/ai 趨勢
-    search_page_dist.parquet
-  apply-conversion/range=.../
-    kpi.parquet / daily.parquet / funnel.parquet
-    device.parquet / os.parquet / source.parquet
-  feature-engagement/range=.../
+  traffic-overview/date=YYYY-MM-DD/
+    daily_summary.parquet  # date, views, clicks, applies, sessions
+    device_type.parquet    # name, count
+    os.parquet             # name, count
+    browser.parquet        # name, count
+  search-behavior/date=YYYY-MM-DD/
+    daily_summary.parquet  # date, general, ai, quick, search_page
+    feature_counts.parquet # feature_id, count
+    search_page_dist.parquet # name, count
+  apply-conversion/date=YYYY-MM-DD/
+    daily_summary.parquet  # date, applies, job_views
+    funnel.parquet / device.parquet / os.parquet / source.parquet
+  feature-engagement/date=YYYY-MM-DD/
+    daily_summary.parquet  # date, explore_jobs, explore_corp, identity, news
     explore_jobs_features.parquet / explore_jobs_category_tabs.parquet
     explore_corp_features.parquet
-    identity_main.parquet / identity_all.parquet
-    news_features.parquet
-  device-platform/range=.../
-    summary.parquet / daily.parquet
+    identity_main.parquet / identity_all.parquet / news_features.parquet
+  device-platform/date=YYYY-MM-DD/
+    daily_summary.parquet  # date, mobile, desktop
     os.parquet / browser.parquet / device_behavior.parquet / os_behavior.parquet
-  page-ranking/range=.../
-    summary.parquet / features.parquet
-  page-navigation/range=.../
-    summary.parquet / nav_pairs.parquet / entry_pages.parquet
+  page-ranking/date=YYYY-MM-DD/
+    daily_summary.parquet  # date, total_events, total_features, top_feature_id, top_feature_total
+    features.parquet / categories.parquet
+  page-navigation/date=YYYY-MM-DD/
+    daily_summary.parquet  # date, nav_total, entry_total, tracked_pages
+    nav_pairs.parquet / entry_pages.parquet
     page_sources.parquet / page_destinations.parquet
-  click-heatmap/range=.../
+  click-heatmap/date=YYYY-MM-DD/
+    daily_summary.parquet  # date, total_clicks, feature_count, top_feature_id, top_count
     click_counts.parquet   # page_path × feature_id × count
 ```
 
 ### T3 — 報表頁（前端殼 + DuckDB-WASM）
 
-`render_*_t3.py` 產生中間 HTML，但 `run_all.py` 最後會呼叫 `build_shell_pages()` 將輸出覆蓋為前端殼（空白 HTML）。實際部署的 `index.html` 是空殼，資料在瀏覽器端由 `app.js` 動態處理：
+實際部署的 `index.html` 是空殼，資料在瀏覽器端由 `app.js` 動態處理：
 
-1. 載入 `dataset/manifest.json` → 取得 `datasetRoot`（GitHub Pages 上的 dataset 根 URL）與可用日期列表
+1. 載入 `dataset/manifest.json` → 取得 `datasetRoot` 與 T2 可查日期列表（`available_dates`）
 2. 初始化 DuckDB-WASM（從 CDN 下載 WASM binary，約 3–5 秒）
-3. 依使用者選取的視角與日期區間，從 `dataset/report/<報表名>/range=<from>_<to>/` 並行 fetch T2 Parquet，以 `registerFileBuffer` 注入 DuckDB
-4. 執行 SQL 查詢、渲染 Chart.js 圖表與表格
+3. 使用者選取日期區間後，計算 `fetchDates`（與 `available_dates` 取交集），並行 fetch 每個日期的 T2 Parquet，以 `registerFileBuffer` 注入 DuckDB
+4. 執行跨天 SQL 聚合（`SUM` / `GROUP BY date`）、渲染 Chart.js 圖表與表格
+5. 若部分日期 404，顯示 warning banner「資料涵蓋 N 天（缺少：...）」，其餘日期仍正常查詢
+
+> **注意**：`render_*_t3.py` / `run_*_pipeline.py` 已退出主管線（標記 deprecated），`run_all.py` 直接呼叫 `build_*_t2.py`。
 
 **存放位置：**
 ```
@@ -132,7 +140,21 @@ output/
 
 ## 前端查詢策略
 
-`query-definitions.js` 中每個 dashboard 直接讀取 T2 預聚合 Parquet，無 T1 fallback。`f.datasetRoot` 未設定時拋出錯誤（代表 manifest.json 載入失敗）。
+`query-definitions.js` 以 `f.fetchDates` 陣列驅動，每個視角的 plan 函式返回：
+- `registerFiles`：所有需要 fetch 的 parquet（每天 × 每個角色）
+- `buildQueries(loadedByRole)`：依實際載入成功的 aliases 動態建構 DuckDB SQL
+
+跨天聚合範例：
+```sql
+-- KPI（SUM 所有天）
+SELECT SUM(views), SUM(clicks) FROM read_parquet(['date1/daily_summary.parquet', ...])
+
+-- 趨勢（GROUP BY date）
+SELECT date, views, clicks FROM read_parquet([...]) ORDER BY date
+
+-- 分佈（去重合算）
+SELECT name, SUM(count) AS count FROM read_parquet([...]) GROUP BY name ORDER BY count DESC
+```
 
 | 視角 | 支援 pagePath 篩選 | 說明 |
 |------|-------------------|------|
@@ -168,9 +190,9 @@ uv run python run_all.py --from 2025-01-01 --to 2025-01-31
 ```
 
 `run_all.py` 會：
-1. 同步 T1 raw 資料至 `dataset/events/`（已存在則跳過，不重複抓）
-2. 依序執行 8 份報表的完整管線（T1 → T2 → T3 shell）
-3. 產生 `output/dataset/manifest.json`（日期清單，供 `app.js` 啟動用）
+1. 同步 T1 raw 資料至 `dataset/raw/`（已存在則跳過，不重複抓）
+2. 依序呼叫 8 個 `build_*_t2.py`，各自產出 day-keyed T2 Parquet
+3. 掃描 T2 `date=*/` 目錄，產生 `output/dataset/manifest.json`（T2 可查日期清單）
 4. 複製 `dataset/report/` 至 `output/dataset/report/`（**僅 T2**，不含 T1 raw）
 5. 產生 `output/index.html` 導覽頁面
 
@@ -184,12 +206,6 @@ uv run python extract_raw_events.py --days 7 --keep-existing  # 已存在則跳�
 
 # Step 2：建立 T2（以 traffic-overview 為例）
 uv run python build_traffic_overview_t2.py --days 7
-
-# Step 3：渲染 T3 HTML
-uv run python render_traffic_overview_t3.py --days 7
-
-# 或一步到位執行單一報表的完整管線
-uv run python run_traffic_overview_pipeline.py --days 7
 ```
 
 ### 部署至 GitHub Pages
@@ -219,10 +235,10 @@ bash deploy.sh 7 v1-2
 │   └── chart_helpers.py     # Chart.js 輔助函式
 │
 ├── extract_raw_events.py    # T1 抽取
-├── build_*_t2.py            # T2 聚合（各報表）
-├── render_*_t3.py           # T3 渲染（各報表）
-├── run_*_pipeline.py        # 各報表完整管線（T1→T2→T3）
+├── build_*_t2.py            # T2 day-keyed 聚合（各報表）
 ├── run_all.py               # 一鍵執行所有報表
+├── render_*_t3.py           # [DEPRECATED] T3 渲染，已退出主管線
+├── run_*_pipeline.py        # [DEPRECATED] 舊版完整管線，已退出主管線
 │
 ├── *_report.py              # 各報表的查詢與 HTML 產生邏輯
 ├── click_heatmap_discover.py # 自動探索頁面可點擊元素

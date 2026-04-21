@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# DEPRECATED: 已退出主管線，由 build_*_t2.py 直接取代。待 day pipeline 穩定後清理。
 """
 run_page_ranking_pipeline.py
 ───────────────────────────

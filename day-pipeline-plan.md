@@ -190,7 +190,7 @@ GROUP BY "from", "to" ORDER BY count DESC
 
 **`run_*_pipeline.py` / `render_*_t3.py`（退出主管線，後續清理）**
 - [x] `run_all.py` 不再呼叫 `run_*_pipeline.py`
-- [ ] 將 `run_*_pipeline.py` / `render_*_t3.py` 標記 deprecated
+- [x] 將 `run_*_pipeline.py` / `render_*_t3.py` 標記 deprecated
 - [ ] 待新 day pipeline 穩定後，再另立清理計畫刪除這批腳本
 
 **驗證 Layer 2**
@@ -229,7 +229,7 @@ GROUP BY "from", "to" ORDER BY count DESC
 
 ### 額外修正
 
-- [ ] **`README.md`**：更新 T2 架構說明，從 range-keyed 改成 day-keyed，並註明各 view 仍保留必要明細 parquet
+- [x] **`README.md`**：更新 T2 架構說明，從 range-keyed 改成 day-keyed，並註明各 view 仍保留必要明細 parquet
 
 ---
 
