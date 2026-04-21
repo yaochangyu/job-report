@@ -188,12 +188,23 @@ uv run python run_all.py --days 30
 uv run python run_all.py --from 2025-01-01 --to 2025-01-31
 ```
 
-`run_all.py` 會：
-1. 同步 T1 raw 資料至 `dataset/raw/`（已存在則跳過，不重複抓）
-2. 依序呼叫 8 個 `build_*_t2.py`，各自產出 day-keyed T2 Parquet
-3. 掃描 T2 `date=*/` 目錄，產生 `output/dataset/manifest.json`（T2 可查日期清單）
-4. 複製 `dataset/report/` 至 `output/dataset/report/`（**僅 T2**，不含 T1 raw）
-5. 產生 `output/index.html` 導覽頁面
+`run_all.py` 會依序執行三個階段（`raw` → `report` → `html`）：
+
+| 階段     | 對應目錄              | 動作                              |
+|----------|-----------------------|-----------------------------------|
+| `raw`    | `dataset/raw/`        | 從 Elasticsearch 抽取 T1 原始事件 |
+| `report` | `dataset/report/`     | 建立 T2 day-keyed parquet         |
+| `html`   | `output/`             | 產生 manifest 與 HTML shell       |
+
+### 指定執行階段
+
+```bash
+# T1 已抓過，只跑 T2 + HTML
+uv run python run_all.py --from 2025-01-01 --to 2025-01-31 --steps report,html
+
+# 只重新產 HTML（T2 不變）
+uv run python run_all.py --steps html
+```
 
 ### 分步執行
 

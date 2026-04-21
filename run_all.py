@@ -208,9 +208,9 @@ def _parse_args() -> argparse.Namespace:
         default=",".join(_ALL_STEPS),
         help=(
             "指定要執行的階段，逗號分隔（預設：raw,report,html）\n"
-            "  raw    — 從 Elasticsearch 抽取 T1 原始事件\n"
-            "  report — 建立 T2 day-keyed parquet\n"
-            "  html   — 複製 output/、產生 manifest 與 HTML shell\n"
+            "  raw    — 從 Elasticsearch 抽取 T1（→ dataset/raw/）\n"
+            "  report — 建立 T2 day-keyed parquet（→ dataset/report/）\n"
+            "  html   — 產生 manifest 與 HTML shell（→ output/）\n"
             "範例：--steps report,html"
         ),
     )
@@ -219,20 +219,24 @@ def _parse_args() -> argparse.Namespace:
 
 def main() -> None:
     args = _parse_args()
-    date_from, date_to = resolve_date_window(args.days, args.time_from, args.time_to)
 
     steps = {s.strip() for s in args.steps.split(",")}
     unknown = steps - set(_ALL_STEPS)
     if unknown:
         raise SystemExit(f"[ERROR] 未知的 step：{', '.join(sorted(unknown))}。可用值：{', '.join(_ALL_STEPS)}")
 
+    print(f"[INFO] 執行階段：{args.steps}")
+
+    if steps & {"raw", "report"}:
+        date_from, date_to = resolve_date_window(args.days, args.time_from, args.time_to)
+        extra_args = ["--from", date_from, "--to", date_to]
+        print(f"[INFO] 查詢區間：{date_from} ～ {date_to}")
+    else:
+        date_from = date_to = None
+        extra_args = []
+
     if "html" in steps and OUTPUT_DIR.exists():
         shutil.rmtree(OUTPUT_DIR)
-
-    extra_args = ["--from", date_from, "--to", date_to]
-
-    print(f"[INFO] 查詢區間：{date_from} ～ {date_to}")
-    print(f"[INFO] 執行階段：{args.steps}")
 
     if "raw" in steps:
         print("[INFO] 先同步 T1 raw 資料（優先重用本地快取）...")

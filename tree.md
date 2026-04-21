@@ -9,7 +9,8 @@ job-report-1/
 │   ├── project-cleanup.plan.md        # ✅ 已完成：專案垃圾檔 / legacy 清理計畫
 │   ├── report-data-pipeline.plan.md   # ✅ 已完成：三層資料管線重構計畫
 │   ├── v1-2-report-shell-sync.plan.md  # ✅ 已完成：v1-2 報表頁接回 v1-1 導覽殼與查詢條件的實作計畫
-│   └── v1-2-ui-sync.plan.md           # ✅ 已完成：v1-2 UI 對齊 v1-1 的實作計畫
+│   ├── v1-2-ui-sync.plan.md           # ✅ 已完成：v1-2 UI 對齊 v1-1 的實作計畫
+│   └── cli-redesign.plan.md           # ✅ 已完成：run_all.py CLI 重新設計計畫
 ├── common/
 │   ├── __init__.py
 │   ├── data_pipeline.py               # T1/T2/T3 資料管線契約與路徑定義
