@@ -754,11 +754,12 @@ async function monthlyFetchDay(date, runtime) {
     const resp = await fetch(url);
     if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
     const buf = new Uint8Array(await resp.arrayBuffer());
-    const alias = "monthly_day_detail.parquet";
+    const alias = `monthly_${date.replace(/-/g, "_")}.parquet`;
+    await runtime.db.dropFile(alias).catch(() => {});
     await runtime.db.registerFileBuffer(alias, buf);
 
     const result = await runtime.conn.query(
-      `SELECT feature_id, CAST(count AS BIGINT) AS cnt FROM '${alias}' ORDER BY cnt DESC`
+      `SELECT feature_id, CAST(count AS BIGINT) AS cnt FROM "${alias}" ORDER BY cnt DESC`
     );
     const rows = result.toArray().map(r => ({
       feature_id: String(r.feature_id),
