@@ -27,7 +27,7 @@ from query_homepage_blocks import ALL_FEATURE_IDS
 
 REPORT_NAME = "homepage-blocks"
 DAILY_SUMMARY_FILE = "daily_summary.parquet"
-CLICK_COUNTS_FILE = "click_counts.parquet"
+FEATURE_COUNTS_FILE = "feature_counts.parquet"
 
 
 def parse_args() -> argparse.Namespace:
@@ -46,7 +46,6 @@ def build_homepage_blocks_t2(date_from: str, date_to: str) -> list[Path]:
     df = load_t1_raw_dataframe(date_from, date_to, columns=columns)
     df = df[
         df["system"].eq("jobbank-web")
-        & df["event_type"].eq("click")
         & df["feature_id"].isin(ALL_FEATURE_IDS)
     ].copy()
 
@@ -58,21 +57,24 @@ def build_homepage_blocks_t2(date_from: str, date_to: str) -> list[Path]:
         output_dir = t2_report_date_dir(REPORT_NAME, target_date)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        click_counts = (
-            day_df.groupby("feature_id", as_index=False)
+        feature_counts = (
+            day_df.groupby(["event_type", "feature_id"], as_index=False)
             .agg(count=("feature_id", "size"))
             .assign(date=target_date)
-            .sort_values(["count", "feature_id"], ascending=[False, True])
+            .sort_values(["event_type", "count", "feature_id"], ascending=[True, False, True])
         )
-        click_counts.to_parquet(output_dir / CLICK_COUNTS_FILE, index=False)
+        feature_counts.to_parquet(output_dir / FEATURE_COUNTS_FILE, index=False)
 
-        total = int(click_counts["count"].sum())
-        top_feature = click_counts.iloc[0]["feature_id"] if not click_counts.empty else ""
-        top_count = int(click_counts.iloc[0]["count"]) if not click_counts.empty else 0
+        total_clicks = int(feature_counts[feature_counts["event_type"].eq("click")]["count"].sum())
+        total_views = int(feature_counts[feature_counts["event_type"].eq("view")]["count"].sum())
+        click_rows = feature_counts[feature_counts["event_type"].eq("click")]
+        top_feature = click_rows.iloc[0]["feature_id"] if not click_rows.empty else ""
+        top_count = int(click_rows.iloc[0]["count"]) if not click_rows.empty else 0
         pd.DataFrame([{
             "date": target_date,
-            "total_clicks": total,
-            "feature_count": int(click_counts["feature_id"].nunique()),
+            "total_clicks": total_clicks,
+            "total_views": total_views,
+            "feature_count": int(feature_counts["feature_id"].nunique()),
             "top_feature_id": top_feature,
             "top_count": top_count,
         }]).to_parquet(output_dir / DAILY_SUMMARY_FILE, index=False)
@@ -82,7 +84,7 @@ def build_homepage_blocks_t2(date_from: str, date_to: str) -> list[Path]:
             "root": str(output_dir.relative_to(output_dir.parents[2])),
             "files": {
                 "daily_summary": rel(DAILY_SUMMARY_FILE),
-                "click_counts": rel(CLICK_COUNTS_FILE),
+                "feature_counts": rel(FEATURE_COUNTS_FILE),
             },
             "rows": len(day_df),
         }

@@ -437,16 +437,16 @@ const HB_EXPLORE_CORP_IDS = [
 
 function homepageBlocksPlan(f) {
   const roles = {
-    daily_summary: "daily_summary.parquet",
-    click_counts:  "click_counts.parquet",
+    daily_summary:  "daily_summary.parquet",
+    feature_counts: "feature_counts.parquet",
   };
   return {
-    summary: `首頁區塊點擊（T2）：${f.dateFrom} ~ ${f.dateTo}`,
+    summary: `首頁區塊點擊／瀏覽（T2）：${f.dateFrom} ~ ${f.dateTo}`,
     registerFiles: f.fetchDates.flatMap(d => dayFiles("homepage-blocks", d, roles, f.datasetRoot)),
     buildQueries(loaded) {
-      const ds = fileList(loaded.daily_summary || []);
-      const cc = fileList(loaded.click_counts  || []);
-      if (!cc) return {};
+      const ds = fileList(loaded.daily_summary  || []);
+      const fc = fileList(loaded.feature_counts || []);
+      if (!fc) return {};
       const searchIn   = inList(HB_SEARCH_IDS);
       const identityIn = inList(HB_IDENTITY_IDS);
       const jobsIn     = inList(HB_EXPLORE_JOBS_IDS);
@@ -454,26 +454,36 @@ function homepageBlocksPlan(f) {
       return {
         kpi: `
           SELECT
-            SUM(count) AS total_clicks,
-            SUM(CASE WHEN feature_id IN ${searchIn}   THEN count ELSE 0 END) AS search_total,
-            SUM(CASE WHEN feature_id IN ${identityIn} THEN count ELSE 0 END) AS identity_total,
-            SUM(CASE WHEN feature_id IN ${jobsIn}     THEN count ELSE 0 END) AS explore_jobs_total,
-            SUM(CASE WHEN feature_id IN ${corpIn}     THEN count ELSE 0 END) AS explore_corp_total
-          FROM read_parquet([${cc}])
+            SUM(CASE WHEN event_type='click' THEN count ELSE 0 END) AS total_clicks,
+            SUM(CASE WHEN event_type='view'  THEN count ELSE 0 END) AS total_views,
+            SUM(CASE WHEN event_type='click' AND feature_id IN ${searchIn}   THEN count ELSE 0 END) AS search_click,
+            SUM(CASE WHEN event_type='view'  AND feature_id IN ${searchIn}   THEN count ELSE 0 END) AS search_view,
+            SUM(CASE WHEN event_type='click' AND feature_id IN ${identityIn} THEN count ELSE 0 END) AS identity_click,
+            SUM(CASE WHEN event_type='view'  AND feature_id IN ${identityIn} THEN count ELSE 0 END) AS identity_view,
+            SUM(CASE WHEN event_type='click' AND feature_id IN ${jobsIn}     THEN count ELSE 0 END) AS explore_jobs_click,
+            SUM(CASE WHEN event_type='view'  AND feature_id IN ${jobsIn}     THEN count ELSE 0 END) AS explore_jobs_view,
+            SUM(CASE WHEN event_type='click' AND feature_id IN ${corpIn}     THEN count ELSE 0 END) AS explore_corp_click,
+            SUM(CASE WHEN event_type='view'  AND feature_id IN ${corpIn}     THEN count ELSE 0 END) AS explore_corp_view
+          FROM read_parquet([${fc}])
         `,
         daily_trend: `
           SELECT
             date,
-            SUM(CASE WHEN feature_id IN ${searchIn}   THEN count ELSE 0 END) AS search_total,
-            SUM(CASE WHEN feature_id IN ${identityIn} THEN count ELSE 0 END) AS identity_total,
-            SUM(CASE WHEN feature_id IN ${jobsIn}     THEN count ELSE 0 END) AS explore_jobs_total,
-            SUM(CASE WHEN feature_id IN ${corpIn}     THEN count ELSE 0 END) AS explore_corp_total
-          FROM read_parquet([${cc}])
+            SUM(CASE WHEN event_type='click' AND feature_id IN ${searchIn}   THEN count ELSE 0 END) AS search_click,
+            SUM(CASE WHEN event_type='view'  AND feature_id IN ${searchIn}   THEN count ELSE 0 END) AS search_view,
+            SUM(CASE WHEN event_type='click' AND feature_id IN ${identityIn} THEN count ELSE 0 END) AS identity_click,
+            SUM(CASE WHEN event_type='view'  AND feature_id IN ${identityIn} THEN count ELSE 0 END) AS identity_view,
+            SUM(CASE WHEN event_type='click' AND feature_id IN ${jobsIn}     THEN count ELSE 0 END) AS explore_jobs_click,
+            SUM(CASE WHEN event_type='view'  AND feature_id IN ${jobsIn}     THEN count ELSE 0 END) AS explore_jobs_view,
+            SUM(CASE WHEN event_type='click' AND feature_id IN ${corpIn}     THEN count ELSE 0 END) AS explore_corp_click,
+            SUM(CASE WHEN event_type='view'  AND feature_id IN ${corpIn}     THEN count ELSE 0 END) AS explore_corp_view
+          FROM read_parquet([${fc}])
           GROUP BY date ORDER BY date
         `,
-        click_detail: `
+        feature_detail: `
           SELECT
             feature_id,
+            event_type,
             SUM(count) AS count,
             CASE
               WHEN feature_id IN ${searchIn}   THEN '搜尋類別'
@@ -482,8 +492,8 @@ function homepageBlocksPlan(f) {
               WHEN feature_id IN ${corpIn}     THEN '探索企業'
               ELSE '其他'
             END AS block
-          FROM read_parquet([${cc}])
-          GROUP BY feature_id ORDER BY count DESC
+          FROM read_parquet([${fc}])
+          GROUP BY feature_id, event_type ORDER BY event_type, count DESC
         `,
       };
     },

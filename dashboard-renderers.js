@@ -637,49 +637,65 @@ function heatmapRenderer(data) {
 // 9. 首頁區塊點擊
 // ════════════════════════════════════════════════════════════════
 function homepageBlocksRenderer(data) {
-  const kpi      = data.kpi?.[0] ?? {};
-  const total    = n(kpi.total_clicks);
-  const search   = n(kpi.search_total);
-  const identity = n(kpi.identity_total);
-  const jobs     = n(kpi.explore_jobs_total);
-  const corp     = n(kpi.explore_corp_total);
+  const kpi           = data.kpi?.[0] ?? {};
+  const totalClicks   = n(kpi.total_clicks);
+  const totalViews    = n(kpi.total_views);
+  const searchClick   = n(kpi.search_click);
+  const identityClick = n(kpi.identity_click);
+  const jobsClick     = n(kpi.explore_jobs_click);
+  const corpClick     = n(kpi.explore_corp_click);
 
-  setKpiCard("1", "總點擊數",  fmt(total),    "4 大類別合計");
-  setKpiCard("2", "搜尋類別",  fmt(search),   total ? `佔 ${pct(search / total * 100)}` : "—");
-  setKpiCard("3", "身分類別",  fmt(identity), total ? `佔 ${pct(identity / total * 100)}` : "—");
-  setKpiCard("4", "探索工作",  fmt(jobs),     total ? `佔 ${pct(jobs / total * 100)}` : "—");
-  setKpiCard("5", "探索企業",  fmt(corp),     total ? `佔 ${pct(corp / total * 100)}` : "—");
-  setKpiCard("6", "—", "—", "");
+  setKpiCard("1", "總點擊數",        fmt(totalClicks),   "4 大類別合計");
+  setKpiCard("2", "總瀏覽數",        fmt(totalViews),    "4 大類別合計");
+  setKpiCard("3", "搜尋類別 Click",  fmt(searchClick),   totalClicks ? `佔 ${pct(searchClick / totalClicks * 100)}` : "—");
+  setKpiCard("4", "身分類別 Click",  fmt(identityClick), totalClicks ? `佔 ${pct(identityClick / totalClicks * 100)}` : "—");
+  setKpiCard("5", "探索工作 Click",  fmt(jobsClick),     totalClicks ? `佔 ${pct(jobsClick / totalClicks * 100)}` : "—");
+  setKpiCard("6", "探索企業 Click",  fmt(corpClick),     totalClicks ? `佔 ${pct(corpClick / totalClicks * 100)}` : "—");
   setKpiCard("7", "—", "—", "");
   setKpiCard("8", "—", "—", "");
 
-  // 圖表 1 — 每日趨勢 (line)
+  // 圖表 1 — 每日趨勢：click 實線 / view 虛線
   const trend = data.daily_trend ?? [];
   lineChart("chart1", trend.map(r => r.date), [
-    { label: "搜尋類別", data: trend.map(r => n(r.search_total)),       borderColor: C.blue,   tension: 0.3, fill: false },
-    { label: "身分類別", data: trend.map(r => n(r.identity_total)),     borderColor: C.purple, tension: 0.3, fill: false },
-    { label: "探索工作", data: trend.map(r => n(r.explore_jobs_total)), borderColor: C.green,  tension: 0.3, fill: false },
-    { label: "探索企業", data: trend.map(r => n(r.explore_corp_total)), borderColor: C.orange, tension: 0.3, fill: false },
+    { label: "搜尋 Click",   data: trend.map(r => n(r.search_click)),       borderColor: C.blue,   tension: 0.3, fill: false },
+    { label: "搜尋 View",    data: trend.map(r => n(r.search_view)),        borderColor: C.blue,   tension: 0.3, fill: false, borderDash: [4, 3] },
+    { label: "身分 Click",   data: trend.map(r => n(r.identity_click)),     borderColor: C.purple, tension: 0.3, fill: false },
+    { label: "身分 View",    data: trend.map(r => n(r.identity_view)),      borderColor: C.purple, tension: 0.3, fill: false, borderDash: [4, 3] },
+    { label: "探索工作 Click", data: trend.map(r => n(r.explore_jobs_click)), borderColor: C.green,  tension: 0.3, fill: false },
+    { label: "探索工作 View",  data: trend.map(r => n(r.explore_jobs_view)),  borderColor: C.green,  tension: 0.3, fill: false, borderDash: [4, 3] },
+    { label: "探索企業 Click", data: trend.map(r => n(r.explore_corp_click)), borderColor: C.orange, tension: 0.3, fill: false },
+    { label: "探索企業 View",  data: trend.map(r => n(r.explore_corp_view)),  borderColor: C.orange, tension: 0.3, fill: false, borderDash: [4, 3] },
   ]);
 
-  // 圖表 2 — 類別佔比 (doughnut)
+  // 圖表 2 — Click 類別佔比 (doughnut)
   doughnutChart("chart2", [
-    { name: "搜尋類別", count: search },
-    { name: "身分類別", count: identity },
-    { name: "探索工作", count: jobs },
-    { name: "探索企業", count: corp },
+    { name: "搜尋類別", count: searchClick },
+    { name: "身分類別", count: identityClick },
+    { name: "探索工作", count: jobsClick },
+    { name: "探索企業", count: corpClick },
   ]);
 
-  // 圖表 3 — Top featureId (bar-H)
-  const detail = data.click_detail ?? [];
-  const top20  = detail.slice(0, 20);
-  barHChart("chart3", top20.map(r => r.feature_id), [
-    { label: "點擊數", data: top20.map(r => n(r.count)), backgroundColor: C.palette },
+  // 圖表 3 — Top featureId by click (bar-H)
+  const detail     = data.feature_detail ?? [];
+  const clickRows  = detail.filter(r => r.event_type === "click");
+  const top20click = clickRows.slice(0, 20);
+  barHChart("chart3", top20click.map(r => r.feature_id), [
+    { label: "點擊數", data: top20click.map(r => n(r.count)), backgroundColor: C.palette },
   ]);
 
-  // 表格 1 — 各 featureId 點擊詳細
-  buildTableHead("table1-head", ["#", "featureId", "點擊數", "佔比", "所屬區塊"]);
-  buildTableBody("table1-body", detail, (r, i) => rankRow(i, r.feature_id, n(r.count), total, r.block ?? "—"));
+  // 表格 1 — 各 featureId click / view 詳細
+  const viewMap = Object.fromEntries(detail.filter(r => r.event_type === "view").map(r => [r.feature_id, n(r.count)]));
+  buildTableHead("table1-head", ["#", "featureId", "Click", "View", "所屬區塊"]);
+  buildTableBody("table1-body", clickRows, (r, i) => {
+    const v = viewMap[r.feature_id] ?? 0;
+    return `<tr>
+      <td class="rank">${i + 1}</td>
+      <td>${r.feature_id}</td>
+      <td>${fmt(n(r.count))}</td>
+      <td>${fmt(v)}</td>
+      <td>${r.block ?? "—"}</td>
+    </tr>`;
+  });
 }
 
 // ── 重置 ────────────────────────────────────────────────────────
@@ -723,22 +739,24 @@ function monthlyFormatMonth(ym) {
   return `${y}年${m}月`;
 }
 
-function monthlyBuildCatTable(rows) {
-  if (!rows.length) return "<p class='monthly-empty'>無資料</p>";
-  const total = rows.reduce((s, r) => s + r.count, 0);
-  const trs = rows.map((r, i) => {
-    const pct = total ? ((r.count / total) * 100).toFixed(1) : "0.0";
-    const bar = total ? Math.round((r.count / total) * 80) : 0;
+function monthlyBuildCatTable(clickRows, viewMap) {
+  if (!clickRows.length) return "<p class='monthly-empty'>無資料</p>";
+  const totalClicks = clickRows.reduce((s, r) => s + r.count, 0);
+  const trs = clickRows.map((r, i) => {
+    const clickPct = totalClicks ? ((r.count / totalClicks) * 100).toFixed(1) : "0.0";
+    const bar = totalClicks ? Math.round((r.count / totalClicks) * 80) : 0;
+    const views = viewMap[r.feature_id] ?? 0;
     return `<tr>
       <td class="cat-rank">${i + 1}</td>
       <td class="cat-id">${r.feature_id}</td>
       <td class="cat-count">${r.count.toLocaleString()}</td>
+      <td class="cat-count" style="color:var(--muted)">${views.toLocaleString()}</td>
       <td class="cat-bar"><span style="width:${bar}px"></span></td>
-      <td class="cat-pct">${pct}%</td>
+      <td class="cat-pct">${clickPct}%</td>
     </tr>`;
   }).join("");
   return `<table class="cat-table">
-    <thead><tr><th>#</th><th>功能</th><th>點擊</th><th></th><th>佔比</th></tr></thead>
+    <thead><tr><th>#</th><th>功能</th><th>點擊</th><th>瀏覽</th><th></th><th>佔比</th></tr></thead>
     <tbody>${trs}</tbody>
   </table>`;
 }
@@ -752,7 +770,7 @@ async function monthlyFetchDay(date, runtime) {
 
   try {
     const url = new URL(
-      `report/homepage-blocks/date=${date}/click_counts.parquet`,
+      `report/homepage-blocks/date=${date}/feature_counts.parquet`,
       runtime.datasetRoot
     ).href;
     const resp = await fetch(url);
@@ -763,30 +781,36 @@ async function monthlyFetchDay(date, runtime) {
     await runtime.db.registerFileBuffer(alias, buf);
 
     const result = await runtime.conn.query(
-      `SELECT feature_id, CAST(count AS BIGINT) AS cnt FROM "${alias}" ORDER BY cnt DESC`
+      `SELECT feature_id, event_type, CAST(count AS BIGINT) AS cnt FROM "${alias}" ORDER BY event_type, cnt DESC`
     );
     const rows = result.toArray().map(r => ({
       feature_id: String(r.feature_id),
+      event_type: String(r.event_type),
       count: Number(r.cnt),
     }));
 
-    const totalClicks = rows.reduce((s, r) => s + r.count, 0);
+    const clickRows = rows.filter(r => r.event_type === "click");
+    const viewMap   = Object.fromEntries(rows.filter(r => r.event_type === "view").map(r => [r.feature_id, r.count]));
+    const totalClicks = clickRows.reduce((s, r) => s + r.count, 0);
+    const totalViews  = rows.filter(r => r.event_type === "view").reduce((s, r) => s + r.count, 0);
+
     const catSections = MONTHLY_CATEGORIES.map(cat => {
-      const catRows = rows.filter(r => cat.test(r.feature_id));
-      const catTotal = catRows.reduce((s, r) => s + r.count, 0);
+      const catClick = clickRows.filter(r => cat.test(r.feature_id));
+      const catClickTotal = catClick.reduce((s, r) => s + r.count, 0);
+      const catViewTotal  = catClick.reduce((s, r) => s + (viewMap[r.feature_id] ?? 0), 0);
       return `<div class="cat-section">
         <div class="cat-header">
           <h4>${cat.label}</h4>
-          <span class="cat-total">${catTotal.toLocaleString()} 次</span>
+          <span class="cat-total">點擊 ${catClickTotal.toLocaleString()} / 瀏覽 ${catViewTotal.toLocaleString()}</span>
         </div>
-        ${monthlyBuildCatTable(catRows)}
+        ${monthlyBuildCatTable(catClick, viewMap)}
       </div>`;
     }).join("");
 
     detail.innerHTML = `
       <div class="day-detail-header">
         <h3>${monthlyFormatDate(date)} 日報表</h3>
-        <span class="day-total">總點擊：${totalClicks.toLocaleString()}</span>
+        <span class="day-total">總點擊：${totalClicks.toLocaleString()} ／ 總瀏覽：${totalViews.toLocaleString()}</span>
       </div>
       <div class="cat-grid">${catSections}</div>`;
   } catch (err) {
