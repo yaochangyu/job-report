@@ -37,8 +37,9 @@ const VIEW_FILTER_FIELDS = {
   feature:    { pagePath: false },
   device:     { pagePath: false },
   ranking:    { pagePath: false },
-  navigation: { pagePath: true  },
-  heatmap:    { pagePath: true  },
+  navigation:        { pagePath: true  },
+  heatmap:           { pagePath: true  },
+  "homepage-blocks": { pagePath: false },
 };
 
 const VIEW_META = {
@@ -81,6 +82,11 @@ const VIEW_META = {
     title: "點擊熱點",
     subtitle: "Page Click Heatmap",
     desc: "從點擊量視角觀察熱門互動區塊。",
+  },
+  "homepage-blocks": {
+    title: "首頁區塊點擊",
+    subtitle: "Homepage Blocks",
+    desc: "搜尋、身分類別、探索工作、探索企業各區塊每日點擊數。",
   },
 };
 
