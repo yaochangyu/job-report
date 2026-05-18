@@ -13,7 +13,8 @@ from pathlib import Path
 
 import pandas as pd
 
-from click_heatmap_report import CONFIG_PATH
+CONFIG_PATH = Path(__file__).parent / "click_heatmap_config.json"
+
 from common.data_pipeline import (
     ensure_pipeline_directories,
     t2_report_date_dir,

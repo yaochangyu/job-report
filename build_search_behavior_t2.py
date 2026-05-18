@@ -18,7 +18,12 @@ from common.data_pipeline import (
     update_t2_manifest_dates,
 )
 from common.t1_reader import load_t1_raw_dataframe, resolve_date_window
-from search_behavior_report import AI_SEARCH_IDS, GENERAL_SEARCH_IDS, QUICK_FILTER_IDS, SEARCH_PAGE_IDS
+
+GENERAL_SEARCH_IDS = ["search-general-keyword", "search-general-submit", "search-general"]
+AI_SEARCH_IDS = ["search-ai-keyword", "search-ai-submit", "search-ai",
+                 "search-ai-voice-input", "search-ai-chat-mode"]
+QUICK_FILTER_IDS = ["T-job-location", "T-job-category"]
+SEARCH_PAGE_IDS = ["search-job-page", "search-corp-page", "search-gig-page", "search-intern-page"]
 
 REPORT_NAME = "search-behavior"
 DAILY_SUMMARY_FILE = "daily_summary.parquet"

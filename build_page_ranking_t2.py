@@ -18,7 +18,29 @@ from common.data_pipeline import (
     update_t2_manifest_dates,
 )
 from common.t1_reader import load_t1_raw_dataframe, resolve_date_window
-from page_ranking_report import CATEGORY_MAP
+
+CATEGORY_MAP = {
+    "job-page": "頁面瀏覽", "search-job-page": "頁面瀏覽", "home-page": "頁面瀏覽",
+    "job-pair-page": "頁面瀏覽", "job-preview-page": "頁面瀏覽", "corp-page": "頁面瀏覽",
+    "corp-preview-new-page": "頁面瀏覽", "welcome-page": "頁面瀏覽",
+    "search-corp-page": "頁面瀏覽", "search-gig-page": "頁面瀏覽", "search-intern-page": "頁面瀏覽",
+    "apply-job": "應徵",
+    "search-general-keyword": "搜尋", "search-general-submit": "搜尋", "search-general": "搜尋",
+    "search-ai-keyword": "AI 搜尋", "search-ai-submit": "AI 搜尋", "search-ai": "AI 搜尋",
+    "search-ai-voice-input": "AI 搜尋", "search-ai-chat-mode": "AI 搜尋",
+    "T-job-location": "快速篩選", "T-job-category": "快速篩選",
+    "explore-jobs-organic": "探索功能", "explore-jobs-organic-corp": "探索功能",
+    "explore-company-corp": "探索功能", "explore-company-job1": "探索功能",
+    "explore-company-job2": "探索功能", "explore-company-job-more": "探索功能",
+    "explore-company-manufacturing": "探索功能", "explore-company-service": "探索功能",
+    "explore-company-next": "探索功能",
+    "identify-returning": "身份辨識", "identify-student": "身份辨識",
+    "identify-worker": "身份辨識", "identify-professional": "身份辨識",
+    "identify-senior": "身份辨識", "identify-fresh": "身份辨識", "identify-personal": "身份辨識",
+    "news-card-1": "新聞", "news-card-2": "新聞", "news-card-3": "新聞",
+    "news-card-4": "新聞", "news-workplace": "新聞", "news-industry": "新聞",
+    "company-select-job": "企業互動",
+}
 
 REPORT_NAME = "page-ranking"
 DAILY_SUMMARY_FILE = "daily_summary.parquet"

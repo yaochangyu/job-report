@@ -18,7 +18,19 @@ from common.data_pipeline import (
     update_t2_manifest_dates,
 )
 from common.t1_reader import load_t1_raw_dataframe, resolve_date_window
-from feature_engagement_report import EXPLORE_CORP_IDS, EXPLORE_JOB_IDS, IDENTITY_IDS, NEWS_IDS
+
+EXPLORE_JOB_IDS = ["explore-jobs-organic", "explore-jobs-organic-corp"]
+EXPLORE_CORP_IDS = [
+    "explore-company-corp", "explore-company-job1", "explore-company-job2",
+    "explore-company-job-more", "explore-company-manufacturing",
+    "explore-company-service", "explore-company-next",
+]
+IDENTITY_IDS = [
+    "identify-returning", "identify-student", "identify-worker",
+    "identify-professional", "identify-senior", "identify-fresh", "identify-personal",
+]
+NEWS_IDS = ["news-card-1", "news-card-2", "news-card-3", "news-card-4",
+            "news-workplace", "news-industry"]
 
 REPORT_NAME = "feature-engagement"
 DAILY_SUMMARY_FILE = "daily_summary.parquet"
