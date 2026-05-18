@@ -825,12 +825,11 @@ function monthlyReportRenderer(runtime) {
       <nav class="monthly-nav">${monthBlocks}</nav>
       <div class="monthly-detail">
         <div id="monthly-day-detail" class="monthly-day-detail hidden">
-          <p class="monthly-empty">點選左側日期查看當日明細</p>
+          <p class="monthly-empty">點選上方日期查看當日明細</p>
         </div>
       </div>
     </div>`;
 
-  // 初始提示設為可見
   document.getElementById("monthly-day-detail")?.classList.remove("hidden");
 
   section.querySelectorAll(".day-btn").forEach(btn => {
@@ -840,6 +839,16 @@ function monthlyReportRenderer(runtime) {
       await monthlyFetchDay(btn.dataset.date, runtime);
     });
   });
+
+  // URL date_from 自動選取對應日期
+  const urlDate = new URLSearchParams(location.search).get("date_from");
+  if (urlDate) {
+    const target = section.querySelector(`.day-btn[data-date="${urlDate}"]`);
+    if (target) {
+      target.scrollIntoView({ block: "nearest", inline: "center" });
+      target.click();
+    }
+  }
 }
 
 // ── 路由 ────────────────────────────────────────────────────────
