@@ -245,9 +245,6 @@ def main() -> None:
         date_from = date_to = None
         extra_args = []
 
-    if "html" in steps and OUTPUT_DIR.exists():
-        shutil.rmtree(OUTPUT_DIR)
-
     if "raw" in steps:
         print("[INFO] 先同步 T1 raw 資料（優先重用本地快取）...")
         extract_raw_events(date_from, date_to, keep_existing=True)
@@ -273,6 +270,8 @@ def main() -> None:
         print(f"[完成] {ok_count}/{len(REPORTS)} 份報告成功，共耗時 {total_elapsed}s")
 
     if "html" in steps:
+        if OUTPUT_DIR.exists():
+            shutil.rmtree(OUTPUT_DIR)
         copy_frontend_bundle(OUTPUT_DIR)
         build_shell_pages(OUTPUT_DIR, REPORTS)
         print(f"[OK] 前端殼已產生：{OUTPUT_DIR / 'index.html'}")
