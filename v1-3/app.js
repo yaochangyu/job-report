@@ -11,6 +11,7 @@ const runtime = {
   conn: null,
   hasEventsView: false,
   datasetRoot: null,
+  datesByMonth: {},
 };
 
 const defaultState = {
@@ -39,7 +40,8 @@ const VIEW_FILTER_FIELDS = {
   ranking:    { pagePath: false },
   navigation:        { pagePath: true  },
   heatmap:           { pagePath: true  },
-  "homepage-blocks": { pagePath: false },
+  "homepage-blocks":   { pagePath: false },
+  "monthly-report":    { pagePath: false },
 };
 
 const VIEW_META = {
@@ -88,10 +90,24 @@ const VIEW_META = {
     subtitle: "Homepage Blocks",
     desc: "搜尋、身分類別、探索工作、探索企業各區塊每日點擊數。",
   },
+  "monthly-report": {
+    title: "月報表",
+    subtitle: "Monthly Report",
+    desc: "依月份瀏覽首頁區塊點擊日報表，點擊月份展開各日明細。",
+  },
 };
 
 function isValidViewMode(viewMode) {
   return Boolean(viewMode && viewMode in VIEW_META);
+}
+
+function groupDatesByMonth(dates) {
+  const map = {};
+  for (const d of dates) {
+    const month = d.slice(0, 7);
+    (map[month] ??= []).push(d);
+  }
+  return map;
 }
 
 function enumerateDates(dateFrom, dateTo) {
@@ -166,6 +182,9 @@ function renderViewMeta(state) {
   });
 
   updateFilterFields(state.selectedViewMode);
+
+  const isMonthly = state.selectedViewMode === "monthly-report";
+  document.querySelector(".filter-wrap")?.classList.toggle("hidden", isMonthly);
 }
 
 function summarizeQueryResult(outputs) {
@@ -226,10 +245,17 @@ let _queryInFlight = false;
 async function runQuery(state, filters) {
   if (_queryInFlight) return false;
 
+  // monthly-report 管理自己的渲染，不走標準查詢流程
+  if (filters.viewMode === "monthly-report") {
+    renderDashboard("monthly-report", [], runtime);
+    renderState(state);
+    return true;
+  }
+
   if (!runtime.conn || !runtime.hasEventsView) {
     state.lastQuery = "目前沒有 events view，可先執行 extract_events.py 匯出 Parquet";
     state.queryResult = null;
-    resetDashboard();
+    resetDashboard(filters.viewMode);
     renderState(state);
     return false;
   }
@@ -240,7 +266,7 @@ async function runQuery(state, filters) {
   if (!fetchDates.length) {
     state.lastQuery = "所選日期區間無可用 T2 資料";
     state.queryResult = null;
-    resetDashboard();
+    resetDashboard(filters.viewMode);
     showMissingDatesWarning([], []);
     renderState(state);
     return false;
@@ -265,13 +291,13 @@ async function runQuery(state, filters) {
       pagePath: filters.pagePath,
     };
     showMissingDatesWarning(result.missingDates, fetchDates);
-    renderDashboard(filters.viewMode, result.outputs);
+    renderDashboard(filters.viewMode, result.outputs, runtime);
     renderState(state);
     return true;
   } catch (error) {
     state.lastQuery = error instanceof Error ? error.message : String(error);
     state.queryResult = null;
-    resetDashboard();
+    resetDashboard(filters.viewMode);
     showMissingDatesWarning([], []);
     renderState(state);
     return false;
@@ -445,6 +471,7 @@ async function bootstrap() {
     const manifest = await loadManifest();
     state.manifestLoaded = true;
     state.availableDates = manifest.available_dates || [];
+    runtime.datesByMonth = groupDatesByMonth(state.availableDates);
     if (manifest.branch) setText("branch-badge", manifest.branch);
     renderState(state);
 
