@@ -806,42 +806,56 @@ function monthlyReportRenderer(runtime) {
     return;
   }
 
-  const monthBlocks = months.map((ym, idx) => {
-    const days = [...datesByMonth[ym]].sort().reverse();
-    const dayBtns = days.map(d =>
-      `<button class="day-btn" data-date="${d}" type="button">${monthlyFormatDate(d)}</button>`
+  const urlDate = new URLSearchParams(location.search).get("date_from");
+  const urlMonth = urlDate ? urlDate.slice(0, 7) : null;
+  const initialMonth = (urlMonth && datesByMonth[urlMonth]) ? urlMonth : months[0];
+
+  function buildDayButtons(ym) {
+    const days = [...(datesByMonth[ym] ?? [])].sort().reverse();
+    return days.map(d =>
+      `<button class="day-btn" data-date="${d}" type="button">${d.slice(5)}</button>`
     ).join("");
-    return `<details class="month-group" ${idx === 0 ? "open" : ""}>
-      <summary class="month-summary">
-        <span class="month-label">${monthlyFormatMonth(ym)}</span>
-        <span class="month-count">${days.length} 天</span>
-      </summary>
-      <div class="day-list">${dayBtns}</div>
-    </details>`;
-  }).join("");
+  }
+
+  const monthTabs = months.map(ym =>
+    `<button class="month-tab${ym === initialMonth ? " is-active" : ""}" data-month="${ym}" type="button">${monthlyFormatMonth(ym)}</button>`
+  ).join("");
 
   section.innerHTML = `
     <div class="monthly-layout">
-      <nav class="monthly-nav">${monthBlocks}</nav>
+      <nav class="monthly-nav-months">${monthTabs}</nav>
+      <div class="monthly-nav-days">${buildDayButtons(initialMonth)}</div>
       <div class="monthly-detail">
-        <div id="monthly-day-detail" class="monthly-day-detail hidden">
+        <div id="monthly-day-detail" class="monthly-day-detail">
           <p class="monthly-empty">點選上方日期查看當日明細</p>
         </div>
       </div>
     </div>`;
 
-  document.getElementById("monthly-day-detail")?.classList.remove("hidden");
+  function bindDayButtons() {
+    section.querySelectorAll(".day-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        section.querySelectorAll(".day-btn").forEach(b => b.classList.remove("is-active"));
+        btn.classList.add("is-active");
+        await monthlyFetchDay(btn.dataset.date, runtime);
+      });
+    });
+  }
 
-  section.querySelectorAll(".day-btn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      section.querySelectorAll(".day-btn").forEach(b => b.classList.remove("is-active"));
-      btn.classList.add("is-active");
-      await monthlyFetchDay(btn.dataset.date, runtime);
+  section.querySelectorAll(".month-tab").forEach(tab => {
+    tab.addEventListener("click", () => {
+      section.querySelectorAll(".month-tab").forEach(t => t.classList.remove("is-active"));
+      tab.classList.add("is-active");
+      section.querySelector(".monthly-nav-days").innerHTML = buildDayButtons(tab.dataset.month);
+      const detail = document.getElementById("monthly-day-detail");
+      if (detail) detail.innerHTML = `<p class="monthly-empty">點選上方日期查看當日明細</p>`;
+      bindDayButtons();
     });
   });
 
+  bindDayButtons();
+
   // URL date_from 自動選取對應日期
-  const urlDate = new URLSearchParams(location.search).get("date_from");
   if (urlDate) {
     const target = section.querySelector(`.day-btn[data-date="${urlDate}"]`);
     if (target) {
