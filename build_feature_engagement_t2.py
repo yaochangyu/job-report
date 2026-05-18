@@ -53,12 +53,10 @@ def parse_args() -> argparse.Namespace:
 
 def _count_by_value(frame: pd.DataFrame, column: str) -> pd.DataFrame:
     return (
-        frame[column]
-        .fillna("unknown")
-        .value_counts(dropna=False)
-        .rename_axis("name")
-        .reset_index(name="count")
-        .sort_values(["count", "name"], ascending=[False, True])
+        frame.groupby(["event_type", column], as_index=False)
+        .size()
+        .rename(columns={column: "name", "size": "count"})
+        .sort_values(["event_type", "count", "name"], ascending=[True, False, True])
     )
 
 
@@ -66,7 +64,7 @@ def build_feature_engagement_t2(date_from: str, date_to: str) -> list[Path]:
     ensure_pipeline_directories()
     columns = ["date", "system", "event_type", "feature_id", "category_tab", "identity_type"]
     df = load_t1_raw_dataframe(date_from, date_to, columns=columns)
-    df = df[df["system"].eq("jobbank-web") & df["event_type"].eq("click") & df["feature_id"].notna()].copy()
+    df = df[df["system"].eq("jobbank-web") & df["feature_id"].notna()].copy()
 
     dates_written: dict[str, dict] = {}
     output_dirs: list[Path] = []
@@ -81,12 +79,19 @@ def build_feature_engagement_t2(date_from: str, date_to: str) -> list[Path]:
         identity_df = day_df[day_df["feature_id"].fillna("").str.startswith("identify-")].copy()
         news_df = day_df[day_df["feature_id"].isin(NEWS_IDS)].copy()
 
+        def _sum(frame: pd.DataFrame, et: str) -> int:
+            return int((frame["event_type"] == et).sum())
+
         pd.DataFrame([{
             "date": target_date,
-            "explore_jobs": len(explore_jobs_df),
-            "explore_corp": len(explore_corp_df),
-            "identity": len(identity_df),
-            "news": len(news_df),
+            "explore_jobs_click": _sum(explore_jobs_df, "click"),
+            "explore_jobs_view":  _sum(explore_jobs_df, "view"),
+            "explore_corp_click": _sum(explore_corp_df, "click"),
+            "explore_corp_view":  _sum(explore_corp_df, "view"),
+            "identity_click": _sum(identity_df, "click"),
+            "identity_view":  _sum(identity_df, "view"),
+            "news_click": _sum(news_df, "click"),
+            "news_view":  _sum(news_df, "view"),
         }]).to_parquet(output_dir / DAILY_SUMMARY_FILE, index=False)
 
         _count_by_value(explore_jobs_df, "feature_id").to_parquet(output_dir / EXPLORE_JOBS_FEATURES_FILE, index=False)

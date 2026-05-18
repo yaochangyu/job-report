@@ -42,7 +42,7 @@ def build_page_navigation_t2(date_from: str, date_to: str) -> list[Path]:
     ensure_pipeline_directories()
     columns = ["date", "system", "event_type", "page_path", "previous_page_path"]
     df = load_t1_raw_dataframe(date_from, date_to, columns=columns)
-    df = df[df["system"].eq("jobbank-web") & df["event_type"].eq("view")].copy()
+    df = df[df["system"].eq("jobbank-web")].copy()
     df["page_path"] = df["page_path"].fillna("/")
     df["previous_page_path"] = df["previous_page_path"].fillna(ENTRY_MARKER)
 
@@ -55,10 +55,10 @@ def build_page_navigation_t2(date_from: str, date_to: str) -> list[Path]:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         pair_counts = (
-            day_df.groupby(["previous_page_path", "page_path"], as_index=False)
+            day_df.groupby(["event_type", "previous_page_path", "page_path"], as_index=False)
             .size()
             .rename(columns={"size": "count", "previous_page_path": "from", "page_path": "to"})
-            .sort_values(["count", "from", "to"], ascending=[False, True, True])
+            .sort_values(["event_type", "count", "from", "to"], ascending=[True, False, True, True])
         )
 
         nav_pairs = pair_counts[pair_counts["from"].ne(ENTRY_MARKER)].copy()
@@ -66,32 +66,40 @@ def build_page_navigation_t2(date_from: str, date_to: str) -> list[Path]:
         nav_pairs.to_parquet(output_dir / NAV_PAIRS_FILE, index=False)
 
         entry_pages = (
-            pair_counts[pair_counts["from"].eq(ENTRY_MARKER)][["to", "count"]]
+            pair_counts[pair_counts["from"].eq(ENTRY_MARKER)][["event_type", "to", "count"]]
             .rename(columns={"to": "name"})
-            .sort_values(["count", "name"], ascending=[False, True])
+            .sort_values(["event_type", "count", "name"], ascending=[True, False, True])
         )
         entry_pages.to_parquet(output_dir / ENTRY_PAGES_FILE, index=False)
 
         page_sources = (
             pair_counts[pair_counts["from"].ne(ENTRY_MARKER)]
             .rename(columns={"to": "page", "from": "name"})
-            .sort_values(["page", "count", "name"], ascending=[True, False, True])
+            .sort_values(["event_type", "page", "count", "name"], ascending=[True, True, False, True])
         )
-        page_sources["rank"] = page_sources.groupby("page").cumcount() + 1
+        page_sources["rank"] = page_sources.groupby(["event_type", "page"]).cumcount() + 1
         page_sources[page_sources["rank"] <= PAGE_RELATION_LIMIT].to_parquet(output_dir / PAGE_SOURCES_FILE, index=False)
 
         page_destinations = (
             pair_counts[pair_counts["from"].ne(ENTRY_MARKER)]
             .rename(columns={"from": "page", "to": "name"})
-            .sort_values(["page", "count", "name"], ascending=[True, False, True])
+            .sort_values(["event_type", "page", "count", "name"], ascending=[True, True, False, True])
         )
-        page_destinations["rank"] = page_destinations.groupby("page").cumcount() + 1
+        page_destinations["rank"] = page_destinations.groupby(["event_type", "page"]).cumcount() + 1
         page_destinations[page_destinations["rank"] <= PAGE_RELATION_LIMIT].to_parquet(output_dir / PAGE_DESTINATIONS_FILE, index=False)
+
+        def _nav_sum(et: str) -> int:
+            return int(nav_pairs[nav_pairs["event_type"].eq(et)]["count"].sum())
+
+        def _entry_sum(et: str) -> int:
+            return int(entry_pages[entry_pages["event_type"].eq(et)]["count"].sum())
 
         pd.DataFrame([{
             "date": target_date,
-            "nav_total": int(nav_pairs["count"].sum()),
-            "entry_total": int(entry_pages["count"].sum()),
+            "nav_click": _nav_sum("click"),
+            "nav_view": _nav_sum("view"),
+            "entry_click": _entry_sum("click"),
+            "entry_view": _entry_sum("view"),
             "tracked_pages": int(page_sources["page"].nunique()),
         }]).to_parquet(output_dir / DAILY_SUMMARY_FILE, index=False)
 

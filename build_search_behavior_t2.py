@@ -53,7 +53,7 @@ def build_search_behavior_t2(date_from: str, date_to: str) -> list[Path]:
     ensure_pipeline_directories()
     columns = ["date", "event_type", "feature_id"]
     df = load_t1_raw_dataframe(date_from, date_to, columns=columns)
-    df = df[df["event_type"].eq("click") & df["feature_id"].isin(ALL_FEATURE_IDS)].copy()
+    df = df[df["feature_id"].isin(ALL_FEATURE_IDS)].copy()
 
     dates_written: dict[str, dict] = {}
     output_dirs: list[Path] = []
@@ -63,31 +63,32 @@ def build_search_behavior_t2(date_from: str, date_to: str) -> list[Path]:
         output_dir = t2_report_date_dir(REPORT_NAME, target_date)
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        counts_map = day_df["feature_id"].value_counts().to_dict()
-        general = sum(counts_map.get(fid, 0) for fid in GENERAL_SEARCH_IDS)
-        ai = sum(counts_map.get(fid, 0) for fid in AI_SEARCH_IDS)
-        quick = sum(counts_map.get(fid, 0) for fid in QUICK_FILTER_IDS)
-        search_page = sum(counts_map.get(fid, 0) for fid in SEARCH_PAGE_IDS)
+        def _sum(ids: list[str], et: str) -> int:
+            return int(day_df[day_df["feature_id"].isin(ids) & day_df["event_type"].eq(et)].shape[0])
+
         pd.DataFrame([{
             "date": target_date,
-            "general": general,
-            "ai": ai,
-            "quick": quick,
-            "search_page": search_page,
+            "general_click":     _sum(GENERAL_SEARCH_IDS, "click"),
+            "general_view":      _sum(GENERAL_SEARCH_IDS, "view"),
+            "ai_click":          _sum(AI_SEARCH_IDS, "click"),
+            "ai_view":           _sum(AI_SEARCH_IDS, "view"),
+            "quick_click":       _sum(QUICK_FILTER_IDS, "click"),
+            "quick_view":        _sum(QUICK_FILTER_IDS, "view"),
+            "search_page_click": _sum(SEARCH_PAGE_IDS, "click"),
+            "search_page_view":  _sum(SEARCH_PAGE_IDS, "view"),
         }]).to_parquet(output_dir / DAILY_SUMMARY_FILE, index=False)
 
         feature_counts = (
-            day_df["feature_id"]
-            .value_counts()
-            .rename_axis("feature_id")
-            .reset_index(name="count")
-            .sort_values(["count", "feature_id"], ascending=[False, True])
+            day_df.groupby(["event_type", "feature_id"], as_index=False)
+            .size()
+            .rename(columns={"size": "count"})
+            .sort_values(["event_type", "count", "feature_id"], ascending=[True, False, True])
         )
         feature_counts.to_parquet(output_dir / FEATURE_COUNTS_FILE, index=False)
 
         search_page_dist = feature_counts[feature_counts["feature_id"].isin(SEARCH_PAGE_IDS)].copy()
         search_page_dist["name"] = search_page_dist["feature_id"].map(SEARCH_PAGE_LABELS).fillna(search_page_dist["feature_id"])
-        search_page_dist[["name", "count"]].to_parquet(output_dir / SEARCH_PAGE_DIST_FILE, index=False)
+        search_page_dist[["event_type", "name", "count"]].to_parquet(output_dir / SEARCH_PAGE_DIST_FILE, index=False)
 
         rel = lambda f: str((output_dir / f).relative_to(output_dir.parents[2]))
         dates_written[target_date] = {
