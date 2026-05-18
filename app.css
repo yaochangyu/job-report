@@ -390,46 +390,48 @@ html[data-theme="dark"] .pct { color: var(--accent); }
   min-height: 480px;
 }
 
-.monthly-nav {
-  border-bottom: 1px solid var(--border);
+/* 第一層：月份 tab 列 */
+.monthly-nav-months {
+  display: flex;
+  flex-direction: row;
   overflow-x: auto;
+  gap: 4px;
   padding: 8px 12px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 4px 0;
-  align-items: flex-start;
+  border-bottom: 1px solid var(--border);
+  scrollbar-width: thin;
 }
 
-.month-group {
-  display: inline-flex;
-  flex-direction: column;
-  border-bottom: none;
-  border-right: 1px solid var(--border);
-  padding: 0 4px;
-}
-.month-group:last-child { border-right: none; }
-.month-group summary { list-style: none; }
-.month-group summary::-webkit-details-marker { display: none; }
-
-.month-summary {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
+.month-tab {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 6px 14px;
   cursor: pointer;
-  user-select: none;
-  font-weight: 600;
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--muted);
   white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
-.month-summary:hover { background: var(--surface-hover, rgba(0,0,0,0.04)); border-radius: 4px; }
-.month-count {
-  font-size: 0.75rem;
-  font-weight: 400;
-  color: var(--text-secondary, #666);
-  white-space: nowrap;
+.month-tab:hover { background: var(--bg-accent); border-color: var(--border); color: var(--text); }
+.month-tab.is-active {
+  background: var(--bg-accent);
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 700;
 }
 
-.day-list { display: flex; flex-direction: row; flex-wrap: wrap; padding: 4px 0; gap: 2px; }
+/* 第二層：日期按鈕列 */
+.monthly-nav-days {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
 .day-btn {
   background: none;
   border: 1px solid transparent;
