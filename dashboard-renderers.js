@@ -186,6 +186,12 @@ const VIEW_PANEL_TEXT = {
     chart3: [],
     table1: ["featureId 點擊排行", ""],
   },
+  "homepage-blocks": {
+    chart1: ["各類別每日點擊趨勢", "搜尋 / 身分 / 探索工作 / 探索企業"],
+    chart2: ["各類別點擊佔比", "4 大區塊分佈"],
+    chart3: ["Top featureId 點擊", "依點擊數排序"],
+    table1: ["各 featureId 點擊詳細", "含所屬區塊"],
+  },
 };
 
 // ── panel title 更新 ─────────────────────────────────────────────
@@ -203,7 +209,7 @@ function applyPanelText(viewMode) {
 // ── panel 顯示/隱藏 ──────────────────────────────────────────────
 function showPanels(viewMode) {
   // chart panels
-  const charts3 = ["overview","search","apply","feature","device"];
+  const charts3 = ["overview","search","apply","feature","device","homepage-blocks"];
   const charts2 = ["ranking","navigation","heatmap"];
   document.getElementById("chart3-panel")?.classList.toggle("hidden", charts2.includes(viewMode));
 
@@ -211,6 +217,7 @@ function showPanels(viewMode) {
   const tableCount = {
     overview: 2, search: 1, apply: 3, feature: 2,
     device: 4, ranking: 1, navigation: 3, heatmap: 1,
+    "homepage-blocks": 1,
   };
   const count = tableCount[viewMode] ?? 1;
   for (let i = 1; i <= 4; i++) {
@@ -609,6 +616,55 @@ function heatmapRenderer(data) {
   buildTableBody("table1-body", ranking, (r, i) => rankRow(i, r.feature_id, n(r.count), total, r.page_path ?? ""));
 }
 
+// ════════════════════════════════════════════════════════════════
+// 9. 首頁區塊點擊
+// ════════════════════════════════════════════════════════════════
+function homepageBlocksRenderer(data) {
+  const kpi      = data.kpi?.[0] ?? {};
+  const total    = n(kpi.total_clicks);
+  const search   = n(kpi.search_total);
+  const identity = n(kpi.identity_total);
+  const jobs     = n(kpi.explore_jobs_total);
+  const corp     = n(kpi.explore_corp_total);
+
+  setKpiCard("1", "總點擊數",  fmt(total),    "4 大類別合計");
+  setKpiCard("2", "搜尋類別",  fmt(search),   total ? `佔 ${pct(search / total * 100)}` : "—");
+  setKpiCard("3", "身分類別",  fmt(identity), total ? `佔 ${pct(identity / total * 100)}` : "—");
+  setKpiCard("4", "探索工作",  fmt(jobs),     total ? `佔 ${pct(jobs / total * 100)}` : "—");
+  setKpiCard("5", "探索企業",  fmt(corp),     total ? `佔 ${pct(corp / total * 100)}` : "—");
+  setKpiCard("6", "—", "—", "");
+  setKpiCard("7", "—", "—", "");
+  setKpiCard("8", "—", "—", "");
+
+  // 圖表 1 — 每日趨勢 (line)
+  const trend = data.daily_trend ?? [];
+  lineChart("chart1", trend.map(r => r.date), [
+    { label: "搜尋類別", data: trend.map(r => n(r.search_total)),       borderColor: C.blue,   tension: 0.3, fill: false },
+    { label: "身分類別", data: trend.map(r => n(r.identity_total)),     borderColor: C.purple, tension: 0.3, fill: false },
+    { label: "探索工作", data: trend.map(r => n(r.explore_jobs_total)), borderColor: C.green,  tension: 0.3, fill: false },
+    { label: "探索企業", data: trend.map(r => n(r.explore_corp_total)), borderColor: C.orange, tension: 0.3, fill: false },
+  ]);
+
+  // 圖表 2 — 類別佔比 (doughnut)
+  doughnutChart("chart2", [
+    { name: "搜尋類別", count: search },
+    { name: "身分類別", count: identity },
+    { name: "探索工作", count: jobs },
+    { name: "探索企業", count: corp },
+  ]);
+
+  // 圖表 3 — Top featureId (bar-H)
+  const detail = data.click_detail ?? [];
+  const top20  = detail.slice(0, 20);
+  barHChart("chart3", top20.map(r => r.feature_id), [
+    { label: "點擊數", data: top20.map(r => n(r.count)), backgroundColor: C.palette },
+  ]);
+
+  // 表格 1 — 各 featureId 點擊詳細
+  buildTableHead("table1-head", ["#", "featureId", "點擊數", "佔比", "所屬區塊"]);
+  buildTableBody("table1-body", detail, (r, i) => rankRow(i, r.feature_id, n(r.count), total, r.block ?? "—"));
+}
+
 // ── 重置 ────────────────────────────────────────────────────────
 function resetKpis() {
   for (let i = 1; i <= 8; i++) setKpiCard(String(i), "—", "--", "");
@@ -637,8 +693,9 @@ const renderers = {
   feature:    featureRenderer,
   device:     deviceRenderer,
   ranking:    rankingRenderer,
-  navigation: navigationRenderer,
-  heatmap:    heatmapRenderer,
+  navigation:          navigationRenderer,
+  heatmap:             heatmapRenderer,
+  "homepage-blocks":   homepageBlocksRenderer,
 };
 
 export function renderDashboard(viewMode, outputs) {

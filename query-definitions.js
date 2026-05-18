@@ -386,6 +386,92 @@ function heatmapPlan(f) {
   };
 }
 
+// ════════════════════════════════════════════════════════════════
+// 9. 首頁區塊點擊 — homepage-blocks
+// ════════════════════════════════════════════════════════════════
+const HB_SEARCH_IDS = [
+  "T-job-category", "T-job-location",
+  "search-general-keyword", "search-general-submit",
+  "search-ai-keyword", "search-ai-voice-input", "search-ai-chat-mode", "search-ai-submit",
+];
+const HB_IDENTITY_IDS = [
+  "identify-personal", "identify-worker", "identify-student",
+  "identify-fresh", "identify-senior", "identify-returning",
+];
+const HB_EXPLORE_JOBS_IDS = [
+  "identify-personal-tab-1", "identify-personal-tab-2", "identify-personal-tab-3",
+  "identify-worker-tab-1",   "identify-worker-tab-2",   "identify-worker-tab-3",
+  "identify-student-tab-1",  "identify-student-tab-2",  "identify-student-tab-3",
+  "identify-fresh-tab-1",    "identify-fresh-tab-2",    "identify-fresh-tab-3",
+  "identify-senior-tab-1",   "identify-senior-tab-2",   "identify-senior-tab-3",
+  "identify-returning-tab-1","identify-returning-tab-2","identify-returning-tab-3",
+  "explore-jobs-organic", "explore-jobs-organic-corp",
+  "explore-jobs-prev", "explore-jobs-next", "explore-jobs-more",
+];
+const HB_EXPLORE_CORP_IDS = [
+  "explore-company-hospitality", "explore-company-manufacturing",
+  "explore-company-healthcare",  "explore-company-tech",
+  "explore-company-education",   "explore-company-retail", "explore-company-service",
+  "explore-company-corp", "explore-company-job-1", "explore-company-job-2",
+  "explore-company-job-more",
+  "explore-company-prev", "explore-company-next", "explore-company-more",
+];
+
+function homepageBlocksPlan(f) {
+  const roles = {
+    daily_summary: "daily_summary.parquet",
+    click_counts:  "click_counts.parquet",
+  };
+  return {
+    summary: `首頁區塊點擊（T2）：${f.dateFrom} ~ ${f.dateTo}`,
+    registerFiles: f.fetchDates.flatMap(d => dayFiles("homepage-blocks", d, roles, f.datasetRoot)),
+    buildQueries(loaded) {
+      const ds = fileList(loaded.daily_summary || []);
+      const cc = fileList(loaded.click_counts  || []);
+      if (!cc) return {};
+      const searchIn   = inList(HB_SEARCH_IDS);
+      const identityIn = inList(HB_IDENTITY_IDS);
+      const jobsIn     = inList(HB_EXPLORE_JOBS_IDS);
+      const corpIn     = inList(HB_EXPLORE_CORP_IDS);
+      return {
+        kpi: `
+          SELECT
+            SUM(count) AS total_clicks,
+            SUM(CASE WHEN feature_id IN ${searchIn}   THEN count ELSE 0 END) AS search_total,
+            SUM(CASE WHEN feature_id IN ${identityIn} THEN count ELSE 0 END) AS identity_total,
+            SUM(CASE WHEN feature_id IN ${jobsIn}     THEN count ELSE 0 END) AS explore_jobs_total,
+            SUM(CASE WHEN feature_id IN ${corpIn}     THEN count ELSE 0 END) AS explore_corp_total
+          FROM read_parquet([${cc}])
+        `,
+        daily_trend: `
+          SELECT
+            date,
+            SUM(CASE WHEN feature_id IN ${searchIn}   THEN count ELSE 0 END) AS search_total,
+            SUM(CASE WHEN feature_id IN ${identityIn} THEN count ELSE 0 END) AS identity_total,
+            SUM(CASE WHEN feature_id IN ${jobsIn}     THEN count ELSE 0 END) AS explore_jobs_total,
+            SUM(CASE WHEN feature_id IN ${corpIn}     THEN count ELSE 0 END) AS explore_corp_total
+          FROM read_parquet([${cc}])
+          GROUP BY date ORDER BY date
+        `,
+        click_detail: `
+          SELECT
+            feature_id,
+            SUM(count) AS count,
+            CASE
+              WHEN feature_id IN ${searchIn}   THEN '搜尋類別'
+              WHEN feature_id IN ${identityIn} THEN '身分類別'
+              WHEN feature_id IN ${jobsIn}     THEN '探索工作'
+              WHEN feature_id IN ${corpIn}     THEN '探索企業'
+              ELSE '其他'
+            END AS block
+          FROM read_parquet([${cc}])
+          GROUP BY feature_id ORDER BY count DESC
+        `,
+      };
+    },
+  };
+}
+
 // ── 路由 ────────────────────────────────────────────────────────
 const planBuilders = {
   overview:   overviewPlan,
@@ -394,8 +480,9 @@ const planBuilders = {
   feature:    featurePlan,
   device:     devicePlan,
   ranking:    rankingPlan,
-  navigation: navigationPlan,
-  heatmap:    heatmapPlan,
+  navigation:       navigationPlan,
+  heatmap:          heatmapPlan,
+  "homepage-blocks": homepageBlocksPlan,
 };
 
 export function buildQueryPlan(filters) {

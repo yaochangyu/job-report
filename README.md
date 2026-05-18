@@ -37,6 +37,7 @@ output/<報表名>/index.html                        ← T3 前端殼（空 HTML
 | 6 | Page Ranking | featureId 排行 Top 20、功能類別佔比 |
 | 7 | Page Navigation Flow | 頁面轉換路徑排行、各頁面來源/目標 |
 | 8 | Page Click Heatmap | 截圖疊加點擊次數，呈現各頁面按鈕點擊熱點 |
+| 9 | Homepage Blocks | 搜尋、身分類別、探索工作、探索企業各區塊每日點擊數 |
 
 ## 資料管線詳細說明
 
@@ -46,7 +47,7 @@ output/<報表名>/index.html                        ← T3 前端殼（空 HTML
 
 **存放位置：**
 ```
-dataset/events/
+dataset/raw/
   date=2025-01-01/events.parquet
   date=2025-01-02/events.parquet
   ...
@@ -104,6 +105,9 @@ dataset/report/
   click-heatmap/date=YYYY-MM-DD/
     daily_summary.parquet  # date, total_clicks, feature_count, top_feature_id, top_count
     click_counts.parquet   # page_path × feature_id × count
+  homepage-blocks/date=YYYY-MM-DD/
+    daily_summary.parquet  # date, total_clicks, feature_count, top_feature_id, top_count
+    click_counts.parquet   # feature_id × count × date
 ```
 
 ### T3 — 報表頁（前端殼 + DuckDB-WASM）
@@ -133,6 +137,7 @@ output/
   page-ranking/index.html
   page-navigation/index.html
   click-heatmap/index.html
+  homepage-blocks/index.html
 ```
 
 > **注意**：T1 原始事件（`dataset/events/`）**不進入** `output/`，不部署至 GitHub Pages。
@@ -217,6 +222,14 @@ uv run python extract_raw_events.py --days 7 --keep-existing  # 已存在則跳�
 # Step 2：建立 T2（以 traffic-overview 為例）
 uv run python build_traffic_overview_t2.py --days 7
 ```
+
+### 驗證 T2 資料正確性
+
+```bash
+uv run python tests/validation/validate_dashboard_data.py --from 2025-01-01 --to 2025-01-31
+```
+
+比對瀏覽器內 `executeViewQueries()` 的實際查詢結果是否與 `output/dataset/report` 中的 T2 parquet 聚合一致，驗證 `feature`、`device`、`ranking`、`heatmap`、`navigation` 五個 view 的 KPI。
 
 ### 部署至 GitHub Pages
 

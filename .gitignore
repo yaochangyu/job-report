@@ -40,3 +40,11 @@ graphify-out/
 .obsidian/
 .playwright/
 .playwright-cli/
+
+# Local tool directories
+.claude/
+.git-rewrite/
+
+# Temporary data exports
+*.tsv
+*.csv

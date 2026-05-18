@@ -108,6 +108,16 @@ REPORTS = [
         "color": "#e63946",
         "view_mode": "heatmap",
     },
+    {
+        "script": "build_homepage_blocks_t2.py",
+        "title": "首頁區塊點擊",
+        "subtitle": "Homepage Blocks",
+        "desc": "搜尋、身分類別、探索工作、探索企業各區塊每日點擊數",
+        "path": "report/homepage-blocks/index.html",
+        "icon": "🏠",
+        "color": "#2ec4b6",
+        "view_mode": "homepage-blocks",
+    },
 ]
 
 

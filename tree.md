@@ -10,7 +10,8 @@ job-report-1/
 │   ├── report-data-pipeline.plan.md   # ✅ 已完成：三層資料管線重構計畫
 │   ├── v1-2-report-shell-sync.plan.md  # ✅ 已完成：v1-2 報表頁接回 v1-1 導覽殼與查詢條件的實作計畫
 │   ├── v1-2-ui-sync.plan.md           # ✅ 已完成：v1-2 UI 對齊 v1-1 的實作計畫
-│   └── cli-redesign.plan.md           # ✅ 已完成：run_all.py CLI 重新設計計畫
+│   ├── cli-redesign.plan.md           # ✅ 已完成：run_all.py CLI 重新設計計畫
+│   └── query-homepage-blocks.plan.md  # ✅ 已完成：首頁區塊點擊查詢腳本計畫
 ├── common/
 │   ├── __init__.py
 │   ├── data_pipeline.py               # T1/T2/T3 資料管線契約與路徑定義
@@ -33,6 +34,7 @@ job-report-1/
 ├── tests/
 │   └── validation/
 │       └── validate_dashboard_data.py  # 比對 JS 實際查詢結果與 T2 parquet 聚合結果
+├── query_homepage_blocks.py           # 從 ES 查詢首頁四大區塊每日點擊數，輸出 TSV
 ├── category_tab_report.py             # 既有報告（保留）
 ├── app.css                            # v1-2 / GitHub Pages 共用前端殼樣式
 ├── app.js                             # v1-2 / GitHub Pages 共用前端殼啟動邏輯
@@ -51,6 +53,7 @@ job-report-1/
 ├── click_heatmap_config.json          # 頁面 URL + featureId → 元素位置 對應表
 ├── build_apply_conversion_t2.py       # 從 T1 產出 apply-conversion 的 T2 parquet
 ├── build_click_heatmap_t2.py          # 從 T1 產出 click-heatmap 的 T2 parquet
+├── build_homepage_blocks_t2.py        # 從 T1 產出 homepage-blocks 的 T2 parquet
 ├── build_device_platform_t2.py        # 從 T1 產出 device-platform 的 T2 parquet
 ├── build_feature_engagement_t2.py     # 從 T1 產出 feature-engagement 的 T2 parquet
 ├── build_page_navigation_t2.py        # 從 T1 產出 page-navigation 的 T2 parquet
