@@ -247,6 +247,7 @@ async function runQuery(state, filters) {
 
   // monthly-report 管理自己的渲染，不走標準查詢流程
   if (filters.viewMode === "monthly-report") {
+    syncUrlParams(filters);
     renderDashboard("monthly-report", [], runtime);
     renderState(state);
     return true;

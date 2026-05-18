@@ -112,6 +112,7 @@ def query_daily_clicks(date_from: str, date_to: str) -> dict[str, dict[str, int]
                 "lte": date_to   + "T23:59:59+08:00",
             }}},
             {"term": {"system": "jobbank-web"}},
+            {"term": {"eventType": "click"}},
             {"terms": {"featureId": ALL_FEATURE_IDS}},
         ]}},
         "aggs": {
