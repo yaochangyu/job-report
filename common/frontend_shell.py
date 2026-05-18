@@ -122,6 +122,13 @@ def build_shell_html(asset_prefix: str = ".", initial_view: str = "overview") ->
            <small>Page Click Heatmap</small>
          </span>
        </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="homepage-blocks">
+         <span class="sidebar__icon">🏠</span>
+         <span>
+           <strong>首頁區塊點擊</strong>
+           <small>Homepage Blocks</small>
+         </span>
+       </button>
      </nav>
    </aside>
 
