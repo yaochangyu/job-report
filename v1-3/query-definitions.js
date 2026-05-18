@@ -87,15 +87,22 @@ function searchPlan(f) {
       return {
         kpi: `
           SELECT
-            SUM(general) AS general_total, SUM(ai) AS ai_total,
-            SUM(quick) AS quick_total, SUM(search_page) AS search_page_total,
-            (SUM(general) + SUM(ai) + SUM(quick) + SUM(search_page)) AS search_total
+            SUM(general_click)     AS general_click_total,
+            SUM(general_view)      AS general_view_total,
+            SUM(ai_click)          AS ai_click_total,
+            SUM(ai_view)           AS ai_view_total,
+            SUM(quick_click)       AS quick_click_total,
+            SUM(quick_view)        AS quick_view_total,
+            SUM(search_page_click) AS search_page_click_total,
+            SUM(search_page_view)  AS search_page_view_total,
+            (SUM(general_click) + SUM(ai_click) + SUM(quick_click) + SUM(search_page_click)) AS search_click_total,
+            (SUM(general_view)  + SUM(ai_view)  + SUM(quick_view)  + SUM(search_page_view))  AS search_view_total
           FROM read_parquet([${ds}])
         `,
-        daily_trend: `SELECT date, general, ai FROM read_parquet([${ds}]) ORDER BY date`,
-        search_page_dist: spd ? `SELECT name, SUM(count) AS count FROM read_parquet([${spd}]) GROUP BY name ORDER BY count DESC` : null,
+        daily_trend: `SELECT date, general_click, general_view, ai_click, ai_view FROM read_parquet([${ds}]) ORDER BY date`,
+        search_page_dist: spd ? `SELECT name, SUM(count) AS count FROM read_parquet([${spd}]) WHERE event_type = 'click' GROUP BY name ORDER BY count DESC` : null,
         feature_detail: fc ? `
-          SELECT feature_id, SUM(count) AS count,
+          SELECT feature_id, event_type, SUM(count) AS count,
             CASE
               WHEN feature_id IN ${inList(SEARCH_PAGE_IDS)}    THEN '搜尋結果頁'
               WHEN feature_id IN ${inList(SEARCH_GENERAL_IDS)} THEN '一般搜尋'
@@ -104,7 +111,7 @@ function searchPlan(f) {
               ELSE '其他'
             END AS category
           FROM read_parquet([${fc}])
-          GROUP BY feature_id ORDER BY count DESC
+          GROUP BY feature_id, event_type ORDER BY event_type, count DESC
         ` : null,
       };
     },
@@ -172,11 +179,18 @@ function featurePlan(f) {
       const nf   = fileList(loaded.news_features || []);
       if (!ds) return {};
       return {
-        kpi: `SELECT SUM(explore_jobs) AS explore_jobs, SUM(explore_corp) AS explore_corp, SUM(identity) AS identity_total, SUM(news) AS news_total FROM read_parquet([${ds}])`,
-        explore_job_category: ejct ? `SELECT name, SUM(count) AS count FROM read_parquet([${ejct}]) GROUP BY name ORDER BY count DESC` : null,
-        explore_corp_feature: ecf  ? `SELECT name, SUM(count) AS count FROM read_parquet([${ecf}]) GROUP BY name ORDER BY count DESC` : null,
-        identity_dist:        im   ? `SELECT name, SUM(count) AS count FROM read_parquet([${im}]) GROUP BY name ORDER BY count DESC` : null,
-        news_dist:            nf   ? `SELECT name, SUM(count) AS count FROM read_parquet([${nf}]) GROUP BY name ORDER BY count DESC` : null,
+        kpi: `
+          SELECT
+            SUM(explore_jobs_click) AS explore_jobs_click, SUM(explore_jobs_view) AS explore_jobs_view,
+            SUM(explore_corp_click) AS explore_corp_click, SUM(explore_corp_view) AS explore_corp_view,
+            SUM(identity_click)     AS identity_click,     SUM(identity_view)     AS identity_view,
+            SUM(news_click)         AS news_click,         SUM(news_view)         AS news_view
+          FROM read_parquet([${ds}])
+        `,
+        explore_job_category: ejct ? `SELECT name, SUM(count) AS count FROM read_parquet([${ejct}]) WHERE event_type = 'click' GROUP BY name ORDER BY count DESC` : null,
+        explore_corp_feature: ecf  ? `SELECT name, SUM(count) AS count FROM read_parquet([${ecf}]) WHERE event_type = 'click' GROUP BY name ORDER BY count DESC` : null,
+        identity_dist:        im   ? `SELECT name, SUM(count) AS count FROM read_parquet([${im}])  WHERE event_type = 'click' GROUP BY name ORDER BY count DESC` : null,
+        news_dist:            nf   ? `SELECT name, SUM(count) AS count FROM read_parquet([${nf}])  WHERE event_type = 'click' GROUP BY name ORDER BY count DESC` : null,
       };
     },
   };
@@ -297,36 +311,40 @@ function navigationPlan(f) {
       return {
         kpi: `
           SELECT
-            SUM(nav_total) AS nav_total,
-            SUM(entry_total) AS entry_total,
+            SUM(nav_click)   AS nav_click,
+            SUM(nav_view)    AS nav_view,
+            SUM(nav_click)  + SUM(nav_view)   AS nav_total,
+            SUM(entry_click) AS entry_click,
+            SUM(entry_view)  AS entry_view,
+            SUM(entry_click) + SUM(entry_view) AS entry_total,
             ${
               ps && pd
                 ? `(SELECT COUNT(DISTINCT page) FROM (
-                    SELECT page FROM read_parquet([${ps}])
+                    SELECT page FROM read_parquet([${ps}]) WHERE event_type = 'view'
                     UNION
-                    SELECT page FROM read_parquet([${pd}])
+                    SELECT page FROM read_parquet([${pd}]) WHERE event_type = 'view'
                   ))`
                 : "SUM(tracked_pages)"
             } AS page_count
           FROM read_parquet([${ds}])
         `,
-        entry_dist: ep ? `SELECT name, SUM(count) AS count FROM read_parquet([${ep}]) GROUP BY name ORDER BY count DESC LIMIT 15` : null,
+        entry_dist: ep ? `SELECT name, SUM(count) AS count FROM read_parquet([${ep}]) WHERE event_type = 'view' GROUP BY name ORDER BY count DESC LIMIT 15` : null,
         transition_ranking: np ? `
           SELECT "from" AS from_page, "to" AS to_page, SUM(count) AS count
           FROM read_parquet([${np}])
-          ${pairWhere}
+          WHERE event_type = 'view' ${pairWhere ? "AND (" + pairWhere.replace("WHERE ", "") + ")" : ""}
           GROUP BY "from", "to" ORDER BY count DESC LIMIT 30
         ` : null,
         page_sources: ps ? `
           SELECT page AS target, name AS source, SUM(count) AS count
           FROM read_parquet([${ps}])
-          ${pageWhere}
+          WHERE event_type = 'view' ${pageWhere ? "AND (" + pageWhere.replace("WHERE ", "") + ")" : ""}
           GROUP BY page, name ORDER BY count DESC, target, source LIMIT ${pageRelationLimit}
         ` : null,
         page_targets: pd ? `
           SELECT page AS source, name AS target, SUM(count) AS count
           FROM read_parquet([${pd}])
-          ${pageWhere}
+          WHERE event_type = 'view' ${pageWhere ? "AND (" + pageWhere.replace("WHERE ", "") + ")" : ""}
           GROUP BY page, name ORDER BY count DESC, source, target LIMIT ${pageRelationLimit}
         ` : null,
       };
