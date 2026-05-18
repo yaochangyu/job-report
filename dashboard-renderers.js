@@ -302,40 +302,44 @@ function overviewRenderer(data) {
 // ════════════════════════════════════════════════════════════════
 function searchRenderer(data) {
   const kpi = data.kpi?.[0] ?? {};
-  const searchTotal = n(kpi.search_total);
-  const genTotal    = n(kpi.general_total);
-  const aiTotal     = n(kpi.ai_total);
-  const aiPct       = (genTotal + aiTotal) ? (aiTotal / (genTotal + aiTotal)) * 100 : 0;
+  const genClick = n(kpi.general_click_total);
+  const genView  = n(kpi.general_view_total);
+  const aiClick  = n(kpi.ai_click_total);
+  const aiView   = n(kpi.ai_view_total);
+  const aiPct    = (genClick + aiClick) ? (aiClick / (genClick + aiClick)) * 100 : 0;
 
-  setKpiCard("1", "搜尋相關事件",  fmt(searchTotal), "含搜尋頁、互動與篩選");
-  setKpiCard("2", "搜尋結果頁瀏覽", fmt(n(kpi.search_page_total)), "job/corp/gig/intern");
-  setKpiCard("3", "一般搜尋互動",  fmt(genTotal), "keyword/submit/general");
-  setKpiCard("4", "AI 搜尋互動",   fmt(aiTotal), `AI 佔搜尋互動 ${pct(aiPct)}`);
-  setKpiCard("5", "快速篩選",      fmt(n(kpi.quick_total)), "地區 / 職類篩選");
-  setKpiCard("6", "—", "—", "");
-  setKpiCard("7", "—", "—", "");
-  setKpiCard("8", "—", "—", "");
+  setKpiCard("1", "一般搜尋 Click", fmt(genClick),  "keyword/submit/general");
+  setKpiCard("2", "一般搜尋 View",  fmt(genView),   "keyword/submit/general");
+  setKpiCard("3", "AI 搜尋 Click",  fmt(aiClick),   `AI 佔搜尋 Click ${pct(aiPct)}`);
+  setKpiCard("4", "AI 搜尋 View",   fmt(aiView),    "search-ai-*");
+  setKpiCard("5", "快速篩選 Click", fmt(n(kpi.quick_click_total)),        "地區 / 職類篩選");
+  setKpiCard("6", "快速篩選 View",  fmt(n(kpi.quick_view_total)),         "地區 / 職類篩選");
+  setKpiCard("7", "搜尋結果頁 Click", fmt(n(kpi.search_page_click_total)), "job/corp/gig/intern");
+  setKpiCard("8", "搜尋結果頁 View",  fmt(n(kpi.search_page_view_total)),  "job/corp/gig/intern");
 
-  // 圖表 1 — 各搜尋類型 bar
-  const detail = data.feature_detail ?? [];
+  // 圖表 1 — 各搜尋類型 click bar
+  const detail = (data.feature_detail ?? []).filter(r => r.event_type === "click");
   barChart("chart1", detail.map(r => r.feature_id), [
-    { label: "事件數", data: detail.map(r => n(r.count)), backgroundColor: C.palette },
+    { label: "Click 數", data: detail.map(r => n(r.count)), backgroundColor: C.palette },
   ], { indexAxis: "y", plugins: { legend: { display: false } } });
 
-  // 圖表 2 — AI vs 一般搜尋每日趨勢
+  // 圖表 2 — AI vs 一般搜尋每日趨勢（click 實線／view 虛線）
   const dt = data.daily_trend ?? [];
   lineChart("chart2", dt.map(r => r.date), [
-    { label: "一般搜尋", data: dt.map(r => n(r.general)), borderColor: C.blue,   tension: 0.3, fill: false },
-    { label: "AI 搜尋",  data: dt.map(r => n(r.ai)),      borderColor: C.purple, tension: 0.3, fill: false },
+    { label: "一般搜尋 Click", data: dt.map(r => n(r.general_click)), borderColor: C.blue,   tension: 0.3, fill: false },
+    { label: "AI 搜尋 Click",  data: dt.map(r => n(r.ai_click)),      borderColor: C.purple, tension: 0.3, fill: false },
+    { label: "一般搜尋 View",  data: dt.map(r => n(r.general_view)),  borderColor: C.blue,   tension: 0.3, fill: false, borderDash: [4,3] },
+    { label: "AI 搜尋 View",   data: dt.map(r => n(r.ai_view)),       borderColor: C.purple, tension: 0.3, fill: false, borderDash: [4,3] },
   ]);
 
-  // 圖表 3 — 搜尋結果頁分佈
+  // 圖表 3 — 搜尋結果頁分佈（click）
   doughnutChart("chart3", data.search_page_dist ?? []);
 
-  // 表格 1 — featureId 詳細
-  buildTableHead("table1-head", ["#","featureId","事件數","佔比","類別"]);
-  const fTotal = detail.reduce((s, r) => s + n(r.count), 0);
-  buildTableBody("table1-body", detail, (r, i) => rankRow(i, r.feature_id, n(r.count), fTotal, r.category));
+  // 表格 1 — featureId × event_type 詳細
+  buildTableHead("table1-head", ["#","featureId","event_type","事件數","佔比","類別"]);
+  const allDetail = data.feature_detail ?? [];
+  const fTotal = allDetail.reduce((s, r) => s + n(r.count), 0);
+  buildTableBody("table1-body", allDetail, (r, i) => rankRow(i, `${r.feature_id} (${r.event_type})`, n(r.count), fTotal, r.category));
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -397,14 +401,14 @@ function applyRenderer(data) {
 // ════════════════════════════════════════════════════════════════
 function featureRenderer(data) {
   const kpi = data.kpi?.[0] ?? {};
-  setKpiCard("1", "探索職缺",  fmt(n(kpi.explore_jobs)),  "organic + corp");
-  setKpiCard("2", "探索企業",  fmt(n(kpi.explore_corp)),  "各企業探索入口");
-  setKpiCard("3", "身份辨識",  fmt(n(kpi.identity_total)), "含 identify-* 延伸互動");
-  setKpiCard("4", "新聞互動",  fmt(n(kpi.news_total)),    "news-card 點擊");
-  setKpiCard("5", "—", "—", "");
-  setKpiCard("6", "—", "—", "");
-  setKpiCard("7", "—", "—", "");
-  setKpiCard("8", "—", "—", "");
+  setKpiCard("1", "探索職缺 Click", fmt(n(kpi.explore_jobs_click)), "organic + corp");
+  setKpiCard("2", "探索職缺 View",  fmt(n(kpi.explore_jobs_view)),  "organic + corp");
+  setKpiCard("3", "探索企業 Click", fmt(n(kpi.explore_corp_click)), "各企業探索入口");
+  setKpiCard("4", "探索企業 View",  fmt(n(kpi.explore_corp_view)),  "各企業探索入口");
+  setKpiCard("5", "身份辨識 Click", fmt(n(kpi.identity_click)),     "含 identify-* 延伸互動");
+  setKpiCard("6", "身份辨識 View",  fmt(n(kpi.identity_view)),      "含 identify-* 延伸互動");
+  setKpiCard("7", "新聞互動 Click", fmt(n(kpi.news_click)),         "news-card 點擊");
+  setKpiCard("8", "新聞互動 View",  fmt(n(kpi.news_view)),          "news-card 曝光");
 
   // 圖表 1 — 探索職缺 categoryTab 分佈（doughnut）
   doughnutChart("chart1", data.explore_job_category ?? []);
@@ -552,11 +556,11 @@ function rankingRenderer(data) {
 // ════════════════════════════════════════════════════════════════
 function navigationRenderer(data) {
   const kpi = data.kpi?.[0] ?? {};
-  setKpiCard("1", "導航事件總數", fmt(n(kpi.nav_total)),   "全部 from→to 轉換事件");
-  setKpiCard("2", "初始進入事件", fmt(n(kpi.entry_total)), "無 previousPageName");
-  setKpiCard("3", "追蹤頁面數",  fmt(n(kpi.page_count)),  "有導航記錄的頁面");
-  setKpiCard("4", "—", "—", "");
-  setKpiCard("5", "—", "—", "");
+  setKpiCard("1", "導航 View 總數",  fmt(n(kpi.nav_view)),   "from→to view 轉換事件");
+  setKpiCard("2", "導航 Click 總數", fmt(n(kpi.nav_click)),  "from→to click 事件");
+  setKpiCard("3", "進入頁 View",     fmt(n(kpi.entry_view)), "無 previousPage view");
+  setKpiCard("4", "進入頁 Click",    fmt(n(kpi.entry_click)),"無 previousPage click");
+  setKpiCard("5", "追蹤頁面數",      fmt(n(kpi.page_count)), "有 view 導航記錄的頁面");
   setKpiCard("6", "—", "—", "");
   setKpiCard("7", "—", "—", "");
   setKpiCard("8", "—", "—", "");
