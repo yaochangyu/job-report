@@ -40,9 +40,9 @@ def parse_args() -> argparse.Namespace:
 
 def build_page_navigation_t2(date_from: str, date_to: str) -> list[Path]:
     ensure_pipeline_directories()
-    columns = ["date", "system", "page_path", "previous_page_path"]
+    columns = ["date", "system", "event_type", "page_path", "previous_page_path"]
     df = load_t1_raw_dataframe(date_from, date_to, columns=columns)
-    df = df[df["system"].eq("jobbank-web")].copy()
+    df = df[df["system"].eq("jobbank-web") & df["event_type"].eq("view")].copy()
     df["page_path"] = df["page_path"].fillna("/")
     df["previous_page_path"] = df["previous_page_path"].fillna(ENTRY_MARKER)
 

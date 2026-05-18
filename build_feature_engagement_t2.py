@@ -64,9 +64,9 @@ def _count_by_value(frame: pd.DataFrame, column: str) -> pd.DataFrame:
 
 def build_feature_engagement_t2(date_from: str, date_to: str) -> list[Path]:
     ensure_pipeline_directories()
-    columns = ["date", "system", "feature_id", "category_tab", "identity_type"]
+    columns = ["date", "system", "event_type", "feature_id", "category_tab", "identity_type"]
     df = load_t1_raw_dataframe(date_from, date_to, columns=columns)
-    df = df[df["system"].eq("jobbank-web") & df["feature_id"].notna()].copy()
+    df = df[df["system"].eq("jobbank-web") & df["event_type"].eq("click") & df["feature_id"].notna()].copy()
 
     dates_written: dict[str, dict] = {}
     output_dirs: list[Path] = []

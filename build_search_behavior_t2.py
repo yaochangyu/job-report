@@ -51,9 +51,9 @@ def parse_args() -> argparse.Namespace:
 
 def build_search_behavior_t2(date_from: str, date_to: str) -> list[Path]:
     ensure_pipeline_directories()
-    columns = ["date", "feature_id"]
+    columns = ["date", "event_type", "feature_id"]
     df = load_t1_raw_dataframe(date_from, date_to, columns=columns)
-    df = df[df["feature_id"].isin(ALL_FEATURE_IDS)].copy()
+    df = df[df["event_type"].eq("click") & df["feature_id"].isin(ALL_FEATURE_IDS)].copy()
 
     dates_written: dict[str, dict] = {}
     output_dirs: list[Path] = []
