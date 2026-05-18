@@ -118,6 +118,16 @@ REPORTS = [
         "color": "#2ec4b6",
         "view_mode": "homepage-blocks",
     },
+    {
+        "script": "build_homepage_blocks_t2.py",
+        "title": "月報表",
+        "subtitle": "Monthly Report",
+        "desc": "依月份瀏覽首頁區塊點擊日報表",
+        "path": "report/monthly-report/index.html",
+        "icon": "📅",
+        "color": "#0ea5e9",
+        "view_mode": "monthly-report",
+    },
 ]
 
 

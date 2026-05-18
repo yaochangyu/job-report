@@ -208,6 +208,19 @@ function applyPanelText(viewMode) {
 
 // ── panel 顯示/隱藏 ──────────────────────────────────────────────
 function showPanels(viewMode) {
+  const isMonthly = viewMode === "monthly-report";
+
+  // monthly-report 用自訂區塊，隱藏所有標準面板
+  document.querySelector(".kpi-grid")?.classList.toggle("hidden", isMonthly);
+  document.querySelector(".chart-grid")?.classList.toggle("hidden", isMonthly);
+  document.getElementById("monthly-section")?.classList.toggle("hidden", !isMonthly);
+
+  if (isMonthly) {
+    for (let i = 1; i <= 4; i++) document.getElementById(`table${i}-panel`)?.classList.add("hidden");
+    document.getElementById("chart3-panel")?.classList.add("hidden");
+    return;
+  }
+
   // chart panels
   const charts3 = ["overview","search","apply","feature","device","homepage-blocks"];
   const charts2 = ["ranking","navigation","heatmap"];
@@ -685,6 +698,145 @@ function resetTables() {
   }
 }
 
+// ════════════════════════════════════════════════════════════════
+// 10. 月報表瀏覽器 — monthly-report
+// ════════════════════════════════════════════════════════════════
+
+const MONTHLY_CATEGORIES = [
+  { key: "search",   label: "搜尋類別", test: id => id.startsWith("search-") || id.startsWith("T-job-") },
+  { key: "identity", label: "身分類別", test: id => id.startsWith("identify-") },
+  { key: "jobs",     label: "探索工作", test: id => id.startsWith("explore-jobs-") },
+  { key: "corp",     label: "探索企業", test: id => id.startsWith("explore-company-") },
+];
+
+function monthlyFormatDate(iso) {
+  const [y, m, d] = iso.split("-");
+  return `${y}/${m}/${d}`;
+}
+
+function monthlyFormatMonth(ym) {
+  const [y, m] = ym.split("-");
+  return `${y}年${m}月`;
+}
+
+function monthlyBuildCatTable(rows) {
+  if (!rows.length) return "<p class='monthly-empty'>無資料</p>";
+  const total = rows.reduce((s, r) => s + r.count, 0);
+  const trs = rows.map((r, i) => {
+    const pct = total ? ((r.count / total) * 100).toFixed(1) : "0.0";
+    const bar = total ? Math.round((r.count / total) * 80) : 0;
+    return `<tr>
+      <td class="cat-rank">${i + 1}</td>
+      <td class="cat-id">${r.feature_id}</td>
+      <td class="cat-count">${r.count.toLocaleString()}</td>
+      <td class="cat-bar"><span style="width:${bar}px"></span></td>
+      <td class="cat-pct">${pct}%</td>
+    </tr>`;
+  }).join("");
+  return `<table class="cat-table">
+    <thead><tr><th>#</th><th>功能</th><th>點擊</th><th></th><th>佔比</th></tr></thead>
+    <tbody>${trs}</tbody>
+  </table>`;
+}
+
+async function monthlyFetchDay(date, runtime) {
+  const detail = document.getElementById("monthly-day-detail");
+  if (!detail) return;
+
+  detail.innerHTML = `<p class='monthly-loading'>載入 ${monthlyFormatDate(date)} 資料中…</p>`;
+  detail.classList.remove("hidden");
+
+  try {
+    const url = new URL(
+      `report/homepage-blocks/date=${date}/click_counts.parquet`,
+      runtime.datasetRoot
+    ).href;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const buf = new Uint8Array(await resp.arrayBuffer());
+    const alias = "monthly_day_detail.parquet";
+    await runtime.db.registerFileBuffer(alias, buf);
+
+    const result = await runtime.conn.query(
+      `SELECT feature_id, CAST(count AS BIGINT) AS cnt FROM '${alias}' ORDER BY cnt DESC`
+    );
+    const rows = result.toArray().map(r => ({
+      feature_id: String(r.feature_id),
+      count: Number(r.cnt),
+    }));
+
+    const totalClicks = rows.reduce((s, r) => s + r.count, 0);
+    const catSections = MONTHLY_CATEGORIES.map(cat => {
+      const catRows = rows.filter(r => cat.test(r.feature_id));
+      const catTotal = catRows.reduce((s, r) => s + r.count, 0);
+      return `<div class="cat-section">
+        <div class="cat-header">
+          <h4>${cat.label}</h4>
+          <span class="cat-total">${catTotal.toLocaleString()} 次</span>
+        </div>
+        ${monthlyBuildCatTable(catRows)}
+      </div>`;
+    }).join("");
+
+    detail.innerHTML = `
+      <div class="day-detail-header">
+        <h3>${monthlyFormatDate(date)} 日報表</h3>
+        <span class="day-total">總點擊：${totalClicks.toLocaleString()}</span>
+      </div>
+      <div class="cat-grid">${catSections}</div>`;
+  } catch (err) {
+    detail.innerHTML = `<p class='monthly-error'>載入失敗：${err.message}</p>`;
+  }
+}
+
+function monthlyReportRenderer(runtime) {
+  const section = document.getElementById("monthly-section");
+  if (!section || !runtime) return;
+
+  const datesByMonth = runtime.datesByMonth ?? {};
+  const months = Object.keys(datesByMonth).sort().reverse();
+
+  if (!months.length) {
+    section.innerHTML = `<p class="monthly-empty">目前沒有可用資料</p>`;
+    return;
+  }
+
+  const monthBlocks = months.map((ym, idx) => {
+    const days = [...datesByMonth[ym]].sort().reverse();
+    const dayBtns = days.map(d =>
+      `<button class="day-btn" data-date="${d}" type="button">${monthlyFormatDate(d)}</button>`
+    ).join("");
+    return `<details class="month-group" ${idx === 0 ? "open" : ""}>
+      <summary class="month-summary">
+        <span class="month-label">${monthlyFormatMonth(ym)}</span>
+        <span class="month-count">${days.length} 天</span>
+      </summary>
+      <div class="day-list">${dayBtns}</div>
+    </details>`;
+  }).join("");
+
+  section.innerHTML = `
+    <div class="monthly-layout">
+      <nav class="monthly-nav">${monthBlocks}</nav>
+      <div class="monthly-detail">
+        <div id="monthly-day-detail" class="monthly-day-detail hidden">
+          <p class="monthly-empty">點選左側日期查看當日明細</p>
+        </div>
+      </div>
+    </div>`;
+
+  // 初始提示設為可見
+  document.getElementById("monthly-day-detail")?.classList.remove("hidden");
+
+  section.querySelectorAll(".day-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      section.querySelectorAll(".day-btn").forEach(b => b.classList.remove("is-active"));
+      btn.classList.add("is-active");
+      await monthlyFetchDay(btn.dataset.date, runtime);
+    });
+  });
+}
+
 // ── 路由 ────────────────────────────────────────────────────────
 const renderers = {
   overview:   overviewRenderer,
@@ -698,16 +850,21 @@ const renderers = {
   "homepage-blocks":   homepageBlocksRenderer,
 };
 
-export function renderDashboard(viewMode, outputs) {
-  const data = Object.fromEntries(outputs.map(o => [o.name, o.rows]));
+export function renderDashboard(viewMode, outputs, runtime = null) {
   showPanels(viewMode);
   applyPanelText(viewMode);
+  if (viewMode === "monthly-report") {
+    monthlyReportRenderer(runtime);
+    return;
+  }
+  const data = Object.fromEntries(outputs.map(o => [o.name, o.rows]));
   const renderer = renderers[viewMode];
   if (!renderer) { resetKpis(); resetCharts(); resetTables(); return; }
   renderer(data);
 }
 
-export function resetDashboard() {
+export function resetDashboard(viewMode = null) {
+  if (viewMode) showPanels(viewMode);
   resetKpis();
   resetCharts();
   resetTables();

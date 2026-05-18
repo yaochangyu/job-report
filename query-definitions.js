@@ -483,6 +483,7 @@ const planBuilders = {
   navigation:       navigationPlan,
   heatmap:          heatmapPlan,
   "homepage-blocks": homepageBlocksPlan,
+  "monthly-report":  () => ({ registerFiles: [], buildQueries: () => [] }),
 };
 
 export function buildQueryPlan(filters) {

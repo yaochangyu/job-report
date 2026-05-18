@@ -129,6 +129,13 @@ def build_shell_html(asset_prefix: str = ".", initial_view: str = "overview") ->
            <small>Homepage Blocks</small>
          </span>
        </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="monthly-report">
+         <span class="sidebar__icon">📅</span>
+         <span>
+           <strong>月報表</strong>
+           <small>Monthly Report</small>
+         </span>
+       </button>
      </nav>
    </aside>
 
@@ -321,6 +328,10 @@ def build_shell_html(asset_prefix: str = ".", initial_view: str = "overview") ->
            </table>
          </div>
        </article>
+
+       <div id="monthly-section" class="panel monthly-section hidden">
+         <!-- populated by monthlyReportRenderer -->
+       </div>
 
      </div>
    </div>
