@@ -336,10 +336,21 @@ function searchRenderer(data) {
   doughnutChart("chart3", data.search_page_dist ?? []);
 
   // 表格 1 — featureId × event_type 詳細
-  buildTableHead("table1-head", ["#","featureId","event_type","事件數","佔比","類別"]);
+  buildTableHead("table1-head", ["#","featureId","featureName","event_type","事件數","佔比","類別"]);
   const allDetail = data.feature_detail ?? [];
   const fTotal = allDetail.reduce((s, r) => s + n(r.count), 0);
-  buildTableBody("table1-body", allDetail, (r, i) => rankRow(i, `${r.feature_id} (${r.event_type})`, n(r.count), fTotal, r.category));
+  buildTableBody("table1-body", allDetail, (r, i) => {
+    const pctStr = fTotal ? `${((n(r.count) / fTotal) * 100).toFixed(1)}%` : "—";
+    return `<tr>
+      <td class="rank">${i + 1}</td>
+      <td>${r.feature_id}</td>
+      <td>${r.feature_name ?? "—"}</td>
+      <td>${r.event_type}</td>
+      <td>${fmt(n(r.count))}</td>
+      <td class="pct">${pctStr}</td>
+      <td>${r.category ?? "—"}</td>
+    </tr>`;
+  });
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -535,13 +546,14 @@ function rankingRenderer(data) {
   const catRows = data.categories ?? [];
   doughnutChart("chart2", catRows);
 
-  // 表格 1 — 完整排行 (#, featureId, 總計, View, Click, CTR, 類別)
-  buildTableHead("table1-head", ["#","featureId","總計","View","Click","CTR","類別"]);
+  // 表格 1 — 完整排行 (#, featureId, featureName, 總計, View, Click, CTR, 類別)
+  buildTableHead("table1-head", ["#","featureId","featureName","總計","View","Click","CTR","類別"]);
   buildTableBody("table1-body", ranking, (r, i) => {
     const ctr = n(r.total) ? (n(r.clicks) / n(r.total)) * 100 : 0;
     return `<tr>
       <td class="rank">${i + 1}</td>
       <td>${r.feature_id}</td>
+      <td>${r.feature_name ?? "—"}</td>
       <td>${fmt(r.total)}</td>
       <td>${fmt(r.views)}</td>
       <td>${fmt(r.clicks)}</td>
@@ -628,9 +640,19 @@ function heatmapRenderer(data) {
   doughnutChart("chart2", data.page_dist ?? []);
 
   // 表格 1 — featureId 點擊排行
-  buildTableHead("table1-head", ["#","featureId","點擊數","佔比","頁面"]);
+  buildTableHead("table1-head", ["#","featureId","featureName","點擊數","佔比","頁面"]);
   const total = ranking.reduce((s, r) => s + n(r.count), 0);
-  buildTableBody("table1-body", ranking, (r, i) => rankRow(i, r.feature_id, n(r.count), total, r.page_path ?? ""));
+  buildTableBody("table1-body", ranking, (r, i) => {
+    const pctStr = total ? `${((n(r.count) / total) * 100).toFixed(1)}%` : "—";
+    return `<tr>
+      <td class="rank">${i + 1}</td>
+      <td>${r.feature_id}</td>
+      <td>${r.feature_name ?? "—"}</td>
+      <td>${fmt(n(r.count))}</td>
+      <td class="pct">${pctStr}</td>
+      <td>${r.page_path ?? "—"}</td>
+    </tr>`;
+  });
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -685,12 +707,13 @@ function homepageBlocksRenderer(data) {
 
   // 表格 1 — 各 featureId click / view 詳細
   const viewMap = Object.fromEntries(detail.filter(r => r.event_type === "view").map(r => [r.feature_id, n(r.count)]));
-  buildTableHead("table1-head", ["#", "featureId", "Click", "View", "所屬區塊"]);
+  buildTableHead("table1-head", ["#", "featureId", "featureName", "Click", "View", "所屬區塊"]);
   buildTableBody("table1-body", clickRows, (r, i) => {
     const v = viewMap[r.feature_id] ?? 0;
     return `<tr>
       <td class="rank">${i + 1}</td>
       <td>${r.feature_id}</td>
+      <td>${r.feature_name ?? "—"}</td>
       <td>${fmt(n(r.count))}</td>
       <td>${fmt(v)}</td>
       <td>${r.block ?? "—"}</td>
@@ -749,6 +772,7 @@ function monthlyBuildCatTable(clickRows, viewMap) {
     return `<tr>
       <td class="cat-rank">${i + 1}</td>
       <td class="cat-id">${r.feature_id}</td>
+      <td class="cat-id">${r.feature_name || "—"}</td>
       <td class="cat-count">${r.count.toLocaleString()}</td>
       <td class="cat-count" style="color:var(--muted)">${views.toLocaleString()}</td>
       <td class="cat-bar"><span style="width:${bar}px"></span></td>
@@ -756,7 +780,7 @@ function monthlyBuildCatTable(clickRows, viewMap) {
     </tr>`;
   }).join("");
   return `<table class="cat-table">
-    <thead><tr><th>#</th><th>功能</th><th>點擊</th><th>瀏覽</th><th></th><th>佔比</th></tr></thead>
+    <thead><tr><th>#</th><th>功能</th><th>featureName</th><th>點擊</th><th>瀏覽</th><th></th><th>佔比</th></tr></thead>
     <tbody>${trs}</tbody>
   </table>`;
 }
@@ -781,10 +805,11 @@ async function monthlyFetchDay(date, runtime) {
     await runtime.db.registerFileBuffer(alias, buf);
 
     const result = await runtime.conn.query(
-      `SELECT feature_id, event_type, CAST(count AS BIGINT) AS cnt FROM "${alias}" ORDER BY event_type, cnt DESC`
+      `SELECT feature_id, feature_name, event_type, CAST(count AS BIGINT) AS cnt FROM "${alias}" ORDER BY event_type, cnt DESC`
     );
     const rows = result.toArray().map(r => ({
       feature_id: String(r.feature_id),
+      feature_name: r.feature_name ? String(r.feature_name) : "",
       event_type: String(r.event_type),
       count: Number(r.cnt),
     }));

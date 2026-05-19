@@ -102,7 +102,7 @@ function searchPlan(f) {
         daily_trend: `SELECT date, general_click, general_view, ai_click, ai_view FROM read_parquet([${ds}]) ORDER BY date`,
         search_page_dist: spd ? `SELECT name, SUM(count) AS count FROM read_parquet([${spd}]) WHERE event_type = 'click' GROUP BY name ORDER BY count DESC` : null,
         feature_detail: fc ? `
-          SELECT feature_id, event_type, SUM(count) AS count,
+          SELECT feature_id, ANY_VALUE(feature_name) AS feature_name, event_type, SUM(count) AS count,
             CASE
               WHEN feature_id IN ${inList(SEARCH_PAGE_IDS)}    THEN '搜尋結果頁'
               WHEN feature_id IN ${inList(SEARCH_GENERAL_IDS)} THEN '一般搜尋'
@@ -274,7 +274,7 @@ function rankingPlan(f) {
           FROM read_parquet([${ds}])
         `,
         ranking: ft ? `
-          SELECT featureId AS feature_id, SUM(total) AS total, SUM(views) AS views, SUM(clicks) AS clicks, ANY_VALUE(category) AS category
+          SELECT featureId AS feature_id, ANY_VALUE(feature_name) AS feature_name, SUM(total) AS total, SUM(views) AS views, SUM(clicks) AS clicks, ANY_VALUE(category) AS category
           FROM read_parquet([${ft}])
           GROUP BY featureId ORDER BY total DESC, feature_id
         ` : null,
@@ -389,7 +389,7 @@ function heatmapPlan(f) {
           FROM read_parquet([${ds}])
         `,
         ranking: cc ? `
-          SELECT feature_id, SUM(count) AS count, ANY_VALUE(page_path) AS page_path
+          SELECT feature_id, ANY_VALUE(feature_name) AS feature_name, SUM(count) AS count, ANY_VALUE(page_path) AS page_path
           FROM read_parquet([${cc}])
           ${pageWhere}
           GROUP BY feature_id ORDER BY count DESC LIMIT 30
@@ -483,6 +483,7 @@ function homepageBlocksPlan(f) {
         feature_detail: `
           SELECT
             feature_id,
+            ANY_VALUE(feature_name) AS feature_name,
             event_type,
             SUM(count) AS count,
             CASE
