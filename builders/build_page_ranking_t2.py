@@ -61,7 +61,7 @@ def parse_args() -> argparse.Namespace:
 
 def build_page_ranking_t2(date_from: str, date_to: str) -> list[Path]:
     ensure_pipeline_directories()
-    columns = ["date", "system", "feature_id", "event_type"]
+    columns = ["date", "system", "feature_id", "feature_name", "event_type"]
     df = load_t1_raw_dataframe(date_from, date_to, columns=columns)
     df = df[df["system"].eq("jobbank-web") & df["feature_id"].notna()].copy()
 
@@ -83,6 +83,7 @@ def build_page_ranking_t2(date_from: str, date_to: str) -> list[Path]:
                 total=("feature_id", "size"),
                 views=("is_view", "sum"),
                 clicks=("is_click", "sum"),
+                feature_name=("feature_name", "first"),
             )
             .sort_values(["total", "feature_id"], ascending=[False, True])
             .rename(columns={"feature_id": "featureId"})

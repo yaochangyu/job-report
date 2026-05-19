@@ -51,7 +51,7 @@ def _count_by_value(frame: pd.DataFrame, column: str, alias: str) -> pd.DataFram
 
 def build_device_platform_t2(date_from: str, date_to: str) -> list[Path]:
     ensure_pipeline_directories()
-    columns = ["date", "system", "device_type", "event_type", "action", "feature_id", "os", "browser"]
+    columns = ["date", "system", "device_type", "event_type", "action", "feature_id", "feature_name", "os", "browser"]
     df = load_t1_raw_dataframe(date_from, date_to, columns=columns)
     df = df[df["system"].eq("jobbank-web")].copy()
 

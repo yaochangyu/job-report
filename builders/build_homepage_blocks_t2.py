@@ -44,7 +44,7 @@ def parse_args() -> argparse.Namespace:
 def build_homepage_blocks_t2(date_from: str, date_to: str) -> list[Path]:
     ensure_pipeline_directories()
 
-    columns = ["date", "system", "event_type", "feature_id"]
+    columns = ["date", "system", "event_type", "feature_id", "feature_name"]
     df = load_t1_raw_dataframe(date_from, date_to, columns=columns)
     df = df[
         df["system"].eq("jobbank-web")
@@ -61,7 +61,7 @@ def build_homepage_blocks_t2(date_from: str, date_to: str) -> list[Path]:
 
         feature_counts = (
             day_df.groupby(["event_type", "feature_id"], as_index=False)
-            .agg(count=("feature_id", "size"))
+            .agg(count=("feature_id", "size"), feature_name=("feature_name", "first"))
             .assign(date=target_date)
             .sort_values(["event_type", "count", "feature_id"], ascending=[True, False, True])
         )

@@ -53,7 +53,7 @@ def parse_args() -> argparse.Namespace:
 
 def build_search_behavior_t2(date_from: str, date_to: str) -> list[Path]:
     ensure_pipeline_directories()
-    columns = ["date", "event_type", "feature_id"]
+    columns = ["date", "event_type", "feature_id", "feature_name"]
     df = load_t1_raw_dataframe(date_from, date_to, columns=columns)
     df = df[df["feature_id"].isin(ALL_FEATURE_IDS)].copy()
 
@@ -82,8 +82,7 @@ def build_search_behavior_t2(date_from: str, date_to: str) -> list[Path]:
 
         feature_counts = (
             day_df.groupby(["event_type", "feature_id"], as_index=False)
-            .size()
-            .rename(columns={"size": "count"})
+            .agg(count=("feature_id", "size"), feature_name=("feature_name", "first"))
             .sort_values(["event_type", "count", "feature_id"], ascending=[True, False, True])
         )
         feature_counts.to_parquet(output_dir / FEATURE_COUNTS_FILE, index=False)
