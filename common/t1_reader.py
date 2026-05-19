@@ -10,6 +10,7 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 
 import pandas as pd
+import pyarrow.parquet as pq
 
 from common.data_pipeline import T1_RAW_DIR
 from common.es_client import TW
@@ -63,5 +64,18 @@ def load_t1_raw_dataframe(date_from: str, date_to: str, columns: list[str] | Non
     files = t1_raw_files(date_from, date_to)
     if not files:
         raise FileNotFoundError(f"找不到 T1 raw parquet：{date_from} ~ {date_to}")
-    frames = [pd.read_parquet(path, columns=columns) for path in files]
-    return pd.concat(frames, ignore_index=True)
+
+    if columns is None:
+        frames = [pd.read_parquet(path) for path in files]
+        return pd.concat(frames, ignore_index=True)
+
+    # 舊版 parquet 可能缺少新欄位，只讀存在的欄位，其餘補 None
+    available = set(pq.read_schema(files[0]).names)
+    readable = [c for c in columns if c in available]
+    missing = [c for c in columns if c not in available]
+
+    frames = [pd.read_parquet(path, columns=readable) for path in files]
+    df = pd.concat(frames, ignore_index=True)
+    for col in missing:
+        df[col] = None
+    return df[columns]
