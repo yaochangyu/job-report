@@ -21,7 +21,7 @@ from pathlib import Path
 from common.es_client import generated_now
 from common.frontend_shell import FRONTEND_ASSETS, build_shell_html
 from common.t1_reader import resolve_date_window
-from extract_raw_events import extract_raw_events
+from tools.extract_raw_events import extract_raw_events
 
 OUTPUT_DIR = Path(__file__).parent / "output"
 ROOT_DIR = Path(__file__).parent
@@ -29,7 +29,7 @@ DATASET_DIR = ROOT_DIR / "dataset"
 
 REPORTS = [
     {
-        "script": "build_traffic_overview_t2.py",
+        "script": "builders/build_traffic_overview_t2.py",
         "title": "整體流量概覽",
         "subtitle": "Traffic Overview",
         "desc": "KPI 指標、每日流量趨勢、裝置與 OS 分佈",
@@ -39,7 +39,7 @@ REPORTS = [
         "view_mode": "overview",
     },
     {
-        "script": "build_search_behavior_t2.py",
+        "script": "builders/build_search_behavior_t2.py",
         "title": "搜尋行為分析",
         "subtitle": "Search Behavior",
         "desc": "AI vs 一般搜尋趨勢、搜尋結果頁分佈、快速篩選",
@@ -49,7 +49,7 @@ REPORTS = [
         "view_mode": "search",
     },
     {
-        "script": "build_apply_conversion_t2.py",
+        "script": "builders/build_apply_conversion_t2.py",
         "title": "應徵轉換分析",
         "subtitle": "Apply Conversion",
         "desc": "應徵漏斗、每日趨勢、來源分佈、裝置分析",
@@ -59,7 +59,7 @@ REPORTS = [
         "view_mode": "apply",
     },
     {
-        "script": "build_feature_engagement_t2.py",
+        "script": "builders/build_feature_engagement_t2.py",
         "title": "功能互動分析",
         "subtitle": "Feature Engagement",
         "desc": "探索職缺/企業、身份辨識、產業 Tab、新聞互動",
@@ -69,7 +69,7 @@ REPORTS = [
         "view_mode": "feature",
     },
     {
-        "script": "build_device_platform_t2.py",
+        "script": "builders/build_device_platform_t2.py",
         "title": "裝置與平台分析",
         "subtitle": "Device & Platform",
         "desc": "Mobile/Desktop 趨勢、OS 與瀏覽器分佈、裝置行為交叉",
@@ -79,7 +79,7 @@ REPORTS = [
         "view_mode": "device",
     },
     {
-        "script": "build_page_ranking_t2.py",
+        "script": "builders/build_page_ranking_t2.py",
         "title": "頁面流量排行",
         "subtitle": "Page Ranking",
         "desc": "featureId 排行 Top 20、功能類別佔比分析",
@@ -89,7 +89,7 @@ REPORTS = [
         "view_mode": "ranking",
     },
     {
-        "script": "build_page_navigation_t2.py",
+        "script": "builders/build_page_navigation_t2.py",
         "title": "頁面導航鏈路",
         "subtitle": "Page Navigation Flow",
         "desc": "頁面轉換路徑排行、各頁面來源/目標、初始進入分佈",
@@ -99,7 +99,7 @@ REPORTS = [
         "view_mode": "navigation",
     },
     {
-        "script": "build_click_heatmap_t2.py",
+        "script": "builders/build_click_heatmap_t2.py",
         "title": "頁面點擊熱點",
         "subtitle": "Page Click Heatmap",
         "desc": "各頁面按鈕/連結的點擊次數排行",
@@ -109,7 +109,7 @@ REPORTS = [
         "view_mode": "heatmap",
     },
     {
-        "script": "build_homepage_blocks_t2.py",
+        "script": "builders/build_homepage_blocks_t2.py",
         "title": "首頁區塊點擊",
         "subtitle": "Homepage Blocks",
         "desc": "搜尋、身分類別、探索工作、探索企業各區塊每日點擊數",
@@ -119,7 +119,7 @@ REPORTS = [
         "view_mode": "homepage-blocks",
     },
     {
-        "script": "build_homepage_blocks_t2.py",
+        "script": "builders/build_homepage_blocks_t2.py",
         "title": "月報表",
         "subtitle": "Monthly Report",
         "desc": "依月份瀏覽首頁區塊點擊日報表",
@@ -158,7 +158,7 @@ def _collect_t2_available_dates(dataset_dir: Path) -> list[str]:
 def copy_frontend_bundle(output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     for asset_name in FRONTEND_ASSETS:
-        shutil.copy2(ROOT_DIR / asset_name, output_dir / asset_name)
+        shutil.copy2(ROOT_DIR / "frontend" / asset_name, output_dir / asset_name)
 
     dataset_output = output_dir / "dataset"
     dataset_output.mkdir(parents=True, exist_ok=True)

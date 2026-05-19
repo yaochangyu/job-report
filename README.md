@@ -14,7 +14,7 @@ Elasticsearch (operation-logs)
         ▼  extract_raw_events.py
 dataset/raw/date=YYYY-MM-DD/events.parquet       ← T1 原始事件（僅本機）
         │
-        ▼  build_*_t2.py  （day-keyed，每天一個分區）
+        ▼  builders/build_*_t2.py  （day-keyed，每天一個分區）
 dataset/report/<報表名>/date=YYYY-MM-DD/
     daily_summary.parquet                        ← 當日 KPI 摘要（一列）
     <detail>.parquet                             ← 各 view 必要明細（分佈/排行等）
@@ -215,12 +215,12 @@ uv run python run_all.py --steps html
 
 ```bash
 # Step 1：抽取 T1
-uv run python extract_raw_events.py --days 7
-uv run python extract_raw_events.py --from 2025-01-01 --to 2025-01-31
-uv run python extract_raw_events.py --days 7 --keep-existing  # 已存在則跳過
+uv run python tools/extract_raw_events.py --days 7
+uv run python tools/extract_raw_events.py --from 2025-01-01 --to 2025-01-31
+uv run python tools/extract_raw_events.py --days 7 --keep-existing  # 已存在則跳過
 
 # Step 2：建立 T2（以 traffic-overview 為例）
-uv run python build_traffic_overview_t2.py --days 7
+uv run python builders/build_traffic_overview_t2.py --days 7
 ```
 
 ### 驗證 T2 資料正確性
@@ -248,6 +248,9 @@ bash deploy.sh 7 v1-2
 ## 專案結構
 
 ```
+├── builders/
+│   └── build_*_t2.py        # T2 day-keyed 聚合（各報表）
+│
 ├── common/
 │   ├── data_pipeline.py     # T1/T2/T3 路徑與契約定義
 │   ├── es_client.py         # Grafana _msearch 封裝
@@ -257,12 +260,22 @@ bash deploy.sh 7 v1-2
 │   ├── html_template.py     # HTML header/footer/style
 │   └── chart_helpers.py     # Chart.js 輔助函式
 │
-├── extract_raw_events.py    # T1 抽取
-├── build_*_t2.py            # T2 day-keyed 聚合（各報表）
+├── exporters/               # 資料匯出腳本
+│
+├── frontend/
+│   ├── app.js               # 前端殼啟動邏輯
+│   ├── app.css              # 前端殼樣式
+│   ├── dashboard-renderers.js # 各 dashboard 前端 renderer
+│   ├── query-definitions.js # DuckDB 前端查詢定義
+│   └── site-manifest.json   # 站點資產與資料集 manifest
+│
+├── tools/
+│   ├── extract_raw_events.py    # T1 抽取
+│   ├── query_homepage_blocks.py # 首頁區塊點擊查詢
+│   └── click_heatmap_discover.py # 自動探索頁面可點擊元素
+│
 ├── run_all.py               # 一鍵執行所有報表
 │
-├── *_report.py              # 各報表的查詢與 HTML 產生邏輯
-├── click_heatmap_discover.py # 自動探索頁面可點擊元素
 ├── click_heatmap_config.json # featureId → 元素位置對應表
 │
 ├── app.js                   # 前端殼啟動邏輯（T2 路徑，registerFileBuffer 並行載入）
@@ -286,8 +299,8 @@ Dashboard 8 需要頁面截圖才能疊加熱點。
 
 **更新截圖：**
 ```bash
-uv run python click_heatmap_discover.py --page /
-uv run python click_heatmap_discover.py --page /job/search
+uv run python tools/click_heatmap_discover.py --page /
+uv run python tools/click_heatmap_discover.py --page /job/search
 ```
 
 `click_heatmap_config.json` 記錄各頁面的 `featureId` → 元素位置對應關係，截圖存於 `output/click-heatmap/screenshots/`。

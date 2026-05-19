@@ -1,7 +1,7 @@
 # 專案資料夾結構
 
 ```
-job-report-1/
+job-report/
 ├── .archive/
 │   ├── grafana-dashboard.plan.md      # ✅ 已完成：原始 Dashboard 規劃總計畫
 │   ├── dashboard-fix-plan.md          # ✅ 已完成：dashboard 資料吻合性修正計畫
@@ -12,57 +12,58 @@ job-report-1/
 │   ├── v1-2-ui-sync.plan.md           # ✅ 已完成：v1-2 UI 對齊 v1-1 的實作計畫
 │   ├── cli-redesign.plan.md           # ✅ 已完成：run_all.py CLI 重新設計計畫
 │   └── query-homepage-blocks.plan.md  # ✅ 已完成：首頁區塊點擊查詢腳本計畫
+├── builders/                          # 從 T1 產出 T2 parquet 的建置腳本
+│   ├── build_apply_conversion_t2.py
+│   ├── build_click_heatmap_t2.py
+│   ├── build_device_platform_t2.py
+│   ├── build_feature_engagement_t2.py
+│   ├── build_homepage_blocks_t2.py
+│   ├── build_page_navigation_t2.py
+│   ├── build_page_ranking_t2.py
+│   ├── build_search_behavior_t2.py
+│   └── build_traffic_overview_t2.py
 ├── common/
 │   ├── __init__.py
 │   ├── data_pipeline.py               # T1/T2/T3 資料管線契約與路徑定義
-│   ├── es_client.py                    # Grafana _msearch 共用封裝
-│   ├── frontend_shell.py              # GitHub Pages v1-2 共用前端殼 HTML 模板
+│   ├── es_client.py                   # Grafana _msearch 共用封裝
+│   ├── frontend_shell.py             # GitHub Pages v1-2 共用前端殼 HTML 模板
 │   ├── raw_events.py                  # T1 raw 事件欄位契約與正規化工具
 │   ├── t1_reader.py                   # 讀取 T1 raw parquet 的共用工具
-│   ├── html_template.py                # HTML header/footer/style 共用模板
-│   └── chart_helpers.py               # Chart.js 輔助函式
+│   ├── html_template.py               # HTML header/footer/style 共用模板
+│   └── chart_helpers.py              # Chart.js 輔助函式
+├── exporters/                         # 資料匯出腳本
+├── frontend/                          # 前端靜態資源（部署時複製到 output/）
+│   ├── app.js                         # 前端殼啟動邏輯
+│   ├── app.css                        # 前端殼樣式
+│   ├── dashboard-renderers.js         # 各 dashboard 前端 renderer
+│   ├── query-definitions.js           # DuckDB 前端查詢定義
+│   └── site-manifest.json             # 前端站點資產與資料集 manifest
 ├── output/
-│   ├── index.html                      # 導覽頁面（由 run_all.py 產生）
-│   ├── traffic-overview/index.html     # Dashboard 1 報告產出
-│   ├── search-behavior/index.html      # Dashboard 2 報告產出
-│   ├── apply-conversion/index.html     # Dashboard 3 報告產出
-│   ├── feature-engagement/index.html   # Dashboard 4 報告產出
-│   ├── device-platform/index.html      # Dashboard 5 報告產出
-│   ├── page-ranking/index.html         # Dashboard 6 報告產出
-│   ├── page-navigation/index.html      # Dashboard 7 報告產出
-│   └── click-heatmap/index.html        # Dashboard 8 報告產出
+│   ├── index.html                     # 導覽頁面（由 run_all.py 產生）
+│   ├── traffic-overview/index.html    # Dashboard 1 報告產出
+│   ├── search-behavior/index.html     # Dashboard 2 報告產出
+│   ├── apply-conversion/index.html    # Dashboard 3 報告產出
+│   ├── feature-engagement/index.html  # Dashboard 4 報告產出
+│   ├── device-platform/index.html     # Dashboard 5 報告產出
+│   ├── page-ranking/index.html        # Dashboard 6 報告產出
+│   ├── page-navigation/index.html     # Dashboard 7 報告產出
+│   └── click-heatmap/index.html       # Dashboard 8 報告產出
 ├── tests/
 │   └── validation/
 │       └── validate_dashboard_data.py  # 比對 JS 實際查詢結果與 T2 parquet 聚合結果
-├── query_homepage_blocks.py           # 從 ES 查詢首頁四大區塊每日點擊數，輸出 TSV
-├── category_tab_report.py             # 既有報告（保留）
+├── tools/                             # 工具 / 一次性查詢腳本
+│   ├── __init__.py
+│   ├── click_heatmap_discover.py      # 自動探索頁面可點擊元素
+│   ├── extract_raw_events.py          # 從 ES 抽取 T1 raw 事件 parquet
+│   └── query_homepage_blocks.py       # 從 ES 查詢首頁四大區塊每日點擊數
 ├── app.css                            # v1-2 / GitHub Pages 共用前端殼樣式
 ├── app.js                             # v1-2 / GitHub Pages 共用前端殼啟動邏輯
-├── dashboard-renderers.js             # 各 dashboard 視角的前端 renderer
-├── query-definitions.js               # DuckDB 前端查詢定義
-├── site-manifest.json                 # 前端站點資產與資料集 manifest
-├── traffic_overview_report.py         # Dashboard 1：整體流量概覽
-├── search_behavior_report.py          # Dashboard 2：搜尋行為分析
-├── apply_conversion_report.py         # Dashboard 3：應徵轉換分析
-├── feature_engagement_report.py       # Dashboard 4：功能互動分析
-├── device_platform_report.py          # Dashboard 5：裝置與平台分析
-├── page_ranking_report.py             # Dashboard 6：頁面流量排行
-├── page_navigation_report.py          # Dashboard 7：頁面導航鏈路分析
-├── click_heatmap_report.py            # Dashboard 8：頁面點擊熱點分析
-├── click_heatmap_discover.py          # 輔助：自動探索頁面可點擊元素
 ├── click_heatmap_config.json          # 頁面 URL + featureId → 元素位置 對應表
-├── build_apply_conversion_t2.py       # 從 T1 產出 apply-conversion 的 T2 parquet
-├── build_click_heatmap_t2.py          # 從 T1 產出 click-heatmap 的 T2 parquet
-├── build_homepage_blocks_t2.py        # 從 T1 產出 homepage-blocks 的 T2 parquet
-├── build_device_platform_t2.py        # 從 T1 產出 device-platform 的 T2 parquet
-├── build_feature_engagement_t2.py     # 從 T1 產出 feature-engagement 的 T2 parquet
-├── build_page_navigation_t2.py        # 從 T1 產出 page-navigation 的 T2 parquet
-├── build_page_ranking_t2.py           # 從 T1 產出 page-ranking 的 T2 parquet
-├── build_search_behavior_t2.py        # 從 T1 產出 search-behavior 的 T2 parquet
-├── build_traffic_overview_t2.py       # 從 T1 產出 traffic-overview 的 T2 parquet
+├── dashboard-renderers.js             # 各 dashboard 視角的前端 renderer
 ├── deploy.sh                          # 一鍵產生報告並部署到 GitHub Pages
-├── extract_raw_events.py              # 從 ES 抽取 T1 raw 事件 parquet
+├── query-definitions.js               # DuckDB 前端查詢定義
 ├── run_all.py                         # 一鍵執行所有報告 + 產生導覽頁
+├── site-manifest.json                 # 前端站點資產與資料集 manifest
 ├── pyproject.toml                     # uv 專案設定
 ├── .python-version                    # Python 版本
 └── tree.md                            # 本檔案

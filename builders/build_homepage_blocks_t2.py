@@ -13,7 +13,9 @@ build_homepage_blocks_t2.py
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import pandas as pd
 
@@ -23,7 +25,7 @@ from common.data_pipeline import (
     update_t2_manifest_dates,
 )
 from common.t1_reader import load_t1_raw_dataframe, resolve_date_window
-from query_homepage_blocks import ALL_FEATURE_IDS
+from tools.query_homepage_blocks import ALL_FEATURE_IDS
 
 REPORT_NAME = "homepage-blocks"
 DAILY_SUMMARY_FILE = "daily_summary.parquet"

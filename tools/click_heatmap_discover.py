@@ -12,12 +12,14 @@ click_heatmap_discover.py
 """
 
 import json
+import sys
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from playwright.sync_api import sync_playwright
 
-CONFIG_PATH = Path(__file__).parent / "click_heatmap_config.json"
-OUTPUT_DIR = Path(__file__).parent / "output" / "click-heatmap"
+CONFIG_PATH = Path(__file__).parent.parent / "click_heatmap_config.json"
+OUTPUT_DIR = Path(__file__).parent.parent / "output" / "click-heatmap"
 
 
 def _make_fingerprint(el: dict) -> str:

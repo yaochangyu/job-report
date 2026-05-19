@@ -11,7 +11,7 @@
       "full_page": true,
       "elements": [
         {
-          "index": 0,
+          "index": 1,
           "tag": "BUTTON",
           "text": "Top",
           "href": "",
@@ -23,7 +23,7 @@
           "feature_id": ""
         },
         {
-          "index": 3,
+          "index": 4,
           "tag": "A",
           "text": "",
           "href": "https://www.1111.com.tw/",
@@ -35,7 +35,7 @@
           "feature_id": ""
         },
         {
-          "index": 4,
+          "index": 5,
           "tag": "A",
           "text": "職接配",
           "href": "https://www.1111.com.tw/job-pair",
@@ -47,7 +47,7 @@
           "feature_id": ""
         },
         {
-          "index": 5,
+          "index": 6,
           "tag": "A",
           "text": "立即匯入履歷",
           "href": "javascript:;",
@@ -59,10 +59,10 @@
           "feature_id": ""
         },
         {
-          "index": 6,
+          "index": 7,
           "tag": "A",
           "text": "求職登入/註冊",
-          "href": "https://www.1111.com.tw/login/Index?agent=f1_out_gds_co_home_20260411",
+          "href": "https://www.1111.com.tw/login/Index?agent=f1_out_gds_co_home_20260519",
           "id": "",
           "x": 1101,
           "y": 0,
@@ -71,7 +71,7 @@
           "feature_id": ""
         },
         {
-          "index": 7,
+          "index": 8,
           "tag": "BUTTON",
           "text": "企業求才",
           "href": "",
@@ -83,19 +83,19 @@
           "feature_id": ""
         },
         {
-          "index": 8,
+          "index": 9,
           "tag": "A",
           "text": "",
           "href": "https://1111.com.tw/279118/",
           "id": "",
           "x": 1135,
-          "y": 110,
+          "y": 124,
           "width": 200,
-          "height": 224,
+          "height": 195,
           "feature_id": ""
         },
         {
-          "index": 10,
+          "index": 11,
           "tag": "BUTTON",
           "text": "搜尋",
           "href": "",
@@ -107,7 +107,7 @@
           "feature_id": "search-general-submit"
         },
         {
-          "index": 11,
+          "index": 12,
           "tag": "BUTTON",
           "text": "AI 小精靈",
           "href": "",
@@ -119,7 +119,7 @@
           "feature_id": "search-ai"
         },
         {
-          "index": 12,
+          "index": 13,
           "tag": "BUTTON",
           "text": "職務",
           "href": "",
@@ -131,7 +131,7 @@
           "feature_id": "T-job-category"
         },
         {
-          "index": 13,
+          "index": 14,
           "tag": "BUTTON",
           "text": "地區",
           "href": "",
@@ -143,7 +143,7 @@
           "feature_id": "T-job-location"
         },
         {
-          "index": 14,
+          "index": 15,
           "tag": "BUTTON",
           "text": "搜尋",
           "href": "",
@@ -155,7 +155,7 @@
           "feature_id": "search-general-submit"
         },
         {
-          "index": 17,
+          "index": 18,
           "tag": "A",
           "text": "餐飲專區",
           "href": "https://catering.1111.com.tw/",
@@ -167,24 +167,12 @@
           "feature_id": ""
         },
         {
-          "index": 18,
-          "tag": "A",
-          "text": "Pei Pei 社群",
-          "href": "https://www.pei.com.tw/",
-          "id": "",
-          "x": 444,
-          "y": 299,
-          "width": 76,
-          "height": 24,
-          "feature_id": ""
-        },
-        {
           "index": 19,
           "tag": "A",
-          "text": "落點分析",
-          "href": "https://exam-match.1111.com.tw/",
+          "text": "嚴選職缺",
+          "href": "https://insight.1111.com.tw/",
           "id": "",
-          "x": 536,
+          "x": 444,
           "y": 299,
           "width": 56,
           "height": 24,
@@ -193,58 +181,58 @@
         {
           "index": 20,
           "tag": "A",
-          "text": "2026 線上校徵",
-          "href": "https://www.1111.com.tw/campusr/event-list/",
+          "text": "Pei Pei 社群",
+          "href": "https://www.pei.com.tw/",
           "id": "",
-          "x": 608,
+          "x": 516,
           "y": 299,
-          "width": 91,
+          "width": 76,
           "height": 24,
           "feature_id": ""
         },
         {
           "index": 21,
           "tag": "A",
-          "text": "AI 模擬面試",
-          "href": "https://ai-lab.1111.com.tw/landing_page/ai-interview/",
+          "text": "落點分析",
+          "href": "https://exam-match.1111.com.tw/",
           "id": "",
-          "x": 715,
+          "x": 608,
           "y": 299,
-          "width": 72,
+          "width": 56,
           "height": 24,
           "feature_id": ""
         },
         {
           "index": 22,
           "tag": "A",
-          "text": "AI 轉職神器",
-          "href": "https://ai-lab.1111.com.tw/ai-job-acceleration/",
-          "id": "",
-          "x": 803,
-          "y": 299,
-          "width": 72,
-          "height": 24,
-          "feature_id": ""
-        },
-        {
-          "index": 23,
-          "tag": "A",
           "text": "退除役官兵專區",
           "href": "http://1111.com.tw/278960/",
           "id": "",
-          "x": 891,
+          "x": 680,
           "y": 299,
           "width": 98,
           "height": 24,
           "feature_id": ""
         },
         {
-          "index": 24,
+          "index": 23,
           "tag": "A",
           "text": "申請幫傭",
           "href": "https://campaign.1111.com.tw/foreign-domestic-helper-under-12/",
           "id": "",
-          "x": 1005,
+          "x": 794,
+          "y": 299,
+          "width": 56,
+          "height": 24,
+          "feature_id": ""
+        },
+        {
+          "index": 24,
+          "tag": "A",
+          "text": "立即上工",
+          "href": "https://www.1111.com.tw/search/gig?page=1&col=ab&sort=desc",
+          "id": "",
+          "x": 866,
           "y": 299,
           "width": 56,
           "height": 24,
@@ -337,7 +325,7 @@
         {
           "index": 32,
           "tag": "A",
-          "text": "科技專區科技人全方位職涯",
+          "text": "科技專區科技人才全方位職涯",
           "href": "https://techplus.1111.com.tw/",
           "id": "",
           "x": 303,
@@ -350,7 +338,7 @@
           "index": 33,
           "tag": "A",
           "text": "外商專區全球外商強力招募",
-          "href": "https://www.1111.com.tw/foreign/",
+          "href": "https://www.1111.com.tw/foreign",
           "id": "",
           "x": 546,
           "y": 460,
@@ -374,7 +362,7 @@
           "index": 35,
           "tag": "A",
           "text": "面試經驗談面試不踩雷",
-          "href": "https://www.1111.com.tw/1000w/fanshome/discuss.asp?cat=fans",
+          "href": "https://www.1111.com.tw/1000w/fanshome/discuss.asp",
           "id": "",
           "x": 1032,
           "y": 460,
@@ -386,7 +374,7 @@
           "index": 36,
           "tag": "A",
           "text": "進修課程技能學習證照培訓",
-          "href": "https://www.1111edu.com.tw/redirectUrl.php?marketing_no=2025121714345698",
+          "href": "https://www.1111edu.com.tw/redirectUrl.php",
           "id": "",
           "x": 1275,
           "y": 460,
@@ -407,10 +395,10 @@
           "feature_id": ""
         },
         {
-          "index": 40,
+          "index": 46,
           "tag": "A",
           "text": "",
-          "href": "https://event.1111.com.tw/event21/chiayi-online/index.asp",
+          "href": "https://www.1111.com.tw/corp/50945316",
           "id": "",
           "x": 60,
           "y": 561,
@@ -419,10 +407,10 @@
           "feature_id": ""
         },
         {
-          "index": 41,
+          "index": 47,
           "tag": "A",
           "text": "",
-          "href": "https://1111.com.tw/278960/",
+          "href": "https://event.1111.com.tw/event21/chiayi-online/index.asp",
           "id": "",
           "x": 726,
           "y": 561,
@@ -431,7 +419,7 @@
           "feature_id": ""
         },
         {
-          "index": 42,
+          "index": 48,
           "tag": "BUTTON",
           "text": "previous",
           "href": "",
@@ -443,7 +431,7 @@
           "feature_id": ""
         },
         {
-          "index": 43,
+          "index": 49,
           "tag": "BUTTON",
           "text": "next",
           "href": "",
@@ -455,10 +443,10 @@
           "feature_id": ""
         },
         {
-          "index": 49,
+          "index": 55,
           "tag": "A",
           "text": "",
-          "href": "https://www.1111job.com.tw/south_search.asp?d0=120400,180105,270213&tt=1&ex=*1&agent=south_main660x160_top3",
+          "href": "https://www.1111edu.com.tw/redirectUrl.php?marketing_no=2026051313483936",
           "id": "",
           "x": 64,
           "y": 561,
@@ -467,10 +455,10 @@
           "feature_id": ""
         },
         {
-          "index": 50,
+          "index": 56,
           "tag": "A",
           "text": "",
-          "href": "https://www.1111edu.com.tw/redirectUrl.php?marketing_no=2026040110550194",
+          "href": "https://1111.com.tw/280049/",
           "id": "",
           "x": 730,
           "y": 561,
@@ -479,19 +467,7 @@
           "feature_id": ""
         },
         {
-          "index": 51,
-          "tag": "A",
-          "text": "",
-          "href": "https://1111.com.tw/278512/",
-          "id": "",
-          "x": 1396,
-          "y": 561,
-          "width": 650,
-          "height": 160,
-          "feature_id": ""
-        },
-        {
-          "index": 52,
+          "index": 57,
           "tag": "BUTTON",
           "text": "previous",
           "href": "",
@@ -503,7 +479,7 @@
           "feature_id": ""
         },
         {
-          "index": 53,
+          "index": 58,
           "tag": "BUTTON",
           "text": "next",
           "href": "",
@@ -515,7 +491,7 @@
           "feature_id": ""
         },
         {
-          "index": 54,
+          "index": 59,
           "tag": "BUTTON",
           "text": "AI 推薦",
           "href": "",
@@ -527,7 +503,7 @@
           "feature_id": "identify-personal-tab-1"
         },
         {
-          "index": 55,
+          "index": 60,
           "tag": "BUTTON",
           "text": "最新工作",
           "href": "",
@@ -539,7 +515,7 @@
           "feature_id": "identify-personal-tab-2"
         },
         {
-          "index": 56,
+          "index": 61,
           "tag": "BUTTON",
           "text": "熱門工作",
           "href": "",
@@ -551,142 +527,142 @@
           "feature_id": "identify-personal-tab-3"
         },
         {
-          "index": 57,
-          "tag": "A",
-          "text": "設計部繪圖專員",
-          "href": "https://www.1111.com.tw/job/59339114",
-          "id": "",
-          "x": 403,
-          "y": 858,
-          "width": 196,
-          "height": 27,
-          "feature_id": ""
-        },
-        {
-          "index": 58,
-          "tag": "A",
-          "text": "弘旭送風空調機械股份有限公司(弘旭空調)",
-          "href": "https://www.1111.com.tw/corp/50016076",
-          "id": "",
-          "x": 403,
-          "y": 889,
-          "width": 196,
-          "height": 20,
-          "feature_id": ""
-        },
-        {
-          "index": 59,
-          "tag": "A",
-          "text": "總務助理-日商半導體原廠設備商(新竹)DM",
-          "href": "https://www.1111.com.tw/job/132456043",
-          "id": "",
-          "x": 745,
-          "y": 858,
-          "width": 196,
-          "height": 27,
-          "feature_id": ""
-        },
-        {
-          "index": 60,
-          "tag": "A",
-          "text": "1111人才獵聘管理中心",
-          "href": "https://www.1111.com.tw/corp/1345485",
-          "id": "",
-          "x": 745,
-          "y": 889,
-          "width": 196,
-          "height": 20,
-          "feature_id": ""
-        },
-        {
-          "index": 61,
-          "tag": "A",
-          "text": "享溫馨KTV-岡山店 早班 櫃檯人員【享底薪+小費】",
-          "href": "https://www.1111.com.tw/job/91519344",
-          "id": "",
-          "x": 1087,
-          "y": 858,
-          "width": 196,
-          "height": 27,
-          "feature_id": ""
-        },
-        {
           "index": 62,
           "tag": "A",
-          "text": "享溫馨企業股份有限公司",
-          "href": "https://www.1111.com.tw/corp/9526830",
+          "text": "【寶雅】儲備課長(台南新市店)",
+          "href": "https://www.1111.com.tw/job/98744511",
           "id": "",
-          "x": 1087,
-          "y": 889,
+          "x": 403,
+          "y": 858,
           "width": 196,
-          "height": 20,
+          "height": 27,
           "feature_id": ""
         },
         {
           "index": 63,
           "tag": "A",
-          "text": "社區祕書",
-          "href": "https://www.1111.com.tw/job/130270678",
+          "text": "寶雅國際股份有限公司",
+          "href": "https://www.1111.com.tw/corp/430420",
           "id": "",
           "x": 403,
-          "y": 1104,
-          "width": 160,
-          "height": 27,
+          "y": 889,
+          "width": 196,
+          "height": 20,
           "feature_id": ""
         },
         {
           "index": 64,
           "tag": "A",
-          "text": "台達保全股份有限公司",
-          "href": "https://www.1111.com.tw/corp/1177713",
+          "text": "醫檢師",
+          "href": "https://www.1111.com.tw/job/131942926",
           "id": "",
-          "x": 403,
-          "y": 1135,
-          "width": 160,
-          "height": 20,
+          "x": 745,
+          "y": 858,
+          "width": 196,
+          "height": 27,
           "feature_id": ""
         },
         {
           "index": 65,
           "tag": "A",
-          "text": "作業員",
-          "href": "https://www.1111.com.tw/job/71330571",
+          "text": "北大醫事放射所(北大醫事檢驗放射所)",
+          "href": "https://www.1111.com.tw/corp/117171985",
           "id": "",
           "x": 745,
-          "y": 1104,
-          "width": 160,
-          "height": 27,
+          "y": 889,
+          "width": 196,
+          "height": 20,
           "feature_id": ""
         },
         {
           "index": 66,
           "tag": "A",
-          "text": "七洲企業股份有限公司",
-          "href": "https://www.1111.com.tw/corp/460014",
+          "text": "【全新開幕】營運專員-櫃檯接待｜健身工廠桃園桃鶯廠",
+          "href": "https://www.1111.com.tw/job/132105967",
           "id": "",
-          "x": 745,
-          "y": 1135,
-          "width": 160,
-          "height": 20,
+          "x": 1087,
+          "y": 858,
+          "width": 196,
+          "height": 27,
           "feature_id": ""
         },
         {
           "index": 67,
           "tag": "A",
-          "text": "畢業生會計記帳培訓工作夥伴",
-          "href": "https://www.1111.com.tw/job/113048481",
+          "text": "(健身工廠)柏文健康事業股份有限公司",
+          "href": "https://www.1111.com.tw/corp/50501234",
           "id": "",
           "x": 1087,
-          "y": 1104,
+          "y": 889,
           "width": 196,
-          "height": 27,
+          "height": 20,
           "feature_id": ""
         },
         {
           "index": 68,
           "tag": "A",
-          "text": "共創會計記帳士事務所",
-          "href": "https://www.1111.com.tw/corp/73083222",
+          "text": "【🐮牛角 板橋店】早、晚班兼職夥伴，時薪211元~226元",
+          "href": "https://www.1111.com.tw/job/132103381",
+          "id": "",
+          "x": 403,
+          "y": 1104,
+          "width": 196,
+          "height": 27,
+          "feature_id": ""
+        },
+        {
+          "index": 69,
+          "tag": "A",
+          "text": "東京牛角股份有限公司",
+          "href": "https://www.1111.com.tw/corp/9780412",
+          "id": "",
+          "x": 403,
+          "y": 1135,
+          "width": 196,
+          "height": 20,
+          "feature_id": ""
+        },
+        {
+          "index": 70,
+          "tag": "A",
+          "text": "廚房師父 三粘板 三冷台 各1名",
+          "href": "https://www.1111.com.tw/job/85939511",
+          "id": "",
+          "x": 745,
+          "y": 1104,
+          "width": 196,
+          "height": 27,
+          "feature_id": ""
+        },
+        {
+          "index": 71,
+          "tag": "A",
+          "text": "鉑宴會館股份有限公司",
+          "href": "https://www.1111.com.tw/corp/71718624",
+          "id": "",
+          "x": 745,
+          "y": 1135,
+          "width": 196,
+          "height": 20,
+          "feature_id": ""
+        },
+        {
+          "index": 72,
+          "tag": "A",
+          "text": "(全家)中班 薪資41000元 正職人員 樹林區 板橋區 新莊區 便利商店 超商 仁愛醫院 樹林車站",
+          "href": "https://www.1111.com.tw/job/132218765",
+          "id": "",
+          "x": 1087,
+          "y": 1104,
+          "width": 196,
+          "height": 27,
+          "feature_id": ""
+        },
+        {
+          "index": 73,
+          "tag": "A",
+          "text": "全家便利商店(全國門市聯合招募)",
+          "href": "https://www.1111.com.tw/corp/69588457",
           "id": "",
           "x": 1087,
           "y": 1135,
@@ -695,439 +671,439 @@
           "feature_id": ""
         },
         {
-          "index": 69,
-          "tag": "A",
-          "text": "外勞仲介翻譯人員",
-          "href": "https://www.1111.com.tw/job/113026617",
-          "id": "",
-          "x": 1429,
-          "y": 858,
-          "width": 196,
-          "height": 27,
-          "feature_id": ""
-        },
-        {
-          "index": 70,
-          "tag": "A",
-          "text": "元星國際人力仲介有限公司-高雄分公司",
-          "href": "https://www.1111.com.tw/corp/117098446",
-          "id": "",
-          "x": 1429,
-          "y": 889,
-          "width": 196,
-          "height": 20,
-          "feature_id": ""
-        },
-        {
-          "index": 71,
-          "tag": "A",
-          "text": "【總部】執行長室儲備幹部(週休二日)",
-          "href": "https://www.1111.com.tw/job/132469839",
-          "id": "",
-          "x": 1771,
-          "y": 858,
-          "width": 196,
-          "height": 27,
-          "feature_id": ""
-        },
-        {
-          "index": 72,
-          "tag": "A",
-          "text": "莊敬生活百貨",
-          "href": "https://www.1111.com.tw/corp/73590469",
-          "id": "",
-          "x": 1771,
-          "y": 889,
-          "width": 196,
-          "height": 20,
-          "feature_id": ""
-        },
-        {
-          "index": 73,
-          "tag": "A",
-          "text": "全天班工作人員",
-          "href": "https://www.1111.com.tw/job/132090515",
-          "id": "",
-          "x": 2113,
-          "y": 858,
-          "width": 126,
-          "height": 27,
-          "feature_id": ""
-        },
-        {
           "index": 74,
           "tag": "A",
-          "text": "永宜美味小吃部",
-          "href": "https://www.1111.com.tw/corp/72137102",
+          "text": "混凝土壓送車管尾(具經驗佳)可直接電聯",
+          "href": "https://www.1111.com.tw/job/98645363",
           "id": "",
-          "x": 2113,
-          "y": 889,
-          "width": 126,
-          "height": 20,
+          "x": 1429,
+          "y": 858,
+          "width": 196,
+          "height": 27,
           "feature_id": ""
         },
         {
           "index": 75,
           "tag": "A",
-          "text": "總公司食品安全襄理",
-          "href": "https://www.1111.com.tw/job/131932839",
+          "text": "朝穩企業有限公司",
+          "href": "https://www.1111.com.tw/corp/69620307",
           "id": "",
           "x": 1429,
-          "y": 1104,
-          "width": 162,
-          "height": 27,
+          "y": 889,
+          "width": 196,
+          "height": 20,
           "feature_id": ""
         },
         {
           "index": 76,
           "tag": "A",
-          "text": "遠東都會股份有限公司",
-          "href": "https://www.1111.com.tw/corp/48473716",
+          "text": "（高薪）資深牙科主管或特助",
+          "href": "https://www.1111.com.tw/job/98874417",
+          "id": "",
+          "x": 1771,
+          "y": 858,
+          "width": 196,
+          "height": 27,
+          "feature_id": ""
+        },
+        {
+          "index": 77,
+          "tag": "A",
+          "text": "康爾牙醫診所",
+          "href": "https://www.1111.com.tw/corp/70674077",
+          "id": "",
+          "x": 1771,
+          "y": 889,
+          "width": 196,
+          "height": 20,
+          "feature_id": ""
+        },
+        {
+          "index": 78,
+          "tag": "A",
+          "text": "北高店儲備幹部",
+          "href": "https://www.1111.com.tw/job/132486407",
+          "id": "",
+          "x": 2113,
+          "y": 858,
+          "width": 183,
+          "height": 27,
+          "feature_id": ""
+        },
+        {
+          "index": 79,
+          "tag": "A",
+          "text": "平凡五金行_平凡有限公司",
+          "href": "https://www.1111.com.tw/corp/72524511",
+          "id": "",
+          "x": 2113,
+          "y": 889,
+          "width": 183,
+          "height": 20,
+          "feature_id": ""
+        },
+        {
+          "index": 80,
+          "tag": "A",
+          "text": "日間照顧中心照顧服務員",
+          "href": "https://www.1111.com.tw/job/132072761",
           "id": "",
           "x": 1429,
+          "y": 1104,
+          "width": 196,
+          "height": 27,
+          "feature_id": ""
+        },
+        {
+          "index": 81,
+          "tag": "A",
+          "text": "智善長照股份有限公司",
+          "href": "https://www.1111.com.tw/corp/117203727",
+          "id": "",
+          "x": 1429,
+          "y": 1135,
+          "width": 196,
+          "height": 20,
+          "feature_id": ""
+        },
+        {
+          "index": 82,
+          "tag": "A",
+          "text": "業務助理",
+          "href": "https://www.1111.com.tw/job/92218517",
+          "id": "",
+          "x": 1771,
+          "y": 1104,
+          "width": 128,
+          "height": 27,
+          "feature_id": ""
+        },
+        {
+          "index": 83,
+          "tag": "A",
+          "text": "鴻鐽國際有限公司",
+          "href": "https://www.1111.com.tw/corp/72557608",
+          "id": "",
+          "x": 1771,
+          "y": 1135,
+          "width": 128,
+          "height": 20,
+          "feature_id": ""
+        },
+        {
+          "index": 84,
+          "tag": "A",
+          "text": "第59台ViVa TV電話行銷人員(保障底薪+高獎金/無經驗可/歡迎二度就業來加入、社會新鮮人來挑戰)",
+          "href": "https://www.1111.com.tw/job/85085915",
+          "id": "",
+          "x": 2113,
+          "y": 1104,
+          "width": 196,
+          "height": 27,
+          "feature_id": ""
+        },
+        {
+          "index": 85,
+          "tag": "A",
+          "text": "(美好購物ViVa TV)美好家庭購物股份有限公司",
+          "href": "https://www.1111.com.tw/corp/48882197",
+          "id": "",
+          "x": 2113,
+          "y": 1135,
+          "width": 196,
+          "height": 20,
+          "feature_id": ""
+        },
+        {
+          "index": 86,
+          "tag": "A",
+          "text": "土地開發專員",
+          "href": "https://www.1111.com.tw/job/132475736",
+          "id": "",
+          "x": 2455,
+          "y": 858,
+          "width": 128,
+          "height": 27,
+          "feature_id": ""
+        },
+        {
+          "index": 87,
+          "tag": "A",
+          "text": "詠心地產有限公司",
+          "href": "https://www.1111.com.tw/corp/117090587",
+          "id": "",
+          "x": 2455,
+          "y": 889,
+          "width": 128,
+          "height": 20,
+          "feature_id": ""
+        },
+        {
+          "index": 88,
+          "tag": "A",
+          "text": "{代理徵才-正職}知名老牌公司業務主管助理",
+          "href": "https://www.1111.com.tw/job/132158193",
+          "id": "",
+          "x": 2797,
+          "y": 858,
+          "width": 196,
+          "height": 27,
+          "feature_id": ""
+        },
+        {
+          "index": 89,
+          "tag": "A",
+          "text": "1111人才獵聘管理中心",
+          "href": "https://www.1111.com.tw/corp/1345485",
+          "id": "",
+          "x": 2797,
+          "y": 889,
+          "width": 196,
+          "height": 20,
+          "feature_id": ""
+        },
+        {
+          "index": 90,
+          "tag": "A",
+          "text": "SPA資深芳療師【台中北屯會館】高薪酬獎金、免call客無業績、集團優渥制度、保障薪資$42,000 （月薪+獎金）",
+          "href": "https://www.1111.com.tw/job/131313078",
+          "id": "",
+          "x": 3139,
+          "y": 858,
+          "width": 196,
+          "height": 27,
+          "feature_id": ""
+        },
+        {
+          "index": 91,
+          "tag": "A",
+          "text": "泰晶殿",
+          "href": "https://www.1111.com.tw/corp/73466686",
+          "id": "",
+          "x": 3139,
+          "y": 889,
+          "width": 196,
+          "height": 20,
+          "feature_id": ""
+        },
+        {
+          "index": 92,
+          "tag": "A",
+          "text": "青隅餐廳外場 服務員 Jade Lounge Restaurant Server",
+          "href": "https://www.1111.com.tw/job/131300180",
+          "id": "",
+          "x": 2455,
+          "y": 1104,
+          "width": 196,
+          "height": 27,
+          "feature_id": ""
+        },
+        {
+          "index": 93,
+          "tag": "A",
+          "text": "台北文華東方酒店_開泰豐國際股份有限公司",
+          "href": "https://www.1111.com.tw/corp/50131815",
+          "id": "",
+          "x": 2455,
+          "y": 1135,
+          "width": 196,
+          "height": 20,
+          "feature_id": ""
+        },
+        {
+          "index": 94,
+          "tag": "A",
+          "text": "西堤台北光復南店-廚藝助理",
+          "href": "https://www.1111.com.tw/job/131977275",
+          "id": "",
+          "x": 2797,
+          "y": 1104,
+          "width": 196,
+          "height": 27,
+          "feature_id": ""
+        },
+        {
+          "index": 95,
+          "tag": "A",
+          "text": "王品餐飲股份有限公司",
+          "href": "https://www.1111.com.tw/corp/9695533",
+          "id": "",
+          "x": 2797,
+          "y": 1135,
+          "width": 196,
+          "height": 20,
+          "feature_id": ""
+        },
+        {
+          "index": 96,
+          "tag": "A",
+          "text": "【日商山崎｜THE PREMIUM YAMAZAKI 崇光店】 麵包製作｜兼職",
+          "href": "https://www.1111.com.tw/job/98974361",
+          "id": "",
+          "x": 3139,
+          "y": 1104,
+          "width": 196,
+          "height": 27,
+          "feature_id": ""
+        },
+        {
+          "index": 97,
+          "tag": "A",
+          "text": "台灣山崎股份有限公司(總管理處)",
+          "href": "https://www.1111.com.tw/corp/93905",
+          "id": "",
+          "x": 3139,
+          "y": 1135,
+          "width": 196,
+          "height": 20,
+          "feature_id": ""
+        },
+        {
+          "index": 98,
+          "tag": "A",
+          "text": "風管工程學徒(依能力給薪.歡迎電洽葉先生:0988525558)",
+          "href": "https://www.1111.com.tw/job/97476957",
+          "id": "",
+          "x": 3481,
+          "y": 858,
+          "width": 196,
+          "height": 27,
+          "feature_id": ""
+        },
+        {
+          "index": 99,
+          "tag": "A",
+          "text": "峯安工程行",
+          "href": "https://www.1111.com.tw/corp/73493826",
+          "id": "",
+          "x": 3481,
+          "y": 889,
+          "width": 196,
+          "height": 20,
+          "feature_id": ""
+        },
+        {
+          "index": 100,
+          "tag": "A",
+          "text": "倉管人員",
+          "href": "https://www.1111.com.tw/job/130440572",
+          "id": "",
+          "x": 3823,
+          "y": 858,
+          "width": 128,
+          "height": 27,
+          "feature_id": ""
+        },
+        {
+          "index": 101,
+          "tag": "A",
+          "text": "詮順工業有限公司",
+          "href": "https://www.1111.com.tw/corp/71060232",
+          "id": "",
+          "x": 3823,
+          "y": 889,
+          "width": 128,
+          "height": 20,
+          "feature_id": ""
+        },
+        {
+          "index": 102,
+          "tag": "A",
+          "text": "MIS資訊專員(熟鼎新系統)",
+          "href": "https://www.1111.com.tw/job/85169077",
+          "id": "",
+          "x": 4165,
+          "y": 858,
+          "width": 196,
+          "height": 27,
+          "feature_id": ""
+        },
+        {
+          "index": 103,
+          "tag": "A",
+          "text": "陸昌化工股份有限公司",
+          "href": "https://www.1111.com.tw/corp/575037",
+          "id": "",
+          "x": 4165,
+          "y": 889,
+          "width": 196,
+          "height": 20,
+          "feature_id": ""
+        },
+        {
+          "index": 104,
+          "tag": "A",
+          "text": "薄膜製程開發工程師",
+          "href": "https://www.1111.com.tw/job/132505301",
+          "id": "",
+          "x": 3481,
+          "y": 1104,
+          "width": 162,
+          "height": 27,
+          "feature_id": ""
+        },
+        {
+          "index": 105,
+          "tag": "A",
+          "text": "南亞科技股份有限公司",
+          "href": "https://www.1111.com.tw/corp/4252",
+          "id": "",
+          "x": 3481,
           "y": 1135,
           "width": 162,
           "height": 20,
           "feature_id": ""
         },
         {
-          "index": 77,
+          "index": 106,
           "tag": "A",
-          "text": "行政助理(工讀生)",
-          "href": "https://www.1111.com.tw/job/132478554",
+          "text": "配管學徒 (高雄)",
+          "href": "https://www.1111.com.tw/job/131998369",
           "id": "",
-          "x": 1771,
+          "x": 3823,
           "y": 1104,
-          "width": 160,
+          "width": 124,
           "height": 27,
           "feature_id": ""
         },
         {
-          "index": 78,
+          "index": 107,
           "tag": "A",
-          "text": "梅景食品股份有限公司",
-          "href": "https://www.1111.com.tw/corp/49456747",
+          "text": "維致有限公司",
+          "href": "https://www.1111.com.tw/corp/73611966",
           "id": "",
-          "x": 1771,
+          "x": 3823,
           "y": 1135,
-          "width": 160,
+          "width": 124,
           "height": 20,
           "feature_id": ""
         },
         {
-          "index": 79,
+          "index": 108,
           "tag": "A",
-          "text": "營業翻譯人員",
-          "href": "https://www.1111.com.tw/job/132497595",
+          "text": "會計出納資料處理",
+          "href": "https://www.1111.com.tw/job/132158763",
           "id": "",
-          "x": 2113,
+          "x": 4165,
           "y": 1104,
-          "width": 196,
-          "height": 27,
-          "feature_id": ""
-        },
-        {
-          "index": 80,
-          "tag": "A",
-          "text": "台灣野村股份有限公司(日商)",
-          "href": "https://www.1111.com.tw/corp/2190287",
-          "id": "",
-          "x": 2113,
-          "y": 1135,
-          "width": 196,
-          "height": 20,
-          "feature_id": ""
-        },
-        {
-          "index": 81,
-          "tag": "A",
-          "text": "《新店區》護士/護理人員(起薪42000起獎金另計.供員工區住宿)※意者請電洽或線上投遞",
-          "href": "https://www.1111.com.tw/job/56657729",
-          "id": "",
-          "x": 2455,
-          "y": 858,
-          "width": 196,
-          "height": 27,
-          "feature_id": ""
-        },
-        {
-          "index": 82,
-          "tag": "A",
-          "text": "福德護理之家",
-          "href": "https://www.1111.com.tw/corp/51855116",
-          "id": "",
-          "x": 2455,
-          "y": 889,
-          "width": 196,
-          "height": 20,
-          "feature_id": ""
-        },
-        {
-          "index": 83,
-          "tag": "A",
-          "text": "美容師",
-          "href": "https://www.1111.com.tw/job/78316439",
-          "id": "",
-          "x": 2797,
-          "y": 858,
-          "width": 196,
-          "height": 27,
-          "feature_id": ""
-        },
-        {
-          "index": 84,
-          "tag": "A",
-          "text": "黎貝詩spa會館-民權分館(愛美力有限公司民權分公司)",
-          "href": "https://www.1111.com.tw/corp/70446284",
-          "id": "",
-          "x": 2797,
-          "y": 889,
-          "width": 196,
-          "height": 20,
-          "feature_id": ""
-        },
-        {
-          "index": 85,
-          "tag": "A",
-          "text": "工讀生（松山區）",
-          "href": "https://www.1111.com.tw/job/97365058",
-          "id": "",
-          "x": 3139,
-          "y": 858,
           "width": 144,
           "height": 27,
           "feature_id": ""
         },
         {
-          "index": 86,
+          "index": 109,
           "tag": "A",
-          "text": "國民小吃店",
-          "href": "https://www.1111.com.tw/corp/73474905",
+          "text": "立崴冷氣有限公司",
+          "href": "https://www.1111.com.tw/corp/117224852",
           "id": "",
-          "x": 3139,
-          "y": 889,
+          "x": 4165,
+          "y": 1135,
           "width": 144,
           "height": 20,
           "feature_id": ""
         },
         {
-          "index": 87,
-          "tag": "A",
-          "text": "Sales 業務人員(台北) [歡迎身障朋友投遞]",
-          "href": "https://www.1111.com.tw/job/103816919",
-          "id": "",
-          "x": 2455,
-          "y": 1104,
-          "width": 196,
-          "height": 27,
-          "feature_id": ""
-        },
-        {
-          "index": 88,
-          "tag": "A",
-          "text": "達飛通運有限公司",
-          "href": "https://www.1111.com.tw/corp/69430877",
-          "id": "",
-          "x": 2455,
-          "y": 1135,
-          "width": 196,
-          "height": 20,
-          "feature_id": ""
-        },
-        {
-          "index": 89,
-          "tag": "A",
-          "text": "儲備技術及管理人員-桃園龜山地區",
-          "href": "https://www.1111.com.tw/job/98856158",
-          "id": "",
-          "x": 2797,
-          "y": 1104,
-          "width": 196,
-          "height": 27,
-          "feature_id": ""
-        },
-        {
-          "index": 90,
-          "tag": "A",
-          "text": "綠點系統工程股份有限公司",
-          "href": "https://www.1111.com.tw/corp/67006789",
-          "id": "",
-          "x": 2797,
-          "y": 1135,
-          "width": 196,
-          "height": 20,
-          "feature_id": ""
-        },
-        {
-          "index": 91,
-          "tag": "A",
-          "text": "矽品科技【固定日、夜班】警勤隊員",
-          "href": "https://www.1111.com.tw/job/99085017",
-          "id": "",
-          "x": 3139,
-          "y": 1104,
-          "width": 196,
-          "height": 27,
-          "feature_id": ""
-        },
-        {
-          "index": 92,
-          "tag": "A",
-          "text": "莒光保全股份有限公司",
-          "href": "https://www.1111.com.tw/corp/1281174",
-          "id": "",
-          "x": 3139,
-          "y": 1135,
-          "width": 196,
-          "height": 20,
-          "feature_id": ""
-        },
-        {
-          "index": 93,
-          "tag": "A",
-          "text": "業務專員(台中)",
-          "href": "https://www.1111.com.tw/job/132482737",
-          "id": "",
-          "x": 3481,
-          "y": 858,
-          "width": 196,
-          "height": 27,
-          "feature_id": ""
-        },
-        {
-          "index": 94,
-          "tag": "A",
-          "text": "全球華人集團(1111人力銀行)",
-          "href": "https://www.1111.com.tw/corp/1355006",
-          "id": "",
-          "x": 3481,
-          "y": 889,
-          "width": 196,
-          "height": 20,
-          "feature_id": ""
-        },
-        {
-          "index": 95,
-          "tag": "A",
-          "text": "烤爐學徒",
-          "href": "https://www.1111.com.tw/job/132048567",
-          "id": "",
-          "x": 3823,
-          "y": 858,
-          "width": 196,
-          "height": 27,
-          "feature_id": ""
-        },
-        {
-          "index": 96,
-          "tag": "A",
-          "text": "激旨燒き鳥_鼎煜餐飲有限公司",
-          "href": "https://www.1111.com.tw/corp/117080869",
-          "id": "",
-          "x": 3823,
-          "y": 889,
-          "width": 196,
-          "height": 20,
-          "feature_id": ""
-        },
-        {
-          "index": 97,
-          "tag": "A",
-          "text": "大夜班加油員【台灣中油白鷺站】",
-          "href": "https://www.1111.com.tw/job/92130132",
-          "id": "",
-          "x": 4165,
-          "y": 858,
-          "width": 196,
-          "height": 27,
-          "feature_id": ""
-        },
-        {
-          "index": 98,
-          "tag": "A",
-          "text": "富洋能源股份有限公司",
-          "href": "https://www.1111.com.tw/corp/71057400",
-          "id": "",
-          "x": 4165,
-          "y": 889,
-          "width": 196,
-          "height": 20,
-          "feature_id": ""
-        },
-        {
-          "index": 99,
-          "tag": "A",
-          "text": "【假日班-時薪$250元起】內場兼職 NARA 泰式料理 桃園華泰店",
-          "href": "https://www.1111.com.tw/job/132086507",
-          "id": "",
-          "x": 3481,
-          "y": 1104,
-          "width": 196,
-          "height": 27,
-          "feature_id": ""
-        },
-        {
-          "index": 100,
-          "tag": "A",
-          "text": "金田興業股份有限公司",
-          "href": "https://www.1111.com.tw/corp/50580093",
-          "id": "",
-          "x": 3481,
-          "y": 1135,
-          "width": 196,
-          "height": 20,
-          "feature_id": ""
-        },
-        {
-          "index": 101,
-          "tag": "A",
-          "text": "早班房務員",
-          "href": "https://www.1111.com.tw/job/130313314",
-          "id": "",
-          "x": 3823,
-          "y": 1104,
-          "width": 192,
-          "height": 27,
-          "feature_id": ""
-        },
-        {
-          "index": 102,
-          "tag": "A",
-          "text": "璽悅旅館國際股份有限公司",
-          "href": "https://www.1111.com.tw/corp/75129337",
-          "id": "",
-          "x": 3823,
-          "y": 1135,
-          "width": 192,
-          "height": 20,
-          "feature_id": ""
-        },
-        {
-          "index": 103,
-          "tag": "A",
-          "text": "居家照顧服務員-東區",
-          "href": "https://www.1111.com.tw/job/131966741",
-          "id": "",
-          "x": 4165,
-          "y": 1104,
-          "width": 196,
-          "height": 27,
-          "feature_id": ""
-        },
-        {
-          "index": 104,
-          "tag": "A",
-          "text": "社團法人臺南市弘福社區關懷照顧服務協會",
-          "href": "https://www.1111.com.tw/corp/69618297",
-          "id": "",
-          "x": 4165,
-          "y": 1135,
-          "width": 196,
-          "height": 20,
-          "feature_id": ""
-        },
-        {
-          "index": 105,
+          "index": 110,
           "tag": "BUTTON",
           "text": "previous",
           "href": "",
@@ -1139,7 +1115,7 @@
           "feature_id": ""
         },
         {
-          "index": 106,
+          "index": 111,
           "tag": "BUTTON",
           "text": "next",
           "href": "",
@@ -1151,7 +1127,7 @@
           "feature_id": ""
         },
         {
-          "index": 107,
+          "index": 112,
           "tag": "A",
           "text": "更多工作",
           "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc",
@@ -1163,21 +1139,21 @@
           "feature_id": ""
         },
         {
-          "index": 108,
+          "index": 113,
           "tag": "BUTTON",
-          "text": "餐飲╱住宿服務",
+          "text": "一般傳統製造",
           "href": "",
           "id": "",
           "x": 1087,
           "y": 1585,
-          "width": 152,
+          "width": 136,
           "height": 48,
           "feature_id": ""
         },
         {
-          "index": 109,
+          "index": 114,
           "tag": "BUTTON",
-          "text": "批發╱零售",
+          "text": "一般服務業",
           "href": "",
           "id": "",
           "x": 1087,
@@ -1187,84 +1163,24 @@
           "feature_id": ""
         },
         {
-          "index": 110,
+          "index": 115,
           "tag": "BUTTON",
-          "text": "教育╱出版╱藝文相關",
+          "text": "餐飲╱住宿服務",
           "href": "",
           "id": "",
           "x": 1087,
           "y": 1721,
-          "width": 200,
+          "width": 152,
           "height": 48,
-          "feature_id": ""
-        },
-        {
-          "index": 111,
-          "tag": "A",
-          "text": "康寧生活事業股份有限公司-康寧生活會館台北市內湖區",
-          "href": "https://www.1111.com.tw/corp/8636094",
-          "id": "",
-          "x": 85,
-          "y": 1465,
-          "width": 352,
-          "height": 53,
-          "feature_id": ""
-        },
-        {
-          "index": 112,
-          "tag": "A",
-          "text": "",
-          "href": "https://www.1111.com.tw/corp/8636094",
-          "id": "",
-          "x": 453,
-          "y": 1463,
-          "width": 56,
-          "height": 56,
-          "feature_id": ""
-        },
-        {
-          "index": 113,
-          "tag": "A",
-          "text": "房務領班月薪 33,000元~35,000元經驗不拘",
-          "href": "https://www.1111.com.tw/job/98830724",
-          "id": "",
-          "x": 85,
-          "y": 1567,
-          "width": 188,
-          "height": 86,
-          "feature_id": ""
-        },
-        {
-          "index": 114,
-          "tag": "A",
-          "text": "公清人員(旅館、大廈經驗者尤佳)月薪 29,500元以上經驗不拘",
-          "href": "https://www.1111.com.tw/job/98788172",
-          "id": "",
-          "x": 321,
-          "y": 1567,
-          "width": 188,
-          "height": 86,
-          "feature_id": ""
-        },
-        {
-          "index": 115,
-          "tag": "A",
-          "text": "更多工作 (11)",
-          "href": "https://www.1111.com.tw/corp/8636094",
-          "id": "",
-          "x": 61,
-          "y": 1677,
-          "width": 472,
-          "height": 46,
           "feature_id": ""
         },
         {
           "index": 116,
           "tag": "A",
-          "text": "富利餐飲股份有限公司台北市中山區",
-          "href": "https://www.1111.com.tw/corp/1085289",
+          "text": "日勝化工股份有限公司南投縣南投市",
+          "href": "https://www.1111.com.tw/corp/107104",
           "id": "",
-          "x": 583,
+          "x": 85,
           "y": 1465,
           "width": 352,
           "height": 53,
@@ -1274,9 +1190,9 @@
           "index": 117,
           "tag": "A",
           "text": "",
-          "href": "https://www.1111.com.tw/corp/1085289",
+          "href": "https://www.1111.com.tw/corp/107104",
           "id": "",
-          "x": 950,
+          "x": 453,
           "y": 1463,
           "width": 56,
           "height": 56,
@@ -1285,10 +1201,10 @@
         {
           "index": 118,
           "tag": "A",
-          "text": "必勝客-台南府前【彈性時段】世代共融餐飲工作機會｜兼職/二度就業/斜槓族歡迎！☆ 〝時薪$196起(另設各項津貼)〝~~",
-          "href": "https://www.1111.com.tw/job/132021805",
+          "text": "設備維護維修人員月薪 36,000元~40,000元2 年以上經驗",
+          "href": "https://www.1111.com.tw/job/91679227",
           "id": "",
-          "x": 583,
+          "x": 85,
           "y": 1567,
           "width": 188,
           "height": 86,
@@ -1297,10 +1213,10 @@
         {
           "index": 119,
           "tag": "A",
-          "text": "肯德基-全職餐廳襄理––工作地點：桃園市區月薪 35,000元以上經驗不拘",
-          "href": "https://www.1111.com.tw/job/132459970",
+          "text": "發泡聚氨酯研究助理月薪 36,000元~40,000元經驗不拘",
+          "href": "https://www.1111.com.tw/job/79888010",
           "id": "",
-          "x": 818,
+          "x": 321,
           "y": 1567,
           "width": 188,
           "height": 86,
@@ -1309,10 +1225,10 @@
         {
           "index": 120,
           "tag": "A",
-          "text": "更多工作 (99+)",
-          "href": "https://www.1111.com.tw/corp/1085289",
+          "text": "更多工作 (4)",
+          "href": "https://www.1111.com.tw/corp/107104",
           "id": "",
-          "x": 559,
+          "x": 61,
           "y": 1677,
           "width": 472,
           "height": 46,
@@ -1321,11 +1237,11 @@
         {
           "index": 121,
           "tag": "A",
-          "text": "陽明山天籟大飯店股份有限公司(天籟)新北市金山區",
-          "href": "https://www.1111.com.tw/corp/835084",
+          "text": "福安工業股份有限公司台南市南區",
+          "href": "https://www.1111.com.tw/corp/725",
           "id": "",
-          "x": 85,
-          "y": 1776,
+          "x": 583,
+          "y": 1465,
           "width": 352,
           "height": 53,
           "feature_id": ""
@@ -1333,11 +1249,11 @@
         {
           "index": 122,
           "tag": "A",
-          "text": "陽",
-          "href": "https://www.1111.com.tw/corp/835084",
+          "text": "",
+          "href": "https://www.1111.com.tw/corp/725",
           "id": "",
-          "x": 453,
-          "y": 1774,
+          "x": 950,
+          "y": 1463,
           "width": 56,
           "height": 56,
           "feature_id": ""
@@ -1345,11 +1261,11 @@
         {
           "index": 123,
           "tag": "A",
-          "text": "餐飲部主管(經理/副理)面議（經常性薪資達4萬元或以上）3 年以上經驗",
-          "href": "https://www.1111.com.tw/job/132476024",
+          "text": "倉管員月薪 29,500元~30,000元經驗不拘",
+          "href": "https://www.1111.com.tw/job/76286217",
           "id": "",
-          "x": 85,
-          "y": 1878,
+          "x": 583,
+          "y": 1567,
           "width": 188,
           "height": 86,
           "feature_id": ""
@@ -1357,11 +1273,11 @@
         {
           "index": 124,
           "tag": "A",
-          "text": "會計人員月薪 30,000元~35,000元2 年以上經驗",
-          "href": "https://www.1111.com.tw/job/132475954",
+          "text": "日文業務助理月薪 30,000元~35,000元經驗不拘",
+          "href": "https://www.1111.com.tw/job/79906432",
           "id": "",
-          "x": 321,
-          "y": 1878,
+          "x": 818,
+          "y": 1567,
           "width": 188,
           "height": 86,
           "feature_id": ""
@@ -1369,11 +1285,11 @@
         {
           "index": 125,
           "tag": "A",
-          "text": "更多工作 (19)",
-          "href": "https://www.1111.com.tw/corp/835084",
+          "text": "更多工作 (16)",
+          "href": "https://www.1111.com.tw/corp/725",
           "id": "",
-          "x": 61,
-          "y": 1988,
+          "x": 559,
+          "y": 1677,
           "width": 472,
           "height": 46,
           "feature_id": ""
@@ -1381,10 +1297,10 @@
         {
           "index": 126,
           "tag": "A",
-          "text": "福華大飯店股份有限公司高雄分公司高雄市新興區",
-          "href": "https://www.1111.com.tw/corp/1947225",
+          "text": "中北塗料企業股份有限公司台中市豐原區",
+          "href": "https://www.1111.com.tw/corp/64010",
           "id": "",
-          "x": 583,
+          "x": 85,
           "y": 1776,
           "width": 352,
           "height": 53,
@@ -1393,10 +1309,10 @@
         {
           "index": 127,
           "tag": "A",
-          "text": "",
-          "href": "https://www.1111.com.tw/corp/1947225",
+          "text": "中",
+          "href": "https://www.1111.com.tw/corp/64010",
           "id": "",
-          "x": 950,
+          "x": 453,
           "y": 1774,
           "width": 56,
           "height": 56,
@@ -1405,10 +1321,10 @@
         {
           "index": 128,
           "tag": "A",
-          "text": "西點蛋糕二廚月薪 35,000元~38,000元2 年以上經驗",
-          "href": "https://www.1111.com.tw/job/80184756",
+          "text": "調色技術人員(顏色色感概念者佳)月薪 32,000元以上經驗不拘",
+          "href": "https://www.1111.com.tw/job/113024063",
           "id": "",
-          "x": 583,
+          "x": 85,
           "y": 1878,
           "width": 188,
           "height": 86,
@@ -1417,10 +1333,10 @@
         {
           "index": 129,
           "tag": "A",
-          "text": "宴會廚一廚月薪 45,000元以上2 年以上經驗",
-          "href": "https://www.1111.com.tw/job/77126967",
+          "text": "1.業務代表月薪 31,000元以上經驗不拘",
+          "href": "https://www.1111.com.tw/job/75776012",
           "id": "",
-          "x": 818,
+          "x": 321,
           "y": 1878,
           "width": 188,
           "height": 86,
@@ -1429,10 +1345,10 @@
         {
           "index": 130,
           "tag": "A",
-          "text": "更多工作 (26)",
-          "href": "https://www.1111.com.tw/corp/1947225",
+          "text": "更多工作 (2)",
+          "href": "https://www.1111.com.tw/corp/64010",
           "id": "",
-          "x": 559,
+          "x": 61,
           "y": 1988,
           "width": 472,
           "height": 46,
@@ -1441,11 +1357,11 @@
         {
           "index": 131,
           "tag": "A",
-          "text": "龐德羅莎(國業股份有限公司)台北市大安區",
-          "href": "https://www.1111.com.tw/corp/1179026",
+          "text": "冠軍建材股份有限公司苗栗縣竹南鎮",
+          "href": "https://www.1111.com.tw/corp/131238",
           "id": "",
-          "x": 1080,
-          "y": 1465,
+          "x": 583,
+          "y": 1776,
           "width": 352,
           "height": 53,
           "feature_id": ""
@@ -1454,10 +1370,10 @@
           "index": 132,
           "tag": "A",
           "text": "",
-          "href": "https://www.1111.com.tw/corp/1179026",
+          "href": "https://www.1111.com.tw/corp/131238",
           "id": "",
-          "x": 1448,
-          "y": 1463,
+          "x": 950,
+          "y": 1774,
           "width": 56,
           "height": 56,
           "feature_id": ""
@@ -1465,11 +1381,11 @@
         {
           "index": 133,
           "tag": "A",
-          "text": "餐飲服務人員-假日計時(台大店)時薪 200元以上經驗不拘",
-          "href": "https://www.1111.com.tw/job/77073959",
+          "text": "北區工務專員(冠軍欣業-台北內湖)面議（經常性薪資達4萬元或以上）1 年以上經驗",
+          "href": "https://www.1111.com.tw/job/98891947",
           "id": "",
-          "x": 1080,
-          "y": 1567,
+          "x": 583,
+          "y": 1878,
           "width": 188,
           "height": 86,
           "feature_id": ""
@@ -1477,11 +1393,11 @@
         {
           "index": 134,
           "tag": "A",
-          "text": "管理幹部(復興微風)月薪 45,000元以上2 年以上經驗",
-          "href": "https://www.1111.com.tw/job/97480588",
+          "text": "會計行政秘書(苗栗竹南)月薪 35,000元以上3 年以上經驗",
+          "href": "https://www.1111.com.tw/job/130351764",
           "id": "",
-          "x": 1316,
-          "y": 1567,
+          "x": 818,
+          "y": 1878,
           "width": 188,
           "height": 86,
           "feature_id": ""
@@ -1489,11 +1405,11 @@
         {
           "index": 135,
           "tag": "A",
-          "text": "更多工作 (12)",
-          "href": "https://www.1111.com.tw/corp/1179026",
+          "text": "更多工作 (41)",
+          "href": "https://www.1111.com.tw/corp/131238",
           "id": "",
-          "x": 1056,
-          "y": 1677,
+          "x": 559,
+          "y": 1988,
           "width": 472,
           "height": 46,
           "feature_id": ""
@@ -1501,10 +1417,10 @@
         {
           "index": 136,
           "tag": "A",
-          "text": "鬍鬚張股份有限公司新北市五股區",
-          "href": "https://www.1111.com.tw/corp/12558",
+          "text": "賀華實業股份有限公司台北市中山區",
+          "href": "https://www.1111.com.tw/corp/89998",
           "id": "",
-          "x": 1578,
+          "x": 1080,
           "y": 1465,
           "width": 352,
           "height": 53,
@@ -1513,10 +1429,10 @@
         {
           "index": 137,
           "tag": "A",
-          "text": "",
-          "href": "https://www.1111.com.tw/corp/12558",
+          "text": "賀",
+          "href": "https://www.1111.com.tw/corp/89998",
           "id": "",
-          "x": 1945,
+          "x": 1448,
           "y": 1463,
           "width": 56,
           "height": 56,
@@ -1525,10 +1441,10 @@
         {
           "index": 138,
           "tag": "A",
-          "text": "展店專員面議（經常性薪資達4萬元或以上）1 年以上經驗",
-          "href": "https://www.1111.com.tw/job/99088590",
+          "text": "業務助理(新竹縣竹北市)月薪 33,000元~38,000元經驗不拘",
+          "href": "https://www.1111.com.tw/job/78392828",
           "id": "",
-          "x": 1578,
+          "x": 1080,
           "y": 1567,
           "width": 188,
           "height": 86,
@@ -1537,10 +1453,10 @@
         {
           "index": 139,
           "tag": "A",
-          "text": "(A001美食文化館)服務人員時薪 196元~312元經驗不拘",
-          "href": "https://www.1111.com.tw/job/77078838",
+          "text": "會計人員 (新竹縣竹北市)月薪 38,000元~42,000元經驗不拘",
+          "href": "https://www.1111.com.tw/job/132166268",
           "id": "",
-          "x": 1813,
+          "x": 1316,
           "y": 1567,
           "width": 188,
           "height": 86,
@@ -1549,10 +1465,10 @@
         {
           "index": 140,
           "tag": "A",
-          "text": "更多工作 (75)",
-          "href": "https://www.1111.com.tw/corp/12558",
+          "text": "更多工作 (2)",
+          "href": "https://www.1111.com.tw/corp/89998",
           "id": "",
-          "x": 1554,
+          "x": 1056,
           "y": 1677,
           "width": 472,
           "height": 46,
@@ -1561,11 +1477,11 @@
         {
           "index": 141,
           "tag": "A",
-          "text": "高雄信宗大飯店(信宗開發股份有限公司)高雄市三民區",
-          "href": "https://www.1111.com.tw/corp/2787071",
+          "text": "一成保溫耐火工程有限公司高雄市小港區",
+          "href": "https://www.1111.com.tw/corp/80061",
           "id": "",
-          "x": 1080,
-          "y": 1776,
+          "x": 1578,
+          "y": 1465,
           "width": 352,
           "height": 53,
           "feature_id": ""
@@ -1574,10 +1490,10 @@
           "index": 142,
           "tag": "A",
           "text": "",
-          "href": "https://www.1111.com.tw/corp/2787071",
+          "href": "https://www.1111.com.tw/corp/80061",
           "id": "",
-          "x": 1448,
-          "y": 1774,
+          "x": 1945,
+          "y": 1463,
           "width": 56,
           "height": 56,
           "feature_id": ""
@@ -1585,11 +1501,11 @@
         {
           "index": 143,
           "tag": "A",
-          "text": "信宗大飯店徵早餐服務人員(05:00-13:30)【意者請親電洽】月薪 29,500元以上經驗不拘",
-          "href": "https://www.1111.com.tw/job/78620702",
+          "text": "冷磚技術工(中鋼廠區)月薪 32,500元~38,000元經驗不拘",
+          "href": "https://www.1111.com.tw/job/132512379",
           "id": "",
-          "x": 1080,
-          "y": 1878,
+          "x": 1578,
+          "y": 1567,
           "width": 188,
           "height": 86,
           "feature_id": ""
@@ -1597,11 +1513,11 @@
         {
           "index": 144,
           "tag": "A",
-          "text": "餐廳內場幫手(兼)部分工時(月薪) 27,360元以上經驗不拘",
-          "href": "https://www.1111.com.tw/job/85905397",
+          "text": "儲備幹部 (外工地)月薪 32,000元~60,000元經驗不拘",
+          "href": "https://www.1111.com.tw/job/132443120",
           "id": "",
-          "x": 1316,
-          "y": 1878,
+          "x": 1813,
+          "y": 1567,
           "width": 188,
           "height": 86,
           "feature_id": ""
@@ -1609,11 +1525,11 @@
         {
           "index": 145,
           "tag": "A",
-          "text": "更多工作 (12)",
-          "href": "https://www.1111.com.tw/corp/2787071",
+          "text": "更多工作 (5)",
+          "href": "https://www.1111.com.tw/corp/80061",
           "id": "",
-          "x": 1056,
-          "y": 1988,
+          "x": 1554,
+          "y": 1677,
           "width": 472,
           "height": 46,
           "feature_id": ""
@@ -1621,10 +1537,10 @@
         {
           "index": 146,
           "tag": "A",
-          "text": "豪爵飯店(豪爵旅館有限公司)台北市中山區",
-          "href": "https://www.1111.com.tw/corp/490160",
+          "text": "台灣杰士電池工業股份有限公司台南市永康區",
+          "href": "https://www.1111.com.tw/corp/125793",
           "id": "",
-          "x": 1578,
+          "x": 1080,
           "y": 1776,
           "width": 352,
           "height": 53,
@@ -1633,10 +1549,10 @@
         {
           "index": 147,
           "tag": "A",
-          "text": "",
-          "href": "https://www.1111.com.tw/corp/490160",
+          "text": "台",
+          "href": "https://www.1111.com.tw/corp/125793",
           "id": "",
-          "x": 1945,
+          "x": 1448,
           "y": 1774,
           "width": 56,
           "height": 56,
@@ -1645,10 +1561,10 @@
         {
           "index": 148,
           "tag": "A",
-          "text": "豪爵大飯店台中館-櫃台人員月薪 32,000元以上經驗不拘",
-          "href": "https://www.1111.com.tw/job/76807647",
+          "text": "產品試驗人員月薪 31,000元~37,000元經驗不拘",
+          "href": "https://www.1111.com.tw/job/78544922",
           "id": "",
-          "x": 1578,
+          "x": 1080,
           "y": 1878,
           "width": 188,
           "height": 86,
@@ -1657,10 +1573,10 @@
         {
           "index": 149,
           "tag": "A",
-          "text": "工務庶務專員-豪爵大飯店台中館月薪 31,000元~35,000元1 年以上經驗",
-          "href": "https://www.1111.com.tw/job/103712791",
+          "text": "設計開發專員月薪 31,000元~35,000元經驗不拘",
+          "href": "https://www.1111.com.tw/job/91467522",
           "id": "",
-          "x": 1813,
+          "x": 1316,
           "y": 1878,
           "width": 188,
           "height": 86,
@@ -1669,8 +1585,68 @@
         {
           "index": 150,
           "tag": "A",
-          "text": "更多工作 (2)",
-          "href": "https://www.1111.com.tw/corp/490160",
+          "text": "更多工作 (8)",
+          "href": "https://www.1111.com.tw/corp/125793",
+          "id": "",
+          "x": 1056,
+          "y": 1988,
+          "width": 472,
+          "height": 46,
+          "feature_id": ""
+        },
+        {
+          "index": 151,
+          "tag": "A",
+          "text": "欽和工業股份有限公司高雄市大社區",
+          "href": "https://www.1111.com.tw/corp/105671",
+          "id": "",
+          "x": 1578,
+          "y": 1776,
+          "width": 352,
+          "height": 53,
+          "feature_id": ""
+        },
+        {
+          "index": 152,
+          "tag": "A",
+          "text": "欽",
+          "href": "https://www.1111.com.tw/corp/105671",
+          "id": "",
+          "x": 1945,
+          "y": 1774,
+          "width": 56,
+          "height": 56,
+          "feature_id": ""
+        },
+        {
+          "index": 153,
+          "tag": "A",
+          "text": "模具設計繪圖人員月薪 35,000元~50,000元1 年以上經驗",
+          "href": "https://www.1111.com.tw/job/130229294",
+          "id": "",
+          "x": 1578,
+          "y": 1878,
+          "width": 188,
+          "height": 86,
+          "feature_id": ""
+        },
+        {
+          "index": 154,
+          "tag": "A",
+          "text": "沖壓模具技術人員月薪 30,000元~45,000元經驗不拘",
+          "href": "https://www.1111.com.tw/job/97476462",
+          "id": "",
+          "x": 1813,
+          "y": 1878,
+          "width": 188,
+          "height": 86,
+          "feature_id": ""
+        },
+        {
+          "index": 155,
+          "tag": "A",
+          "text": "更多工作 (4)",
+          "href": "https://www.1111.com.tw/corp/105671",
           "id": "",
           "x": 1554,
           "y": 1988,
@@ -1679,7 +1655,7 @@
           "feature_id": ""
         },
         {
-          "index": 151,
+          "index": 156,
           "tag": "BUTTON",
           "text": "previous",
           "href": "",
@@ -1691,7 +1667,7 @@
           "feature_id": ""
         },
         {
-          "index": 152,
+          "index": 157,
           "tag": "BUTTON",
           "text": "next",
           "href": "",
@@ -1703,10 +1679,10 @@
           "feature_id": ""
         },
         {
-          "index": 153,
+          "index": 158,
           "tag": "A",
           "text": "更多公司",
-          "href": "https://www.1111.com.tw/search/corp?page=1&t0=220000",
+          "href": "https://www.1111.com.tw/search/corp?page=1&t0=110000",
           "id": "",
           "x": 967,
           "y": 2065,
@@ -1715,7 +1691,7 @@
           "feature_id": ""
         },
         {
-          "index": 154,
+          "index": 159,
           "tag": "BUTTON",
           "text": "嚴選企業",
           "href": "",
@@ -1727,7 +1703,7 @@
           "feature_id": ""
         },
         {
-          "index": 155,
+          "index": 160,
           "tag": "BUTTON",
           "text": "幸福企業",
           "href": "",
@@ -1739,7 +1715,7 @@
           "feature_id": ""
         },
         {
-          "index": 156,
+          "index": 161,
           "tag": "BUTTON",
           "text": "知名企業",
           "href": "",
@@ -1751,10 +1727,10 @@
           "feature_id": ""
         },
         {
-          "index": 157,
+          "index": 162,
           "tag": "A",
           "text": "",
-          "href": "https://www.1111.com.tw/corp/2865089",
+          "href": "https://rdrc.mnd.gov.tw/RdrcWeb/Schedule/Soldier",
           "id": "",
           "x": 93,
           "y": 2321,
@@ -1763,10 +1739,10 @@
           "feature_id": ""
         },
         {
-          "index": 158,
+          "index": 163,
           "tag": "A",
-          "text": "達邁科技股份有限公司",
-          "href": "https://www.1111.com.tw/corp/2865089",
+          "text": "國防部",
+          "href": "https://rdrc.mnd.gov.tw/RdrcWeb/Schedule/Soldier",
           "id": "",
           "x": 117,
           "y": 2480,
@@ -1775,22 +1751,10 @@
           "feature_id": ""
         },
         {
-          "index": 159,
-          "tag": "A",
-          "text": "更多工作(23)",
-          "href": "https://www.1111.com.tw/corp/2865089",
-          "id": "",
-          "x": 117,
-          "y": 2593,
-          "width": 246,
-          "height": 26,
-          "feature_id": ""
-        },
-        {
-          "index": 160,
+          "index": 164,
           "tag": "A",
           "text": "",
-          "href": "https://www.1111.com.tw/corp/2160005",
+          "href": "https://www.1111.com.tw/corp/890042",
           "id": "",
           "x": 413,
           "y": 2321,
@@ -1799,10 +1763,10 @@
           "feature_id": ""
         },
         {
-          "index": 161,
+          "index": 165,
           "tag": "A",
-          "text": "華碩電腦股份有限公司(ASUS)",
-          "href": "https://www.1111.com.tw/corp/2160005",
+          "text": "台灣吉野家股份有限公司",
+          "href": "https://www.1111.com.tw/corp/890042",
           "id": "",
           "x": 437,
           "y": 2480,
@@ -1811,10 +1775,10 @@
           "feature_id": ""
         },
         {
-          "index": 162,
+          "index": 166,
           "tag": "A",
-          "text": "更多工作(4)",
-          "href": "https://www.1111.com.tw/corp/2160005",
+          "text": "更多工作(79)",
+          "href": "https://www.1111.com.tw/corp/890042",
           "id": "",
           "x": 437,
           "y": 2593,
@@ -1823,10 +1787,10 @@
           "feature_id": ""
         },
         {
-          "index": 163,
+          "index": 167,
           "tag": "A",
           "text": "",
-          "href": "https://www.1111.com.tw/corp/580587",
+          "href": "https://www.1111.com.tw/corp/69590844",
           "id": "",
           "x": 733,
           "y": 2321,
@@ -1835,10 +1799,10 @@
           "feature_id": ""
         },
         {
-          "index": 164,
+          "index": 168,
           "tag": "A",
-          "text": "桂冠實業股份有限公司",
-          "href": "https://www.1111.com.tw/corp/580587",
+          "text": "友良高科技紡織股份有限公司",
+          "href": "https://www.1111.com.tw/corp/69590844",
           "id": "",
           "x": 757,
           "y": 2480,
@@ -1847,10 +1811,10 @@
           "feature_id": ""
         },
         {
-          "index": 165,
+          "index": 169,
           "tag": "A",
-          "text": "更多工作(40)",
-          "href": "https://www.1111.com.tw/corp/580587",
+          "text": "更多工作(4)",
+          "href": "https://www.1111.com.tw/corp/69590844",
           "id": "",
           "x": 757,
           "y": 2593,
@@ -1859,10 +1823,10 @@
           "feature_id": ""
         },
         {
-          "index": 166,
+          "index": 170,
           "tag": "A",
           "text": "",
-          "href": "https://www.1111.com.tw/corp/9528761",
+          "href": "https://www.1111.com.tw/corp/2785661",
           "id": "",
           "x": 1053,
           "y": 2321,
@@ -1871,10 +1835,10 @@
           "feature_id": ""
         },
         {
-          "index": 167,
+          "index": 171,
           "tag": "A",
-          "text": "富台工程股份有限公司",
-          "href": "https://www.1111.com.tw/corp/9528761",
+          "text": "台灣金蜂股份有限公司",
+          "href": "https://www.1111.com.tw/corp/2785661",
           "id": "",
           "x": 1077,
           "y": 2480,
@@ -1883,10 +1847,10 @@
           "feature_id": ""
         },
         {
-          "index": 168,
+          "index": 172,
           "tag": "A",
-          "text": "更多工作(19)",
-          "href": "https://www.1111.com.tw/corp/9528761",
+          "text": "更多工作(8)",
+          "href": "https://www.1111.com.tw/corp/2785661",
           "id": "",
           "x": 1077,
           "y": 2593,
@@ -1895,7 +1859,7 @@
           "feature_id": ""
         },
         {
-          "index": 171,
+          "index": 175,
           "tag": "A",
           "text": "AI 小精靈你的智慧求職好夥伴，精準推薦合適職缺",
           "href": "https://www.1111.com.tw/?open_ai_chat=1",
@@ -1907,9 +1871,9 @@
           "feature_id": ""
         },
         {
-          "index": 172,
+          "index": 176,
           "tag": "A",
-          "text": "AI 履歷健檢幫你優化內容，找出拿下 offer 的關鍵細節",
+          "text": "AI 履歷健檢幫你優化內容，找出拿下 offer 關鍵細節",
           "href": "https://events.1111.com.tw/ai-resume-check/?agent=ppc_aitool_promo",
           "id": "",
           "x": 334,
@@ -1919,7 +1883,7 @@
           "feature_id": ""
         },
         {
-          "index": 173,
+          "index": 177,
           "tag": "A",
           "text": "AI 模擬面試AI 精準預測提問，並提供面試改善建議",
           "href": "https://ai-lab.1111.com.tw/landing_page/ai-interview",
@@ -1931,7 +1895,7 @@
           "feature_id": ""
         },
         {
-          "index": 174,
+          "index": 178,
           "tag": "A",
           "text": "薪資公秤查詢比對薪資，掌握身價與市場定位",
           "href": "https://www.jobsalary.com.tw/",
@@ -1943,10 +1907,10 @@
           "feature_id": ""
         },
         {
-          "index": 175,
+          "index": 179,
           "tag": "A",
-          "text": "九大職能星探索個人職能，打造你的專屬職涯藍圖",
-          "href": "https://assessment.1111.com.tw/cstar/",
+          "text": "九大職能星探索個人職能，打造你的專屬藍圖",
+          "href": "https://assessment.1111.com.tw/cstar/index.aspx",
           "id": "",
           "x": 1154,
           "y": 2867,
@@ -1955,7 +1919,7 @@
           "feature_id": ""
         },
         {
-          "index": 178,
+          "index": 182,
           "tag": "BUTTON",
           "text": "求職面試",
           "href": "",
@@ -1967,7 +1931,7 @@
           "feature_id": ""
         },
         {
-          "index": 179,
+          "index": 183,
           "tag": "BUTTON",
           "text": "職場 Talk",
           "href": "",
@@ -1979,7 +1943,7 @@
           "feature_id": ""
         },
         {
-          "index": 180,
+          "index": 184,
           "tag": "BUTTON",
           "text": "產業趨勢",
           "href": "",
@@ -1991,7 +1955,7 @@
           "feature_id": ""
         },
         {
-          "index": 181,
+          "index": 185,
           "tag": "A",
           "text": "救救面試焦慮，告別腦袋空空！AI模擬面試實測心得面試焦慮救星！實測 1111 AI 模擬面試地勤職位，揭露你沒發現的說話",
           "href": "https://guide.1111.com.tw/article/job-hunting/ai-mock-interview-test-1111",
@@ -2003,7 +1967,7 @@
           "feature_id": ""
         },
         {
-          "index": 182,
+          "index": 186,
           "tag": "A",
           "text": "",
           "href": "https://guide.1111.com.tw/article/job-hunting/ai-mock-interview-test-1111",
@@ -2015,7 +1979,7 @@
           "feature_id": ""
         },
         {
-          "index": 183,
+          "index": 187,
           "tag": "A",
           "text": "面試不再腦袋空白！實測AI模擬面試練出「錄取體質」求職失利，不一定是履歷不好，本文整理求職者最常見的3大面試痛點，並介紹",
           "href": "https://guide.1111.com.tw/article/job-hunting/ai_interview",
@@ -2027,7 +1991,7 @@
           "feature_id": ""
         },
         {
-          "index": 184,
+          "index": 188,
           "tag": "A",
           "text": "",
           "href": "https://guide.1111.com.tw/article/job-hunting/ai_interview",
@@ -2039,7 +2003,7 @@
           "feature_id": ""
         },
         {
-          "index": 185,
+          "index": 189,
           "tag": "A",
           "text": "為什麼總收無聲卡？當主管後我才看懂人資流程本文以主管視角逆向拆解人資招募流程，分析 ATS 篩選、主管排程與核薪等環節，",
           "href": "https://guide.1111.com.tw/article/job-hunting/recruitment-process-insights-hr-perspective",
@@ -2051,7 +2015,7 @@
           "feature_id": ""
         },
         {
-          "index": 186,
+          "index": 190,
           "tag": "A",
           "text": "",
           "href": "https://guide.1111.com.tw/article/job-hunting/recruitment-process-insights-hr-perspective",
@@ -2063,7 +2027,7 @@
           "feature_id": ""
         },
         {
-          "index": 187,
+          "index": 191,
           "tag": "A",
           "text": "年薪怎麼算？搞懂計算公式、年終獎金與中位數，談薪不被低估搞懂年薪怎麼算、是否包含年終與獎金，才能避免談薪吃虧。本文解析年",
           "href": "https://guide.1111.com.tw/article/job-hunting/annual_salary_calculation",
@@ -2075,7 +2039,7 @@
           "feature_id": ""
         },
         {
-          "index": 189,
+          "index": 193,
           "tag": "A",
           "text": "",
           "href": "https://guide.1111.com.tw/article/job-hunting/annual_salary_calculation",
@@ -2087,7 +2051,7 @@
           "feature_id": ""
         },
         {
-          "index": 190,
+          "index": 194,
           "tag": "A",
           "text": "更多文章",
           "href": "https://guide.1111.com.tw/article/job-hunting",
@@ -2099,7 +2063,7 @@
           "feature_id": ""
         },
         {
-          "index": 193,
+          "index": 197,
           "tag": "A",
           "text": "",
           "href": "https://www.1111.com.tw/",
@@ -2111,7 +2075,7 @@
           "feature_id": ""
         },
         {
-          "index": 194,
+          "index": 198,
           "tag": "A",
           "text": "下載找工作 App",
           "href": "https://www.1111.com.tw/1111app/",
@@ -2123,7 +2087,7 @@
           "feature_id": ""
         },
         {
-          "index": 195,
+          "index": 199,
           "tag": "A",
           "text": "",
           "href": "https://www.facebook.com/1111jobbank/?locale=zh_TW",
@@ -2135,7 +2099,7 @@
           "feature_id": ""
         },
         {
-          "index": 196,
+          "index": 200,
           "tag": "A",
           "text": "",
           "href": "https://www.instagram.com/1111.com.tw/",
@@ -2147,7 +2111,7 @@
           "feature_id": ""
         },
         {
-          "index": 197,
+          "index": 201,
           "tag": "A",
           "text": "中部專區",
           "href": "https://www.1111tc.com.tw/",
@@ -2159,7 +2123,7 @@
           "feature_id": ""
         },
         {
-          "index": 198,
+          "index": 202,
           "tag": "A",
           "text": "南部專區",
           "href": "https://www.1111job.com.tw/",
@@ -2171,7 +2135,7 @@
           "feature_id": ""
         },
         {
-          "index": 199,
+          "index": 203,
           "tag": "A",
           "text": "兼差打工",
           "href": "https://parttime.1111.com.tw/",
@@ -2183,7 +2147,7 @@
           "feature_id": ""
         },
         {
-          "index": 200,
+          "index": 204,
           "tag": "A",
           "text": "高階獵頭",
           "href": "https://headhunt.com.tw/Pages/index.aspx",
@@ -2195,7 +2159,7 @@
           "feature_id": ""
         },
         {
-          "index": 201,
+          "index": 205,
           "tag": "A",
           "text": "家教網",
           "href": "https://tutor.1111.com.tw/",
@@ -2207,7 +2171,7 @@
           "feature_id": ""
         },
         {
-          "index": 202,
+          "index": 206,
           "tag": "A",
           "text": "求職QA",
           "href": "https://www.1111.com.tw/QA/Index",
@@ -2219,7 +2183,7 @@
           "feature_id": ""
         },
         {
-          "index": 203,
+          "index": 207,
           "tag": "A",
           "text": "企業註冊",
           "href": "https://recruit.1111.com.tw/dVipRegister.aspx",
@@ -2231,7 +2195,7 @@
           "feature_id": ""
         },
         {
-          "index": 204,
+          "index": 208,
           "tag": "A",
           "text": "徵才方案",
           "href": "https://recruit.1111.com.tw/dPrice.aspx",
@@ -2243,7 +2207,7 @@
           "feature_id": ""
         },
         {
-          "index": 205,
+          "index": 209,
           "tag": "A",
           "text": "人才試搜",
           "href": "https://recruit.1111.com.tw/dTrialsearch.aspx",
@@ -2255,7 +2219,7 @@
           "feature_id": ""
         },
         {
-          "index": 206,
+          "index": 210,
           "tag": "A",
           "text": "廣告合作",
           "href": "https://www.1111.com.tw/1111AD/index.asp",
@@ -2267,7 +2231,7 @@
           "feature_id": ""
         },
         {
-          "index": 207,
+          "index": 211,
           "tag": "A",
           "text": "線上客服",
           "href": "https://25.cami.yesing.com/tw/service/MTExMWpvYmJhbms",
@@ -2279,7 +2243,7 @@
           "feature_id": ""
         },
         {
-          "index": 208,
+          "index": 212,
           "tag": "A",
           "text": "求才QA",
           "href": "https://www.1111.com.tw/QARecruit/",
@@ -2291,7 +2255,7 @@
           "feature_id": ""
         },
         {
-          "index": 209,
+          "index": 213,
           "tag": "A",
           "text": "科技島",
           "href": "https://www.technice.com.tw/",
@@ -2303,7 +2267,7 @@
           "feature_id": ""
         },
         {
-          "index": 210,
+          "index": 214,
           "tag": "A",
           "text": "幸福企業",
           "href": "https://happiness.1111.com.tw/",
@@ -2315,7 +2279,7 @@
           "feature_id": ""
         },
         {
-          "index": 211,
+          "index": 215,
           "tag": "A",
           "text": "OPT歐趴糖",
           "href": "https://www.1111opt.com.tw/",
@@ -2327,7 +2291,7 @@
           "feature_id": ""
         },
         {
-          "index": 212,
+          "index": 216,
           "tag": "A",
           "text": "職涯論壇",
           "href": "https://www.jobforum.tw/index.asp",
@@ -2339,7 +2303,7 @@
           "feature_id": ""
         },
         {
-          "index": 213,
+          "index": 217,
           "tag": "A",
           "text": "產經新聞",
           "href": "https://www.1111.com.tw/news/",
@@ -2351,7 +2315,7 @@
           "feature_id": ""
         },
         {
-          "index": 214,
+          "index": 218,
           "tag": "A",
           "text": "進修網",
           "href": "https://www.1111edu.com.tw/",
@@ -2363,7 +2327,7 @@
           "feature_id": ""
         },
         {
-          "index": 215,
+          "index": 219,
           "tag": "A",
           "text": "面試經驗談",
           "href": "https://www.1111.com.tw/1000w/fanshome/discuss.asp?cat=fans",
@@ -2375,7 +2339,7 @@
           "feature_id": ""
         },
         {
-          "index": 216,
+          "index": 220,
           "tag": "A",
           "text": "網站指引",
           "href": "http://www.1111.com.tw/webmap.asp",
@@ -2387,7 +2351,7 @@
           "feature_id": ""
         },
         {
-          "index": 217,
+          "index": 221,
           "tag": "A",
           "text": "1111簡介",
           "href": "http://www.1111.com.tw/13SP/summary/index.asp",
@@ -2399,7 +2363,7 @@
           "feature_id": ""
         },
         {
-          "index": 218,
+          "index": 222,
           "tag": "A",
           "text": "加入1111",
           "href": "https://www.1111.com.tw/recruitment",
@@ -2411,7 +2375,7 @@
           "feature_id": ""
         },
         {
-          "index": 219,
+          "index": 223,
           "tag": "A",
           "text": "合作提案",
           "href": "http://www.1111.com.tw/help/alliance.asp",
@@ -2423,7 +2387,7 @@
           "feature_id": ""
         },
         {
-          "index": 220,
+          "index": 224,
           "tag": "A",
           "text": "電子報訂閱",
           "href": "https://www.1111.com.tw/Member/Epaper",
@@ -2435,7 +2399,7 @@
           "feature_id": ""
         },
         {
-          "index": 221,
+          "index": 225,
           "tag": "A",
           "text": "隱私權保護",
           "href": "https://www.1111.com.tw/help/privacy",
@@ -2447,7 +2411,7 @@
           "feature_id": ""
         },
         {
-          "index": 222,
+          "index": 226,
           "tag": "A",
           "text": "意見反映",
           "href": "https://www.1111.com.tw/help/service.asp",
@@ -2459,7 +2423,7 @@
           "feature_id": ""
         },
         {
-          "index": 223,
+          "index": 227,
           "tag": "A",
           "text": "0800-09-1111 (21:00PM - 08:00AM 轉語音信箱)",
           "href": "tel:0800091111",
@@ -2471,7 +2435,7 @@
           "feature_id": ""
         },
         {
-          "index": 224,
+          "index": 228,
           "tag": "A",
           "text": "02-8787-1111 轉 8",
           "href": "tel:0287871111",
@@ -2483,7 +2447,7 @@
           "feature_id": ""
         },
         {
-          "index": 225,
+          "index": 229,
           "tag": "A",
           "text": "02-8787-1111",
           "href": "tel:0287871111",
@@ -2495,7 +2459,7 @@
           "feature_id": ""
         },
         {
-          "index": 226,
+          "index": 230,
           "tag": "A",
           "text": "04-2203-1111",
           "href": "tel:0422031111",
@@ -2507,7 +2471,7 @@
           "feature_id": ""
         },
         {
-          "index": 227,
+          "index": 231,
           "tag": "A",
           "text": "07-958-1111",
           "href": "tel:079581111",
@@ -2519,7 +2483,7 @@
           "feature_id": ""
         },
         {
-          "index": 235,
+          "index": 239,
           "tag": "A",
           "text": "",
           "href": "https://www.1111.com.tw/#",
@@ -2543,7 +2507,7 @@
       "full_page": true,
       "elements": [
         {
-          "index": 0,
+          "index": 1,
           "tag": "BUTTON",
           "text": "Top",
           "href": "",
@@ -2555,7 +2519,7 @@
           "feature_id": ""
         },
         {
-          "index": 1,
+          "index": 2,
           "tag": "A",
           "text": "查看詳情",
           "href": "https://1111.com.tw/271004/",
@@ -2567,7 +2531,7 @@
           "feature_id": ""
         },
         {
-          "index": 4,
+          "index": 5,
           "tag": "A",
           "text": "",
           "href": "https://www.1111.com.tw/",
@@ -2579,7 +2543,7 @@
           "feature_id": ""
         },
         {
-          "index": 5,
+          "index": 6,
           "tag": "A",
           "text": "職接配",
           "href": "https://www.1111.com.tw/job-pair",
@@ -2591,7 +2555,7 @@
           "feature_id": ""
         },
         {
-          "index": 6,
+          "index": 7,
           "tag": "A",
           "text": "立即匯入履歷",
           "href": "javascript:;",
@@ -2603,7 +2567,7 @@
           "feature_id": ""
         },
         {
-          "index": 7,
+          "index": 8,
           "tag": "A",
           "text": "求職登入/註冊",
           "href": "https://www.1111.com.tw/login/Index?ReturnUrl=https%3A%2F%2Fwww.1111.com.tw%2Fsearch%2Fjob%3Fpage%3D1%26col%3Dab%26sort%",
@@ -2615,7 +2579,7 @@
           "feature_id": ""
         },
         {
-          "index": 8,
+          "index": 9,
           "tag": "BUTTON",
           "text": "企業求才",
           "href": "",
@@ -2627,7 +2591,7 @@
           "feature_id": ""
         },
         {
-          "index": 9,
+          "index": 10,
           "tag": "BUTTON",
           "text": "立即上工 New 「立即上工」提供快速到職的短期打工、臨時工等工作機會",
           "href": "",
@@ -2639,7 +2603,7 @@
           "feature_id": ""
         },
         {
-          "index": 10,
+          "index": 11,
           "tag": "BUTTON",
           "text": "找工作",
           "href": "",
@@ -2651,7 +2615,7 @@
           "feature_id": ""
         },
         {
-          "index": 11,
+          "index": 12,
           "tag": "BUTTON",
           "text": "找公司",
           "href": "",
@@ -2663,7 +2627,7 @@
           "feature_id": ""
         },
         {
-          "index": 12,
+          "index": 13,
           "tag": "BUTTON",
           "text": "職務",
           "href": "",
@@ -2675,7 +2639,7 @@
           "feature_id": ""
         },
         {
-          "index": 13,
+          "index": 14,
           "tag": "BUTTON",
           "text": "地區",
           "href": "",
@@ -2687,7 +2651,7 @@
           "feature_id": ""
         },
         {
-          "index": 14,
+          "index": 15,
           "tag": "BUTTON",
           "text": "搜尋",
           "href": "",
@@ -2699,7 +2663,7 @@
           "feature_id": ""
         },
         {
-          "index": 22,
+          "index": 23,
           "tag": "BUTTON",
           "text": "最相關",
           "href": "",
@@ -2711,7 +2675,7 @@
           "feature_id": ""
         },
         {
-          "index": 23,
+          "index": 24,
           "tag": "BUTTON",
           "text": "地區",
           "href": "",
@@ -2723,7 +2687,7 @@
           "feature_id": ""
         },
         {
-          "index": 24,
+          "index": 25,
           "tag": "BUTTON",
           "text": "近期更新",
           "href": "",
@@ -2735,7 +2699,7 @@
           "feature_id": ""
         },
         {
-          "index": 25,
+          "index": 26,
           "tag": "BUTTON",
           "text": "工作經驗",
           "href": "",
@@ -2747,7 +2711,7 @@
           "feature_id": ""
         },
         {
-          "index": 26,
+          "index": 27,
           "tag": "BUTTON",
           "text": "薪資",
           "href": "",
@@ -2759,10 +2723,10 @@
           "feature_id": ""
         },
         {
-          "index": 27,
+          "index": 28,
           "tag": "A",
-          "text": "現場工程師",
-          "href": "https://www.1111.com.tw/job/132482634",
+          "text": "工程師",
+          "href": "https://www.1111.com.tw/job/131982708?mid=searchlistTop",
           "id": "",
           "x": 149,
           "y": 479,
@@ -2771,22 +2735,22 @@
           "feature_id": ""
         },
         {
-          "index": 28,
+          "index": 29,
           "tag": "A",
-          "text": "顏春發企業有限公司｜土木工程",
-          "href": "https://www.1111.com.tw/corp/117244861",
+          "text": "正昇工程顧問有限公司｜土木工程",
+          "href": "https://www.1111.com.tw/corp/69453750",
           "id": "",
           "x": 149,
           "y": 513,
-          "width": 227,
+          "width": 243,
           "height": 19,
           "feature_id": ""
         },
         {
-          "index": 29,
+          "index": 30,
           "tag": "A",
-          "text": "高雄市鳳山區",
-          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&c0=101824",
+          "text": "台南市新營區",
+          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&c0=101625",
           "id": "",
           "x": 843,
           "y": 495,
@@ -2795,7 +2759,7 @@
           "feature_id": ""
         },
         {
-          "index": 30,
+          "index": 31,
           "tag": "A",
           "text": "經驗不拘",
           "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB",
@@ -2807,7 +2771,7 @@
           "feature_id": ""
         },
         {
-          "index": 32,
+          "index": 33,
           "tag": "BUTTON",
           "text": "應 徵",
           "href": "",
@@ -2819,10 +2783,10 @@
           "feature_id": ""
         },
         {
-          "index": 33,
+          "index": 34,
           "tag": "A",
-          "text": "駐廠工程師",
-          "href": "https://www.1111.com.tw/job/132438781",
+          "text": "機械工程師/資深機械工程師",
+          "href": "https://www.1111.com.tw/job/132503088?mid=searchlistTop",
           "id": "",
           "x": 149,
           "y": 762,
@@ -2831,43 +2795,43 @@
           "feature_id": ""
         },
         {
-          "index": 34,
+          "index": 35,
           "tag": "A",
-          "text": "沅鼎自動化企業社｜自動控制相關",
-          "href": "https://www.1111.com.tw/corp/75138793",
+          "text": "菱洋國際工程股份有限公司｜自動控制相關",
+          "href": "https://www.1111.com.tw/corp/49788051",
           "id": "",
           "x": 149,
           "y": 796,
-          "width": 243,
+          "width": 308,
           "height": 19,
-          "feature_id": ""
-        },
-        {
-          "index": 35,
-          "tag": "A",
-          "text": "新竹市東區",
-          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&c0=100601",
-          "id": "",
-          "x": 843,
-          "y": 778,
-          "width": 70,
-          "height": 24,
           "feature_id": ""
         },
         {
           "index": 36,
           "tag": "A",
-          "text": "經驗不拘",
-          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB",
+          "text": "新竹市",
+          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&c0=100600",
           "id": "",
           "x": 843,
-          "y": 868,
-          "width": 56,
+          "y": 778,
+          "width": 42,
           "height": 24,
           "feature_id": ""
         },
         {
-          "index": 38,
+          "index": 37,
+          "tag": "A",
+          "text": "2 年以上經驗",
+          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&ex=3%7E5",
+          "id": "",
+          "x": 843,
+          "y": 868,
+          "width": 81,
+          "height": 24,
+          "feature_id": ""
+        },
+        {
+          "index": 39,
           "tag": "BUTTON",
           "text": "應 徵",
           "href": "",
@@ -2879,10 +2843,10 @@
           "feature_id": ""
         },
         {
-          "index": 39,
+          "index": 40,
           "tag": "A",
-          "text": "業務工程師",
-          "href": "https://www.1111.com.tw/job/79388797",
+          "text": "電子工程師",
+          "href": "https://www.1111.com.tw/job/91230280?mid=searchlistTop",
           "id": "",
           "x": 149,
           "y": 1045,
@@ -2891,22 +2855,22 @@
           "feature_id": ""
         },
         {
-          "index": 40,
+          "index": 41,
           "tag": "A",
-          "text": "力技科技工程股份有限公司｜污染防治設備製造修配",
-          "href": "https://www.1111.com.tw/corp/9721939",
+          "text": "得洋電子工業股份有限公司｜被動電子元件製造",
+          "href": "https://www.1111.com.tw/corp/51801054",
           "id": "",
           "x": 149,
           "y": 1079,
-          "width": 373,
+          "width": 340,
           "height": 19,
           "feature_id": ""
         },
         {
-          "index": 41,
+          "index": 42,
           "tag": "A",
-          "text": "新北市中和區",
-          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&c0=100215",
+          "text": "新北市瑞芳區",
+          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&c0=100207",
           "id": "",
           "x": 843,
           "y": 1061,
@@ -2915,7 +2879,7 @@
           "feature_id": ""
         },
         {
-          "index": 42,
+          "index": 43,
           "tag": "A",
           "text": "3 年以上經驗",
           "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&ex=5%7E7",
@@ -2927,7 +2891,7 @@
           "feature_id": ""
         },
         {
-          "index": 44,
+          "index": 45,
           "tag": "BUTTON",
           "text": "應 徵",
           "href": "",
@@ -2939,10 +2903,10 @@
           "feature_id": ""
         },
         {
-          "index": 45,
+          "index": 46,
           "tag": "A",
-          "text": "ERP資訊工程師",
-          "href": "https://www.1111.com.tw/job/113066761",
+          "text": "機電工程師",
+          "href": "https://www.1111.com.tw/job/131963149?mid=searchlistTop",
           "id": "",
           "x": 149,
           "y": 1328,
@@ -2951,22 +2915,22 @@
           "feature_id": ""
         },
         {
-          "index": 46,
+          "index": 47,
           "tag": "A",
-          "text": "台灣美加金屬股份有限公司｜環境衛生╱污染防治相關",
-          "href": "https://www.1111.com.tw/corp/400471",
+          "text": "弘景工程有限公司｜空調╱水機電工程",
+          "href": "https://www.1111.com.tw/corp/73192499",
           "id": "",
           "x": 149,
           "y": 1362,
-          "width": 389,
+          "width": 275,
           "height": 19,
           "feature_id": ""
         },
         {
-          "index": 47,
+          "index": 48,
           "tag": "A",
-          "text": "高雄市大寮區",
-          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&c0=101825",
+          "text": "台北市松山區",
+          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&c0=100104",
           "id": "",
           "x": 843,
           "y": 1344,
@@ -2975,19 +2939,19 @@
           "feature_id": ""
         },
         {
-          "index": 48,
+          "index": 49,
           "tag": "A",
-          "text": "1 年以上經驗",
-          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&ex=3%7E5",
+          "text": "經驗不拘",
+          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB",
           "id": "",
           "x": 843,
           "y": 1434,
-          "width": 81,
+          "width": 56,
           "height": 24,
           "feature_id": ""
         },
         {
-          "index": 50,
+          "index": 51,
           "tag": "BUTTON",
           "text": "應 徵",
           "href": "",
@@ -2999,10 +2963,10 @@
           "feature_id": ""
         },
         {
-          "index": 51,
+          "index": 52,
           "tag": "A",
-          "text": "資訊系統工程師",
-          "href": "https://www.1111.com.tw/job/132473104",
+          "text": "品保工程師",
+          "href": "https://www.1111.com.tw/job/130451689?mid=searchlistTop",
           "id": "",
           "x": 149,
           "y": 1611,
@@ -3011,22 +2975,22 @@
           "feature_id": ""
         },
         {
-          "index": 52,
+          "index": 53,
           "tag": "A",
-          "text": "台灣杰士電池工業股份有限公司｜電力機械器材製造修配",
-          "href": "https://www.1111.com.tw/corp/125793",
+          "text": "久誼股份有限公司｜紙相關製造",
+          "href": "https://www.1111.com.tw/corp/9723455",
           "id": "",
           "x": 149,
           "y": 1645,
-          "width": 405,
+          "width": 227,
           "height": 19,
           "feature_id": ""
         },
         {
-          "index": 53,
+          "index": 54,
           "tag": "A",
-          "text": "台南市永康區",
-          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&c0=101607",
+          "text": "台中市外埔區",
+          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&c0=100928",
           "id": "",
           "x": 843,
           "y": 1627,
@@ -3035,19 +2999,19 @@
           "feature_id": ""
         },
         {
-          "index": 54,
+          "index": 55,
           "tag": "A",
-          "text": "經驗不拘",
-          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB",
+          "text": "5 年以上經驗",
+          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&ex=7%7E12",
           "id": "",
           "x": 843,
           "y": 1717,
-          "width": 56,
+          "width": 81,
           "height": 24,
           "feature_id": ""
         },
         {
-          "index": 56,
+          "index": 57,
           "tag": "BUTTON",
           "text": "應 徵",
           "href": "",
@@ -3059,10 +3023,10 @@
           "feature_id": ""
         },
         {
-          "index": 57,
+          "index": 58,
           "tag": "A",
-          "text": "TE工程師 (EEN10桃園)",
-          "href": "https://www.1111.com.tw/job/132177602",
+          "text": "助理工程師",
+          "href": "https://www.1111.com.tw/job/91471052?mid=searchlistTop",
           "id": "",
           "x": 149,
           "y": 1894,
@@ -3071,22 +3035,22 @@
           "feature_id": ""
         },
         {
-          "index": 58,
+          "index": 59,
           "tag": "A",
-          "text": "協益電子股份有限公司｜電腦╱週邊設備製造",
-          "href": "https://www.1111.com.tw/corp/510461",
+          "text": "竹鋒有限公司｜自動控制相關",
+          "href": "https://www.1111.com.tw/corp/72466121",
           "id": "",
           "x": 149,
           "y": 1928,
-          "width": 324,
+          "width": 211,
           "height": 19,
           "feature_id": ""
         },
         {
-          "index": 59,
+          "index": 60,
           "tag": "A",
-          "text": "桃園市觀音區",
-          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&c0=100506",
+          "text": "台中市西屯區",
+          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&c0=100907",
           "id": "",
           "x": 843,
           "y": 1910,
@@ -3095,19 +3059,19 @@
           "feature_id": ""
         },
         {
-          "index": 60,
+          "index": 61,
           "tag": "A",
-          "text": "3 年以上經驗",
-          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&ex=5%7E7",
+          "text": "經驗不拘",
+          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB",
           "id": "",
           "x": 843,
           "y": 2000,
-          "width": 81,
+          "width": 56,
           "height": 24,
           "feature_id": ""
         },
         {
-          "index": 62,
+          "index": 63,
           "tag": "BUTTON",
           "text": "應 徵",
           "href": "",
@@ -3119,10 +3083,10 @@
           "feature_id": ""
         },
         {
-          "index": 63,
+          "index": 64,
           "tag": "A",
-          "text": "機械設計工程師",
-          "href": "https://www.1111.com.tw/job/55037781",
+          "text": "開發工程師",
+          "href": "https://www.1111.com.tw/job/132476561?mid=searchlistTop",
           "id": "",
           "x": 149,
           "y": 2177,
@@ -3131,10 +3095,10 @@
           "feature_id": ""
         },
         {
-          "index": 64,
+          "index": 65,
           "tag": "A",
-          "text": "聚川企業股份有限公司｜專用生產機械製造修配",
-          "href": "https://www.1111.com.tw/corp/9526140",
+          "text": "安盛精密工業股份有限公司｜被動電子元件製造",
+          "href": "https://www.1111.com.tw/corp/48362854",
           "id": "",
           "x": 149,
           "y": 2211,
@@ -3143,10 +3107,10 @@
           "feature_id": ""
         },
         {
-          "index": 65,
+          "index": 66,
           "tag": "A",
-          "text": "桃園市桃園區",
-          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&c0=100507",
+          "text": "新北市新莊區",
+          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&c0=100221",
           "id": "",
           "x": 843,
           "y": 2193,
@@ -3155,7 +3119,7 @@
           "feature_id": ""
         },
         {
-          "index": 66,
+          "index": 67,
           "tag": "A",
           "text": "2 年以上經驗",
           "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&ex=3%7E5",
@@ -3167,7 +3131,7 @@
           "feature_id": ""
         },
         {
-          "index": 68,
+          "index": 69,
           "tag": "BUTTON",
           "text": "應 徵",
           "href": "",
@@ -3179,10 +3143,10 @@
           "feature_id": ""
         },
         {
-          "index": 69,
+          "index": 70,
           "tag": "A",
-          "text": "機台操作工程師",
-          "href": "https://www.1111.com.tw/job/98618577",
+          "text": "研發工程師",
+          "href": "https://www.1111.com.tw/job/132225088?mid=searchlistTop",
           "id": "",
           "x": 149,
           "y": 2460,
@@ -3191,10 +3155,10 @@
           "feature_id": ""
         },
         {
-          "index": 70,
+          "index": 71,
           "tag": "A",
-          "text": "永進滾筒科技股份有限公司｜橡膠製品製造",
-          "href": "https://www.1111.com.tw/corp/72459197",
+          "text": "極品化學科技股份有限公司｜化學原料製造",
+          "href": "https://www.1111.com.tw/corp/68005936",
           "id": "",
           "x": 149,
           "y": 2494,
@@ -3205,8 +3169,8 @@
         {
           "index": 72,
           "tag": "A",
-          "text": "台中市神岡區",
-          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&c0=100921",
+          "text": "桃園市觀音區",
+          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&c0=100506",
           "id": "",
           "x": 843,
           "y": 2476,
@@ -3217,8 +3181,8 @@
         {
           "index": 73,
           "tag": "A",
-          "text": "1 年以上經驗",
-          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&ex=3%7E5",
+          "text": "5 年以上經驗",
+          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&ex=7%7E12",
           "id": "",
           "x": 843,
           "y": 2566,
@@ -3241,8 +3205,8 @@
         {
           "index": 76,
           "tag": "A",
-          "text": "資訊整合軟體工程師",
-          "href": "https://www.1111.com.tw/job/132488521",
+          "text": "Java程式工程師",
+          "href": "https://www.1111.com.tw/job/79720258?mid=searchlistTop",
           "id": "",
           "x": 149,
           "y": 2743,
@@ -3253,20 +3217,20 @@
         {
           "index": 77,
           "tag": "A",
-          "text": "和司特股份有限公司｜綜合商品批發代理",
-          "href": "https://www.1111.com.tw/corp/71962109",
+          "text": "銳碁資訊股份有限公司｜電腦系統整合服務相關",
+          "href": "https://www.1111.com.tw/corp/71696526",
           "id": "",
           "x": 149,
           "y": 2777,
-          "width": 292,
+          "width": 340,
           "height": 19,
           "feature_id": ""
         },
         {
           "index": 78,
           "tag": "A",
-          "text": "台中市南屯區",
-          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&c0=100908",
+          "text": "台北市內湖區",
+          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&c0=100110",
           "id": "",
           "x": 843,
           "y": 2759,
@@ -3277,12 +3241,12 @@
         {
           "index": 79,
           "tag": "A",
-          "text": "5 年以上經驗",
-          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&ex=7%7E12",
+          "text": "經驗不拘",
+          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB",
           "id": "",
           "x": 843,
           "y": 2849,
-          "width": 81,
+          "width": 56,
           "height": 24,
           "feature_id": ""
         },
@@ -3301,8 +3265,8 @@
         {
           "index": 82,
           "tag": "A",
-          "text": "設備巡檢助理工程師",
-          "href": "https://www.1111.com.tw/job/132112465",
+          "text": "台中現場工程師",
+          "href": "https://www.1111.com.tw/job/91534235?mid=searchlistTop",
           "id": "",
           "x": 149,
           "y": 3026,
@@ -3313,32 +3277,32 @@
         {
           "index": 83,
           "tag": "A",
-          "text": "正穎環境科技有限公司｜農事╱畜牧相關",
-          "href": "https://www.1111.com.tw/corp/72531028",
+          "text": "上菱工業股份有限公司｜空調╱水機電工程",
+          "href": "https://www.1111.com.tw/corp/72570567",
           "id": "",
           "x": 149,
           "y": 3060,
-          "width": 292,
+          "width": 308,
           "height": 19,
           "feature_id": ""
         },
         {
           "index": 84,
           "tag": "A",
-          "text": "雲林縣斗南鎮",
-          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&c0=101301",
+          "text": "台中市西區",
+          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&c0=100904",
           "id": "",
           "x": 843,
           "y": 3042,
-          "width": 84,
+          "width": 70,
           "height": 24,
           "feature_id": ""
         },
         {
           "index": 85,
           "tag": "A",
-          "text": "經驗不拘",
-          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB",
+          "text": "半年經驗",
+          "href": "https://www.1111.com.tw/search/job?page=1&col=ab&sort=desc&ks=%E5%B7%A5%E7%A8%8B%E5%B8%AB&ex=3%7E5",
           "id": "",
           "x": 843,
           "y": 3132,
@@ -3361,8 +3325,8 @@
         {
           "index": 88,
           "tag": "A",
-          "text": "優先推薦 CAD工程師采邑文化創意精品月薪 42,000元~55,000元",
-          "href": "https://www.1111.com.tw/job/79558715/",
+          "text": "優先推薦 網路工程師摯陞數位科技有限公司月薪 30,000元~60,000元",
+          "href": "https://www.1111.com.tw/job/103864410/?mid=searchlist",
           "id": "",
           "x": 1179,
           "y": 141,
@@ -3373,8 +3337,8 @@
         {
           "index": 89,
           "tag": "A",
-          "text": "優先推薦 監造工程師正昇工程顧問有限公司月薪 40,000元~60,000元",
-          "href": "https://www.1111.com.tw/job/97423285/",
+          "text": "優先推薦 品保工程師雄舜股份有限公司月薪 32,000元以上",
+          "href": "https://www.1111.com.tw/job/71618800/?mid=searchlist",
           "id": "",
           "x": 1179,
           "y": 367,
@@ -3385,8 +3349,8 @@
         {
           "index": 90,
           "tag": "A",
-          "text": "優先推薦 ERP資訊工程師台灣美加金屬股份有限公司月薪 35,000元~45,000元",
-          "href": "https://www.1111.com.tw/job/113066761/",
+          "text": "優先推薦 客服工程師川詠事務機器有限公司月薪 35,000元以上",
+          "href": "https://www.1111.com.tw/job/78509660/?mid=searchlist",
           "id": "",
           "x": 1179,
           "y": 593,
