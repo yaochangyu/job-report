@@ -51,6 +51,7 @@ function barChart(id, labels, datasets, opts = {}) {
 }
 
 function barHChart(id, labels, datasets) {
+  if (id === 'chart3') console.log('[DEBUG barHChart]', id, 'labels:', labels?.slice(0,3), 'data:', datasets?.[0]?.data?.slice(0,3), 'dataTypes:', datasets?.[0]?.data?.slice(0,3)?.map(v => typeof v));
   makeChart(id, {
     type: "bar",
     data: { labels, datasets },
@@ -150,6 +151,12 @@ const VIEW_PANEL_TEXT = {
     table2: ["應徵 OS 分佈", ""],
     table3: ["應徵來源詳細數據", ""],
   },
+  "apply-journey": {
+    chart1: ["Top 20 應徵路徑排行", "最常見的頁面路徑（前 20）"],
+    chart2: ["步數分佈", "應徵前經過的頁面數量"],
+    chart3: ["進入頁分佈", "應徵 session 的第一個頁面"],
+    table1: ["完整路徑排行", ""],
+  },
   feature: {
     chart1: ["探索職缺 — categoryTab 分佈", "各 Tab 點擊分佈"],
     chart2: ["探索企業 — featureId 分佈", "各企業探索入口使用量"],
@@ -222,13 +229,13 @@ function showPanels(viewMode) {
   }
 
   // chart panels
-  const charts3 = ["overview","search","apply","feature","device","homepage-blocks"];
+  const charts3 = ["overview","search","apply","apply-journey","feature","device","homepage-blocks"];
   const charts2 = ["ranking","navigation","heatmap"];
   document.getElementById("chart3-panel")?.classList.toggle("hidden", charts2.includes(viewMode));
 
   // table panels — 各視角顯示不同數量
   const tableCount = {
-    overview: 2, search: 1, apply: 3, feature: 2,
+    overview: 2, search: 1, apply: 3, "apply-journey": 1, feature: 2,
     device: 4, ranking: 1, navigation: 3, heatmap: 1,
     "homepage-blocks": 1,
   };
@@ -408,7 +415,60 @@ function applyRenderer(data) {
 }
 
 // ════════════════════════════════════════════════════════════════
-// 4. 功能互動
+// 4. 應徵路徑
+// ════════════════════════════════════════════════════════════════
+function applyJourneyRenderer(data) {
+  const kpi           = data.kpi?.[0] ?? {};
+  const applies       = n(kpi.applies);
+  const applySessions = n(kpi.apply_sessions);
+  const avgSteps      = n(kpi.avg_steps);
+  const topPath       = data.path_ranking?.[0]?.path ?? "—";
+  const topCount      = n(data.path_ranking?.[0]?.count ?? 0);
+
+  setKpiCard("1", "總應徵次數",    fmt(applies),       "action=apply 事件數");
+  setKpiCard("2", "涉及 Session 數", fmt(applySessions), "有應徵行為的 session");
+  setKpiCard("3", "平均步數",      avgSteps.toFixed(1), "應徵前平均頁面數（含 apply）");
+  setKpiCard("4", "Top 1 路徑",    `${fmt(topCount)} 次`, topPath);
+  setKpiCard("5", "—", "—", "");
+  setKpiCard("6", "—", "—", "");
+  setKpiCard("7", "—", "—", "");
+  setKpiCard("8", "—", "—", "");
+
+  // 圖表 1 — Top 20 路徑排行（bar-H）
+  const ranking = data.path_ranking ?? [];
+  const top20   = ranking.slice(0, 20);
+  barHChart("chart1", top20.map(r => r.path), [
+    { label: "次數", data: top20.map(r => n(r.count)), backgroundColor: C.palette },
+  ]);
+
+  // 圖表 2 — 步數分佈（doughnut）
+  const stepLabels = { 1: "1步", 2: "2步", 3: "3步", 4: "4步", 5: "5步以上" };
+  const stepDist = (data.step_distribution ?? []).map(r => ({
+    name:  stepLabels[n(r.steps_group)] ?? `${n(r.steps_group)}步`,
+    count: n(r.count),
+  }));
+  doughnutChart("chart2", stepDist);
+
+  // 圖表 3 — 進入頁分佈（doughnut）
+  doughnutChart("chart3", data.entry_page ?? []);
+
+  // 表格 1 — 完整路徑排行
+  buildTableHead("table1-head", ["#", "路徑", "步數", "次數", "佔比"]);
+  const total = ranking.reduce((s, r) => s + n(r.count), 0);
+  buildTableBody("table1-body", ranking, (r, i) => {
+    const pctStr = total ? `${((n(r.count) / total) * 100).toFixed(1)}%` : "—";
+    return `<tr>
+      <td class="rank">${i + 1}</td>
+      <td>${r.path ?? "—"}</td>
+      <td>${n(r.step_count)}</td>
+      <td>${fmt(n(r.count))}</td>
+      <td class="pct">${pctStr}</td>
+    </tr>`;
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+// 5. 功能互動
 // ════════════════════════════════════════════════════════════════
 function featureRenderer(data) {
   const kpi = data.kpi?.[0] ?? {};
@@ -479,8 +539,10 @@ function deviceRenderer(data) {
 
   // 圖表 3 — 瀏覽器分佈 (bar-H)
   const bDist = data.browser_dist ?? [];
+  const bDistData = bDist.map(r => n(r.count));
+  console.log('[DEBUG browser_dist]', 'length:', bDist.length, 'sample r:', bDist[0], 'count type:', typeof bDist[0]?.count, 'count val:', bDist[0]?.count, 'n(count):', bDistData[0]);
   barHChart("chart3", bDist.map(r => r.name), [
-    { label: "事件數", data: bDist.map(r => n(r.count)), backgroundColor: C.palette },
+    { label: "事件數", data: bDistData, backgroundColor: C.palette },
   ]);
 
   // 表格 1 — OS 詳細
@@ -918,8 +980,9 @@ function monthlyReportRenderer(runtime) {
 const renderers = {
   overview:   overviewRenderer,
   search:     searchRenderer,
-  apply:      applyRenderer,
-  feature:    featureRenderer,
+  apply:           applyRenderer,
+  "apply-journey": applyJourneyRenderer,
+  feature:         featureRenderer,
   device:     deviceRenderer,
   ranking:    rankingRenderer,
   navigation:          navigationRenderer,

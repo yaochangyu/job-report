@@ -154,7 +154,61 @@ function applyPlan(f) {
 }
 
 // ════════════════════════════════════════════════════════════════
-// 4. 功能互動 — feature-engagement
+// 4. 應徵路徑 — apply-journey
+// ════════════════════════════════════════════════════════════════
+function applyJourneyPlan(f) {
+  const roles = {
+    daily_summary:     "daily_summary.parquet",
+    path_ranking:      "path_ranking.parquet",
+    step_distribution: "step_distribution.parquet",
+    entry_page:        "entry_page.parquet",
+  };
+  return {
+    summary: `應徵路徑（T2）：${f.dateFrom} ~ ${f.dateTo}`,
+    registerFiles: f.fetchDates.flatMap(d => dayFiles("apply-journey", d, roles, f.datasetRoot)),
+    buildQueries(loaded) {
+      const ds  = fileList(loaded.daily_summary || []);
+      const pr  = fileList(loaded.path_ranking || []);
+      const sd  = fileList(loaded.step_distribution || []);
+      const ep  = fileList(loaded.entry_page || []);
+      if (!ds && !pr) return {};
+      return {
+        kpi: ds ? `
+          SELECT
+            SUM(applies)        AS applies,
+            SUM(apply_sessions) AS apply_sessions,
+            SUM(total_steps) / NULLIF(SUM(applies), 0) AS avg_steps
+          FROM read_parquet([${ds}])
+        ` : null,
+        path_ranking: pr ? `
+          SELECT path, SUM(count) AS count, ANY_VALUE(step_count) AS step_count
+          FROM read_parquet([${pr}])
+          GROUP BY path ORDER BY count DESC LIMIT 30
+        ` : null,
+        step_distribution: sd ? `
+          SELECT
+            CASE WHEN steps >= 5 THEN 5 ELSE steps END AS steps_group,
+            SUM(count) AS count
+          FROM read_parquet([${sd}])
+          GROUP BY steps_group ORDER BY steps_group
+        ` : null,
+        entry_page: ep ? `
+          SELECT name, SUM(count) AS count
+          FROM read_parquet([${ep}])
+          GROUP BY name ORDER BY count DESC LIMIT 15
+        ` : null,
+        daily_trend: ds ? `
+          SELECT date, applies, apply_sessions,
+            total_steps / NULLIF(applies, 0) AS avg_steps
+          FROM read_parquet([${ds}]) ORDER BY date
+        ` : null,
+      };
+    },
+  };
+}
+
+// ════════════════════════════════════════════════════════════════
+// 5. 功能互動 — feature-engagement
 // ════════════════════════════════════════════════════════════════
 function featurePlan(f) {
   const roles = {
@@ -506,6 +560,7 @@ const planBuilders = {
   overview:   overviewPlan,
   search:     searchPlan,
   apply:      applyPlan,
+  "apply-journey": applyJourneyPlan,
   feature:    featurePlan,
   device:     devicePlan,
   ranking:    rankingPlan,
