@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import pandas as pd
 
-CONFIG_PATH = Path(__file__).parent / "click_heatmap_config.json"
+CONFIG_PATH = Path(__file__).parent.parent / "click_heatmap_config.json"
 
 from common.data_pipeline import (
     ensure_pipeline_directories,
