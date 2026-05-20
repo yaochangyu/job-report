@@ -322,11 +322,10 @@ function setQueryRunning(running) {
 
 function buildDefaultFilters() {
   const today = new Date();
-  const from = new Date(today);
-  from.setDate(today.getDate() - 6);
+  const todayStr = today.toISOString().slice(0, 10);
   return {
-    dateFrom: from.toISOString().slice(0, 10),
-    dateTo: today.toISOString().slice(0, 10),
+    dateFrom: todayStr,
+    dateTo: todayStr,
     pagePath: "",
   };
 }
