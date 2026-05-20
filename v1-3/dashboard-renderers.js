@@ -847,6 +847,110 @@ function monthlyBuildCatTable(clickRows, viewMap) {
   </table>`;
 }
 
+function periodFormatLabel(type, period) {
+  if (type === "monthly") return `${period.slice(0, 4)}年${period.slice(5, 7)}月 月報`;
+  if (type === "quarterly") { const [y, q] = period.split("-"); return `${y}年 ${q} 季報`; }
+  if (type === "yearly") return `${period}年 年報`;
+  return period;
+}
+
+async function fetchPeriodData(type, period, runtime) {
+  const pathMap = {
+    monthly:   `report/homepage-blocks/monthly=${period}/feature_counts.parquet`,
+    quarterly: `report/homepage-blocks/quarterly=${period}/feature_counts.parquet`,
+    yearly:    `report/homepage-blocks/yearly=${period}/feature_counts.parquet`,
+  };
+  const url = new URL(pathMap[type], runtime.datasetRoot).href;
+  const resp = await fetch(url);
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  const buf = new Uint8Array(await resp.arrayBuffer());
+  const alias = `period_${type}_${period.replace(/[-Q]/g, "_")}.parquet`;
+  await runtime.db.dropFile(alias).catch(() => {});
+  await runtime.db.registerFileBuffer(alias, buf);
+  const result = await runtime.conn.query(
+    `SELECT period, feature_id, feature_name, event_type, CAST(count AS BIGINT) AS cnt
+     FROM "${alias}" ORDER BY event_type, period, cnt DESC`
+  );
+  return result.toArray().map(r => ({
+    period:       String(r.period),
+    feature_id:   String(r.feature_id),
+    feature_name: r.feature_name ? String(r.feature_name) : "",
+    event_type:   String(r.event_type),
+    count:        Number(r.cnt),
+  }));
+}
+
+function renderPeriodDetail(detail, type, period, rows) {
+  const clickRows = rows.filter(r => r.event_type === "click");
+  const totalClicks = clickRows.reduce((s, r) => s + r.count, 0);
+  const totalViews  = rows.filter(r => r.event_type === "view").reduce((s, r) => s + r.count, 0);
+
+  const trendMap = new Map();
+  for (const r of clickRows) trendMap.set(r.period, (trendMap.get(r.period) ?? 0) + r.count);
+  const trendPeriods = [...trendMap.keys()].sort();
+
+  const featureClickMap = new Map();
+  for (const r of clickRows) {
+    const e = featureClickMap.get(r.feature_id);
+    if (e) e.count += r.count;
+    else featureClickMap.set(r.feature_id, { feature_id: r.feature_id, feature_name: r.feature_name, count: r.count });
+  }
+  const aggClickRows = [...featureClickMap.values()].sort((a, b) => b.count - a.count);
+  const aggViewMap = Object.fromEntries(
+    rows.filter(r => r.event_type === "view")
+      .reduce((m, r) => { m.set(r.feature_id, (m.get(r.feature_id) ?? 0) + r.count); return m; }, new Map())
+  );
+
+  const sidebarItems = MONTHLY_CATEGORIES.map(cat =>
+    `<button class="cat-sidebar-item" data-nav="${cat.navId}" type="button">${cat.label}</button>`
+  ).join("");
+  const catSections = MONTHLY_CATEGORIES.map(cat => {
+    const catClick = aggClickRows.filter(r => cat.test(r.feature_id));
+    const catClickTotal = catClick.reduce((s, r) => s + r.count, 0);
+    const catViewTotal  = catClick.reduce((s, r) => s + (aggViewMap[r.feature_id] ?? 0), 0);
+    return `<div class="cat-section" id="${cat.navId}">
+      <div class="cat-header">
+        <h4>${cat.label}</h4>
+        <span class="cat-total">點擊 ${catClickTotal.toLocaleString()} / 瀏覽 ${catViewTotal.toLocaleString()}</span>
+      </div>
+      ${monthlyBuildCatTable(catClick, aggViewMap)}
+    </div>`;
+  }).join("");
+
+  detail.innerHTML = `
+    <div class="day-detail-header">
+      <h3>${periodFormatLabel(type, period)}</h3>
+      <span class="day-total">總點擊：${totalClicks.toLocaleString()} ／ 總瀏覽：${totalViews.toLocaleString()}</span>
+    </div>
+    <div class="period-trend-wrap">
+      <canvas id="period-trend-chart"></canvas>
+    </div>
+    <div class="day-detail-body">
+      <nav class="cat-sidebar">${sidebarItems}</nav>
+      <div class="cat-content">${catSections}</div>
+    </div>`;
+
+  lineChart("period-trend-chart", trendPeriods, [
+    { label: "總點擊", data: trendPeriods.map(p => trendMap.get(p)), borderColor: "#4361ee", tension: 0.3, fill: false },
+  ]);
+
+  detail.querySelectorAll(".cat-sidebar-item").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const target = detail.querySelector(`#${btn.dataset.nav}`);
+      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  });
+  const catSectionEls = detail.querySelectorAll(".cat-section");
+  const sidebarBtns   = detail.querySelectorAll(".cat-sidebar-item");
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting)
+        sidebarBtns.forEach(btn => btn.classList.toggle("is-active", btn.dataset.nav === entry.target.id));
+    });
+  }, { rootMargin: "0px 0px -60% 0px" });
+  catSectionEls.forEach(el => observer.observe(el));
+}
+
 async function monthlyFetchDay(date, runtime) {
   const detail = document.getElementById("monthly-day-detail");
   if (!detail) return;
@@ -937,71 +1041,153 @@ function monthlyReportRenderer(runtime) {
   const datesByMonth = runtime.datesByMonth ?? {};
   const months = Object.keys(datesByMonth).sort().reverse();
 
-  if (!months.length) {
-    section.innerHTML = `<p class="monthly-empty">目前沒有可用資料</p>`;
-    return;
-  }
+  const urlDate       = runtime.pendingDate ?? new URLSearchParams(location.search).get("date_from");
+  const urlPeriodType = runtime.pendingPeriodType ?? new URLSearchParams(location.search).get("period_type") ?? "daily";
+  const urlPeriod     = runtime.pendingPeriod ?? new URLSearchParams(location.search).get("period");
 
-  const urlDate = runtime.pendingDate ?? new URLSearchParams(location.search).get("date_from");
-  const urlMonth = urlDate ? urlDate.slice(0, 7) : null;
-  const initialMonth = (urlMonth && datesByMonth[urlMonth]) ? urlMonth : months[0];
+  const periodTypeDefs = [
+    { key: "daily",     label: "日報" },
+    { key: "monthly",   label: "月報" },
+    { key: "quarterly", label: "季報" },
+    { key: "yearly",    label: "年報" },
+  ];
 
-  function buildDayButtons(ym) {
-    const days = [...(datesByMonth[ym] ?? [])].sort().reverse();
-    return days.map(d =>
-      `<button class="day-btn" data-date="${d}" type="button">${d.slice(5)}</button>`
-    ).join("");
-  }
-
-  const monthTabs = months.map(ym =>
-    `<button class="month-tab${ym === initialMonth ? " is-active" : ""}" data-month="${ym}" type="button">${monthlyFormatMonth(ym)}</button>`
+  const tabsHtml = periodTypeDefs.map(t =>
+    `<button class="period-type-tab${t.key === urlPeriodType ? " is-active" : ""}" data-ptype="${t.key}" type="button">${t.label}</button>`
   ).join("");
 
   section.innerHTML = `
     <div class="monthly-layout">
-      <nav class="monthly-nav-months">${monthTabs}</nav>
-      <div class="monthly-nav-days">${buildDayButtons(initialMonth)}</div>
+      <nav class="period-type-tabs">${tabsHtml}</nav>
+      <div class="period-selector"></div>
       <div class="monthly-detail">
         <div id="monthly-day-detail" class="monthly-day-detail">
-          <p class="monthly-empty">點選上方日期查看當日明細</p>
+          <p class="monthly-empty">點選上方期間查看明細</p>
         </div>
       </div>
     </div>`;
 
-  function bindDayButtons() {
-    section.querySelectorAll(".day-btn").forEach(btn => {
-      btn.addEventListener("click", async () => {
-        section.querySelectorAll(".day-btn").forEach(b => b.classList.remove("is-active"));
-        btn.classList.add("is-active");
-        const params = new URLSearchParams(location.search);
-        params.set("date_from", btn.dataset.date);
-        history.replaceState(null, "", `?${params.toString()}`);
-        await monthlyFetchDay(btn.dataset.date, runtime);
+  const selectorEl = section.querySelector(".period-selector");
+  const detailEl   = () => document.getElementById("monthly-day-detail");
+
+  function buildDailySelector() {
+    const curDate  = runtime.pendingDate ?? new URLSearchParams(location.search).get("date_from");
+    const curMonth = curDate ? curDate.slice(0, 7) : null;
+    const initMonth = (curMonth && datesByMonth[curMonth]) ? curMonth : months[0];
+
+    function buildDayButtons(ym) {
+      return [...(datesByMonth[ym] ?? [])].sort().reverse().map(d =>
+        `<button class="day-btn" data-date="${d}" type="button">${d.slice(5)}</button>`
+      ).join("");
+    }
+
+    const monthTabs = months.map(ym =>
+      `<button class="month-tab${ym === initMonth ? " is-active" : ""}" data-month="${ym}" type="button">${monthlyFormatMonth(ym)}</button>`
+    ).join("");
+
+    selectorEl.innerHTML = `
+      <nav class="monthly-nav-months">${monthTabs}</nav>
+      <div class="monthly-nav-days">${buildDayButtons(initMonth)}</div>`;
+
+    function bindDayButtons() {
+      selectorEl.querySelectorAll(".day-btn").forEach(btn => {
+        btn.addEventListener("click", async () => {
+          selectorEl.querySelectorAll(".day-btn").forEach(b => b.classList.remove("is-active"));
+          btn.classList.add("is-active");
+          const params = new URLSearchParams(location.search);
+          params.set("date_from", btn.dataset.date);
+          params.delete("period_type"); params.delete("period");
+          history.replaceState(null, "", `?${params.toString()}`);
+          await monthlyFetchDay(btn.dataset.date, runtime);
+        });
+      });
+    }
+
+    selectorEl.querySelectorAll(".month-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        selectorEl.querySelectorAll(".month-tab").forEach(t => t.classList.remove("is-active"));
+        tab.classList.add("is-active");
+        selectorEl.querySelector(".monthly-nav-days").innerHTML = buildDayButtons(tab.dataset.month);
+        const d = detailEl();
+        if (d) d.innerHTML = `<p class="monthly-empty">點選上方日期查看當日明細</p>`;
+        bindDayButtons();
       });
     });
+
+    bindDayButtons();
+
+    if (curDate) {
+      const target = selectorEl.querySelector(`.day-btn[data-date="${curDate}"]`);
+      if (target) { target.scrollIntoView({ block: "nearest", inline: "center" }); target.click(); }
+    }
   }
 
-  section.querySelectorAll(".month-tab").forEach(tab => {
+  function buildPeriodSelector(ptype) {
+    const listMap = {
+      monthly:   runtime.availableMonths   ?? [],
+      quarterly: runtime.availableQuarters ?? [],
+      yearly:    runtime.availableYears    ?? [],
+    };
+    const labelFn = {
+      monthly:   p => `${p.slice(0, 4)}年${p.slice(5, 7)}月`,
+      quarterly: p => { const [y, q] = p.split("-"); return `${y}年 ${q}`; },
+      yearly:    p => `${p}年`,
+    };
+    const items = listMap[ptype] ?? [];
+    if (!items.length) {
+      selectorEl.innerHTML = `<p class="monthly-empty">尚無${ptype}資料，請先執行 build_period_summary.py</p>`;
+      return;
+    }
+    const tabs = items.map(p =>
+      `<button class="month-tab${p === urlPeriod ? " is-active" : ""}" data-period="${p}" type="button">${labelFn[ptype](p)}</button>`
+    ).join("");
+    selectorEl.innerHTML = `<nav class="monthly-nav-months">${tabs}</nav>`;
+
+    selectorEl.querySelectorAll("[data-period]").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        selectorEl.querySelectorAll("[data-period]").forEach(b => b.classList.remove("is-active"));
+        btn.classList.add("is-active");
+        const p = btn.dataset.period;
+        const params = new URLSearchParams(location.search);
+        params.set("period_type", ptype); params.set("period", p);
+        params.delete("date_from");
+        history.replaceState(null, "", `?${params.toString()}`);
+        const d = detailEl();
+        if (d) d.innerHTML = `<p class="monthly-loading">載入 ${periodFormatLabel(ptype, p)} 資料中…</p>`;
+        try {
+          const rows = await fetchPeriodData(ptype, p, runtime);
+          renderPeriodDetail(d, ptype, p, rows);
+        } catch (err) {
+          if (d) d.innerHTML = `<p class="monthly-error">載入失敗：${err.message}</p>`;
+        }
+      });
+    });
+
+    const initTarget = urlPeriod
+      ? selectorEl.querySelector(`[data-period="${urlPeriod}"]`)
+      : selectorEl.querySelector("[data-period]");
+    if (initTarget) initTarget.click();
+  }
+
+  function switchPeriodType(ptype) {
+    section.querySelectorAll(".period-type-tab").forEach(t => t.classList.toggle("is-active", t.dataset.ptype === ptype));
+    const d = detailEl();
+    if (d) d.innerHTML = `<p class="monthly-empty">點選上方期間查看明細</p>`;
+    if (ptype === "daily") buildDailySelector();
+    else buildPeriodSelector(ptype);
+  }
+
+  section.querySelectorAll(".period-type-tab").forEach(tab => {
     tab.addEventListener("click", () => {
-      section.querySelectorAll(".month-tab").forEach(t => t.classList.remove("is-active"));
-      tab.classList.add("is-active");
-      section.querySelector(".monthly-nav-days").innerHTML = buildDayButtons(tab.dataset.month);
-      const detail = document.getElementById("monthly-day-detail");
-      if (detail) detail.innerHTML = `<p class="monthly-empty">點選上方日期查看當日明細</p>`;
-      bindDayButtons();
+      const params = new URLSearchParams(location.search);
+      params.set("period_type", tab.dataset.ptype);
+      params.delete("period"); params.delete("date_from");
+      history.replaceState(null, "", `?${params.toString()}`);
+      switchPeriodType(tab.dataset.ptype);
     });
   });
 
-  bindDayButtons();
-
-  // URL date_from 自動選取對應日期
-  if (urlDate) {
-    const target = section.querySelector(`.day-btn[data-date="${urlDate}"]`);
-    if (target) {
-      target.scrollIntoView({ block: "nearest", inline: "center" });
-      target.click();
-    }
-  }
+  switchPeriodType(urlPeriodType);
 }
 
 // ── 路由 ────────────────────────────────────────────────────────
