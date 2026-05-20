@@ -3,6 +3,7 @@
 ```
 job-report/
 ├── .archive/
+│   ├── apply-journey.plan.md          # ✅ 已完成：應徵路徑分析實作計畫
 │   ├── grafana-dashboard.plan.md      # ✅ 已完成：原始 Dashboard 規劃總計畫
 │   ├── dashboard-fix-plan.md          # ✅ 已完成：dashboard 資料吻合性修正計畫
 │   ├── page-click-analysis.plan.md    # ✅ 已完成：Dashboard 8 實作計畫
@@ -14,6 +15,7 @@ job-report/
 │   └── query-homepage-blocks.plan.md  # ✅ 已完成：首頁區塊點擊查詢腳本計畫
 ├── builders/                          # 從 T1 產出 T2 parquet 的建置腳本
 │   ├── build_apply_conversion_t2.py
+│   ├── build_apply_journey_t2.py      # 應徵路徑分析
 │   ├── build_click_heatmap_t2.py
 │   ├── build_device_platform_t2.py
 │   ├── build_feature_engagement_t2.py

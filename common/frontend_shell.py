@@ -87,6 +87,13 @@ def build_shell_html(asset_prefix: str = ".", initial_view: str = "overview") ->
            <small>Apply Conversion</small>
          </span>
        </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="apply-journey">
+         <span class="sidebar__icon">🗺️</span>
+         <span>
+           <strong>應徵路徑</strong>
+           <small>Apply Journey</small>
+         </span>
+       </button>
        <button class="sidebar__nav-item" type="button" data-view-mode="feature">
          <span class="sidebar__icon">⚡</span>
          <span>

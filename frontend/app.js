@@ -34,8 +34,9 @@ const SIDEBAR_STORAGE_KEY = "job-report-sidebar-collapsed";
 const VIEW_FILTER_FIELDS = {
   overview:   { pagePath: false },
   search:     { pagePath: false },
-  apply:      { pagePath: false },
-  feature:    { pagePath: false },
+  apply:           { pagePath: false },
+  "apply-journey": { pagePath: false },
+  feature:         { pagePath: false },
   device:     { pagePath: false },
   ranking:    { pagePath: false },
   navigation:        { pagePath: true  },
@@ -59,6 +60,11 @@ const VIEW_META = {
     title: "應徵轉換",
     subtitle: "Apply Conversion",
     desc: "檢視應徵量、來源與每日轉換趨勢。",
+  },
+  "apply-journey": {
+    title: "應徵路徑",
+    subtitle: "Apply Journey",
+    desc: "分析使用者從進入網站到送出應徵的完整頁面路徑。",
   },
   feature: {
     title: "功能互動",

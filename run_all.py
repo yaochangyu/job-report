@@ -59,6 +59,16 @@ REPORTS = [
         "view_mode": "apply",
     },
     {
+        "script": "builders/build_apply_journey_t2.py",
+        "title": "應徵路徑分析",
+        "subtitle": "Apply Journey",
+        "desc": "使用者從進入網站到送出應徵的完整頁面路徑分析",
+        "path": "report/apply-journey/index.html",
+        "icon": "🗺️",
+        "color": "#e76f51",
+        "view_mode": "apply-journey",
+    },
+    {
         "script": "builders/build_feature_engagement_t2.py",
         "title": "功能互動分析",
         "subtitle": "Feature Engagement",
