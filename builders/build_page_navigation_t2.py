@@ -24,6 +24,7 @@ from common.t1_reader import load_t1_raw_dataframe, resolve_date_window
 REPORT_NAME = "page-navigation"
 ENTRY_MARKER = "_entry_"
 PAGE_RELATION_LIMIT = 5
+NAV_PAIRS_LIMIT = 30
 DAILY_SUMMARY_FILE = "daily_summary.parquet"
 NAV_PAIRS_FILE = "nav_pairs.parquet"
 ENTRY_PAGES_FILE = "entry_pages.parquet"
@@ -64,6 +65,8 @@ def build_page_navigation_t2(date_from: str, date_to: str) -> list[Path]:
         )
 
         nav_pairs = pair_counts[pair_counts["from"].ne(ENTRY_MARKER)].copy()
+        nav_pairs["rank"] = nav_pairs.groupby("event_type").cumcount() + 1
+        nav_pairs = nav_pairs[nav_pairs["rank"] <= NAV_PAIRS_LIMIT].copy()
         nav_pairs["label"] = nav_pairs["from"] + " → " + nav_pairs["to"]
         nav_pairs.to_parquet(output_dir / NAV_PAIRS_FILE, index=False)
 

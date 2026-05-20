@@ -12,7 +12,8 @@ job-report/
 │   ├── v1-2-report-shell-sync.plan.md  # ✅ 已完成：v1-2 報表頁接回 v1-1 導覽殼與查詢條件的實作計畫
 │   ├── v1-2-ui-sync.plan.md           # ✅ 已完成：v1-2 UI 對齊 v1-1 的實作計畫
 │   ├── cli-redesign.plan.md           # ✅ 已完成：run_all.py CLI 重新設計計畫
-│   └── query-homepage-blocks.plan.md  # ✅ 已完成：首頁區塊點擊查詢腳本計畫
+│   ├── query-homepage-blocks.plan.md  # ✅ 已完成：首頁區塊點擊查詢腳本計畫
+│   └── nav-pairs-limit.plan.md        # ✅ 已完成：nav_pairs top-30 截斷計畫
 ├── builders/                          # 從 T1 產出 T2 parquet 的建置腳本
 │   ├── build_apply_conversion_t2.py
 │   ├── build_apply_journey_t2.py      # 應徵路徑分析
