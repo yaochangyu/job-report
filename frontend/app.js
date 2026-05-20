@@ -392,7 +392,38 @@ function bindThemeToggle(state) {
 function bindSidebarToggle(state) {
   document.getElementById("sidebar-toggle").addEventListener("click", () => {
     applySidebarState(!state.sidebarCollapsed, state);
+    syncSidebarViewportHeight();
   });
+}
+
+function syncSidebarViewportHeight() {
+  const sidebar = document.querySelector(".sidebar");
+  if (!sidebar) return;
+
+  if (window.matchMedia("(max-width: 960px)").matches) {
+    sidebar.style.removeProperty("--sidebar-viewport-height");
+    return;
+  }
+
+  const stickyTop = Number.parseFloat(window.getComputedStyle(sidebar).top) || 0;
+  const { top } = sidebar.getBoundingClientRect();
+  const nextHeight = Math.max(window.innerHeight - top - stickyTop, 240);
+  sidebar.style.setProperty("--sidebar-viewport-height", `${Math.round(nextHeight)}px`);
+}
+
+function bindSidebarViewportHeight() {
+  let rafId = 0;
+  const requestSync = () => {
+    if (rafId) return;
+    rafId = window.requestAnimationFrame(() => {
+      rafId = 0;
+      syncSidebarViewportHeight();
+    });
+  };
+
+  window.addEventListener("scroll", requestSync, { passive: true });
+  window.addEventListener("resize", requestSync);
+  requestSync();
 }
 
 function bindSidebar(state) {
@@ -488,6 +519,7 @@ async function bootstrap() {
   applyTheme(savedTheme === "dark" ? "dark" : "light", state);
   applySidebarState(savedSidebarState === "true", state);
   applyFiltersToForm(readInitialFilters(state.selectedViewMode));
+  bindSidebarViewportHeight();
   bindThemeToggle(state);
   bindSidebarToggle(state);
   bindSidebar(state);

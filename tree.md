@@ -19,6 +19,7 @@ job-report/
 │   ├── backfill-apply-journey.plan.md       # ✅ 已完成：apply-journey 45 天歷史資料補跑計畫
 │   ├── monthly-report-day-nav.plan.md       # ✅ 已完成：月報表日期導覽與側邊類別欄實作計畫
 │   ├── period-summary-report.plan.md        # ✅ 已完成：月報/季報/年報聚合 + period-type tabs 實作計畫
+│   ├── sidebar-dynamic-height.plan.md       # ✅ 已完成：分析角度導覽動態高度修正計畫
 │   ├── sidebar-touchpad-scroll.plan.md      # ✅ 已完成：分析角度導覽觸控板捲動修正計畫
 │   ├── sidebar-scroll-container.plan.md     # ✅ 已完成：分析角度導覽固定框捲動修正計畫
 │   └── builder-unit-tests.plan.md           # ✅ 已完成：10 個 T2 builder 單元測試實作計畫
