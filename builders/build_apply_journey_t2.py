@@ -62,7 +62,11 @@ def _build_journeys(session_df: pd.DataFrame) -> list[tuple[str, int]]:
     sorted_events = session_df.sort_values("occurred_at")
     names: list[str] = []
     for _, row in sorted_events.iterrows():
-        names.append("apply" if row["action"] == "apply" else _normalize_page(row.get("page_path")))
+        if row["action"] == "apply":
+            names.append(_normalize_page(row.get("page_path")))
+            names.append("apply")
+        else:
+            names.append(_normalize_page(row.get("page_path")))
     deduped = _dedup_consecutive(names)
     paths: list[tuple[str, int]] = []
     for i, name in enumerate(deduped):
