@@ -509,11 +509,13 @@ html[data-theme="dark"] .pct { color: var(--accent); }
   gap: 20px;
 }
 .cat-section {
+  display: none;
   background: var(--surface, #fff);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 16px;
 }
+.cat-section.is-active { display: block; }
 .cat-header {
   display: flex;
   align-items: baseline;
