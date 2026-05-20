@@ -344,8 +344,13 @@ function readInitialFilters(viewMode) {
 function syncUrlParams(filters) {
   const url = new URL(window.location.href);
   url.searchParams.set("view", filters.viewMode);
-  url.searchParams.set("date_from", filters.dateFrom);
-  url.searchParams.set("date_to", filters.dateTo);
+  if (filters.viewMode === "monthly-report") {
+    url.searchParams.delete("date_from");
+    url.searchParams.delete("date_to");
+  } else {
+    url.searchParams.set("date_from", filters.dateFrom);
+    url.searchParams.set("date_to", filters.dateTo);
+  }
   if (filters.pagePath) url.searchParams.set("page_path", filters.pagePath);
   else url.searchParams.delete("page_path");
   history.replaceState(null, "", `${url.pathname}${url.search}`);
