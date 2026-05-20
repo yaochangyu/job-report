@@ -808,10 +808,10 @@ function resetTables() {
 // ════════════════════════════════════════════════════════════════
 
 const MONTHLY_CATEGORIES = [
-  { key: "search",   label: "搜尋類別", test: id => id.startsWith("search-") || id.startsWith("T-job-") },
-  { key: "identity", label: "身分類別", test: id => id.startsWith("identify-") },
-  { key: "jobs",     label: "探索工作", test: id => id.startsWith("explore-jobs-") },
-  { key: "corp",     label: "探索企業", test: id => id.startsWith("explore-company-") },
+  { key: "search",   label: "搜尋類別", navId: "cat-search",   test: id => id.startsWith("search-") || id.startsWith("T-job-") },
+  { key: "identity", label: "身分類別", navId: "cat-identity", test: id => id.startsWith("identify-") },
+  { key: "jobs",     label: "探索工作", navId: "cat-jobs",     test: id => id.startsWith("explore-jobs-") },
+  { key: "corp",     label: "探索企業", navId: "cat-corp",     test: id => id.startsWith("explore-company-") },
 ];
 
 function monthlyFormatDate(iso) {
@@ -885,7 +885,7 @@ async function monthlyFetchDay(date, runtime) {
       const catClick = clickRows.filter(r => cat.test(r.feature_id));
       const catClickTotal = catClick.reduce((s, r) => s + r.count, 0);
       const catViewTotal  = catClick.reduce((s, r) => s + (viewMap[r.feature_id] ?? 0), 0);
-      return `<div class="cat-section">
+      return `<div class="cat-section" id="${cat.navId}">
         <div class="cat-header">
           <h4>${cat.label}</h4>
           <span class="cat-total">點擊 ${catClickTotal.toLocaleString()} / 瀏覽 ${catViewTotal.toLocaleString()}</span>
@@ -894,12 +894,37 @@ async function monthlyFetchDay(date, runtime) {
       </div>`;
     }).join("");
 
+    const sidebarItems = MONTHLY_CATEGORIES.map(cat =>
+      `<button class="cat-sidebar-item" data-nav="${cat.navId}" type="button">${cat.label}</button>`
+    ).join("");
+
     detail.innerHTML = `
       <div class="day-detail-header">
         <h3>${monthlyFormatDate(date)} 日報表</h3>
         <span class="day-total">總點擊：${totalClicks.toLocaleString()} ／ 總瀏覽：${totalViews.toLocaleString()}</span>
       </div>
-      <div class="cat-grid">${catSections}</div>`;
+      <div class="day-detail-body">
+        <nav class="cat-sidebar">${sidebarItems}</nav>
+        <div class="cat-content">${catSections}</div>
+      </div>`;
+
+    detail.querySelectorAll(".cat-sidebar-item").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const target = detail.querySelector(`#${btn.dataset.nav}`);
+        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
+
+    const catSectionEls = detail.querySelectorAll(".cat-section");
+    const sidebarBtns   = detail.querySelectorAll(".cat-sidebar-item");
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          sidebarBtns.forEach(btn => btn.classList.toggle("is-active", btn.dataset.nav === entry.target.id));
+        }
+      });
+    }, { rootMargin: "0px 0px -60% 0px" });
+    catSectionEls.forEach(el => observer.observe(el));
   } catch (err) {
     detail.innerHTML = `<p class='monthly-error'>載入失敗：${err.message}</p>`;
   }
@@ -917,7 +942,7 @@ function monthlyReportRenderer(runtime) {
     return;
   }
 
-  const urlDate = new URLSearchParams(location.search).get("date_from");
+  const urlDate = runtime.pendingDate ?? new URLSearchParams(location.search).get("date_from");
   const urlMonth = urlDate ? urlDate.slice(0, 7) : null;
   const initialMonth = (urlMonth && datesByMonth[urlMonth]) ? urlMonth : months[0];
 
@@ -948,6 +973,9 @@ function monthlyReportRenderer(runtime) {
       btn.addEventListener("click", async () => {
         section.querySelectorAll(".day-btn").forEach(b => b.classList.remove("is-active"));
         btn.classList.add("is-active");
+        const params = new URLSearchParams(location.search);
+        params.set("date_from", btn.dataset.date);
+        history.replaceState(null, "", `?${params.toString()}`);
         await monthlyFetchDay(btn.dataset.date, runtime);
       });
     });

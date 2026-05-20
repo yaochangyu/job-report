@@ -253,8 +253,10 @@ async function runQuery(state, filters) {
 
   // monthly-report 管理自己的渲染，不走標準查詢流程
   if (filters.viewMode === "monthly-report") {
+    runtime.pendingDate = new URLSearchParams(location.search).get("date_from") || null;
     syncUrlParams(filters);
     renderDashboard("monthly-report", [], runtime);
+    runtime.pendingDate = null;
     renderState(state);
     return true;
   }
