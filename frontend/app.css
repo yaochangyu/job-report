@@ -145,15 +145,22 @@ body {
   align-self: start;
   display: flex;
   flex-direction: column;
-  max-height: calc(100vh - 48px);
-  overflow: hidden;
+  height: calc(100vh - 48px);
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 .sidebar__header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 1;
   padding: 20px 20px 16px;
+  background: var(--panel);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
@@ -173,9 +180,7 @@ body {
   display: grid;
   gap: 8px;
   padding: 14px;
-  min-height: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
+  overflow: visible;
 }
 .sidebar__nav-item {
   display: flex;
@@ -385,11 +390,11 @@ html[data-theme="dark"] .pct { color: var(--accent); }
   .hero { padding: 28px 20px 22px; }
   .hero__topbar { flex-direction: column; }
   .page-layout { grid-template-columns: 1fr; padding: 16px 16px 48px; }
-  .sidebar { position: static; max-height: none; }
+  .sidebar { position: static; height: auto; overflow: visible; }
   .sidebar__toggle { display: none; }
   .sidebar__nav {
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    overflow-y: visible;
+    overflow: visible;
   }
   .chart-grid { grid-template-columns: 1fr; }
   .view-panel__heading { flex-direction: column; align-items: flex-start; }
