@@ -29,7 +29,6 @@ function dayFiles(reportName, date, roleMap, datasetRoot) {
 function overviewPlan(f) {
   const roles = {
     daily_summary: "daily_summary.parquet",
-    session_ids:   "session_ids.parquet",
     device_type:   "device_type.parquet",
     os:            "os.parquet",
     browser:       "browser.parquet",
@@ -39,7 +38,6 @@ function overviewPlan(f) {
     registerFiles: f.fetchDates.flatMap(d => dayFiles("traffic-overview", d, roles, f.datasetRoot)),
     buildQueries(loaded) {
       const ds = fileList(loaded.daily_summary || []);
-      const ss = fileList(loaded.session_ids || []);
       const dv = fileList(loaded.device_type || []);
       const os = fileList(loaded.os || []);
       const br = fileList(loaded.browser || []);
@@ -51,11 +49,7 @@ function overviewPlan(f) {
             SUM(views) AS views,
             SUM(clicks) AS clicks,
             SUM(applies) AS applies,
-            ${
-              ss
-                ? `(SELECT COUNT(DISTINCT session_id) FROM read_parquet([${ss}]))`
-                : "SUM(sessions)"
-            } AS sessions
+            SUM(sessions) AS sessions
           FROM read_parquet([${ds}])
         `,
         daily_trend: `SELECT date, views, clicks, applies, sessions FROM read_parquet([${ds}]) ORDER BY date`,
