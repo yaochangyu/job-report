@@ -865,181 +865,286 @@ function periodFormatLabel(type, period) {
   return period;
 }
 
-async function fetchPeriodData(type, period, runtime) {
-  const pathMap = {
-    monthly:   `report/homepage-blocks/monthly=${period}/feature_counts.parquet`,
-    quarterly: `report/homepage-blocks/quarterly=${period}/feature_counts.parquet`,
-    yearly:    `report/homepage-blocks/yearly=${period}/feature_counts.parquet`,
-  };
-  const url = new URL(pathMap[type], runtime.datasetRoot).href;
+// ══ Period Report Categories ════════════════════════════════════
+const PERIOD_REPORT_CATEGORIES = [
+  { key: "traffic-overview",   label: "整體流量", kpiCols: ["total","views","clicks","applies","sessions"],                                   kpiLabels: ["總事件","View","Click","Apply","Sessions"],         mainMetric: "clicks",             breakdowns: [] },
+  { key: "search-behavior",    label: "搜尋行為", kpiCols: ["general_click","ai_click","quick_click"],                                         kpiLabels: ["一般搜尋","AI 搜尋","快速篩選"],                     mainMetric: "general_click",      breakdowns: ["feature_counts.parquet"] },
+  { key: "apply-conversion",   label: "應徵轉換", kpiCols: ["applies","job_views"],                                                            kpiLabels: ["應徵數","職缺頁瀏覽"],                               mainMetric: "applies",            breakdowns: ["source.parquet","funnel.parquet"] },
+  { key: "apply-journey",      label: "應徵路徑", kpiCols: ["applies","apply_sessions","total_steps"],                                         kpiLabels: ["應徵數","有效 Session","總步數"],                     mainMetric: "applies",            breakdowns: ["path_ranking.parquet","entry_page.parquet"] },
+  { key: "feature-engagement", label: "功能互動", kpiCols: ["explore_jobs_click","explore_corp_click","identity_click","news_click"],           kpiLabels: ["探索職缺","探索企業","身份辨識","新聞"],               mainMetric: "explore_jobs_click", breakdowns: [] },
+  { key: "device-platform",    label: "裝置平台", kpiCols: ["mobile","desktop"],                                                               kpiLabels: ["Mobile","Desktop"],                                  mainMetric: "mobile",             breakdowns: [] },
+  { key: "page-ranking",       label: "頁面排行", kpiCols: ["total_events","total_features"],                                                  kpiLabels: ["總事件","功能數"],                                   mainMetric: "total_events",       breakdowns: ["features.parquet","categories.parquet"] },
+  { key: "page-navigation",    label: "頁面導航", kpiCols: ["nav_click","nav_view","entry_click","entry_view"],                                kpiLabels: ["導航 Click","導航 View","進入 Click","進入 View"],   mainMetric: "nav_click",          breakdowns: ["nav_pairs.parquet","entry_pages.parquet"] },
+  { key: "click-heatmap",      label: "點擊熱點", kpiCols: ["total_clicks"],                                                                   kpiLabels: ["總點擊"],                                            mainMetric: "total_clicks",       breakdowns: ["click_counts.parquet"] },
+  { key: "homepage-blocks",    label: "首頁區塊", kpiCols: ["total_clicks","total_views"],                                                     kpiLabels: ["總點擊","總瀏覽"],                                   mainMetric: "total_clicks",       breakdowns: ["feature_counts.parquet"] },
+];
+
+// ══ Period Report: Data Fetching ════════════════════════════════
+
+async function _loadParquetRows(url, db, conn, alias) {
   const resp = await fetch(url);
-  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  if (!resp.ok) throw new Error(`HTTP ${resp.status} ${url}`);
   const buf = new Uint8Array(await resp.arrayBuffer());
-  const alias = `period_${type}_${period.replace(/[-Q]/g, "_")}.parquet`;
-  await runtime.db.dropFile(alias).catch(() => {});
-  await runtime.db.registerFileBuffer(alias, buf);
-  const result = await runtime.conn.query(
-    `SELECT period, feature_id, feature_name, event_type, CAST(count AS BIGINT) AS cnt
-     FROM "${alias}" ORDER BY event_type, period, cnt DESC`
+  await db.dropFile(alias).catch(() => {});
+  await db.registerFileBuffer(alias, buf);
+  const result = await conn.query(`SELECT * FROM "${alias}"`);
+  return result.toArray().map(r =>
+    Object.fromEntries(Object.entries(r).map(([k, v]) => [k, typeof v === "bigint" ? Number(v) : v]))
   );
-  return result.toArray().map(r => ({
-    period:       String(r.period),
-    feature_id:   String(r.feature_id),
-    feature_name: r.feature_name ? String(r.feature_name) : "",
-    event_type:   String(r.event_type),
-    count:        Number(r.cnt),
-  }));
 }
 
-function renderPeriodDetail(detail, type, period, rows) {
-  const clickRows = rows.filter(r => r.event_type === "click");
-  const totalClicks = clickRows.reduce((s, r) => s + r.count, 0);
-  const totalViews  = rows.filter(r => r.event_type === "view").reduce((s, r) => s + r.count, 0);
+async function fetchPeriodReport(category, periodType, period, runtime) {
+  const catCfg = PERIOD_REPORT_CATEGORIES.find(c => c.key === category);
+  const dir = `report/${category}/${periodType}=${period}`;
+  const safe = s => String(s).replace(/[^a-z0-9]/gi, "_");
+  const base = `pr_${safe(category)}_${safe(periodType)}_${safe(period)}`;
 
-  const trendMap = new Map();
-  for (const r of clickRows) trendMap.set(r.period, (trendMap.get(r.period) ?? 0) + r.count);
-  const trendPeriods = [...trendMap.keys()].sort();
+  const summaryUrl = new URL(`${dir}/period_summary.parquet`, runtime.datasetRoot).href;
+  const summary = await _loadParquetRows(summaryUrl, runtime.db, runtime.conn, `${base}_sum`);
 
-  const featureClickMap = new Map();
-  for (const r of clickRows) {
-    const e = featureClickMap.get(r.feature_id);
-    if (e) e.count += r.count;
-    else featureClickMap.set(r.feature_id, { feature_id: r.feature_id, feature_name: r.feature_name, count: r.count });
+  const breakdowns = {};
+  for (const fn of catCfg?.breakdowns ?? []) {
+    const bdUrl = new URL(`${dir}/${fn}`, runtime.datasetRoot).href;
+    try {
+      breakdowns[fn] = await _loadParquetRows(bdUrl, runtime.db, runtime.conn, `${base}_${safe(fn)}`);
+    } catch {
+      breakdowns[fn] = [];
+    }
   }
-  const aggClickRows = [...featureClickMap.values()].sort((a, b) => b.count - a.count);
-  const aggViewMap = Object.fromEntries(
-    rows.filter(r => r.event_type === "view")
-      .reduce((m, r) => { m.set(r.feature_id, (m.get(r.feature_id) ?? 0) + r.count); return m; }, new Map())
-  );
+  return { summary, breakdowns };
+}
 
-  const sidebarItems = MONTHLY_CATEGORIES.map(cat =>
-    `<button class="cat-sidebar-item" data-nav="${cat.navId}" type="button">${cat.label}</button>`
+// ══ Period Report: Rendering ════════════════════════════════════
+
+function _buildSimpleRankHtml(title, rows, nameKey, valueKey) {
+  if (!rows.length) return `<p class="monthly-empty">${title}：無資料</p>`;
+  const agg = new Map();
+  for (const r of rows) {
+    const k = String(r[nameKey] ?? "—");
+    agg.set(k, (agg.get(k) ?? 0) + n(r[valueKey]));
+  }
+  const sorted = [...agg.entries()].sort((a, b) => b[1] - a[1]);
+  const total = sorted.reduce((s, [, v]) => s + v, 0);
+  const trs = sorted.map(([name, val], i) => rankRow(i, name, val, total)).join("");
+  return `<div class="period-breakdown-section">
+    <h4 class="period-breakdown-title">${title}</h4>
+    <table><thead><tr><th>#</th><th>名稱</th><th>數量</th><th></th><th>佔比</th></tr></thead>
+    <tbody>${trs}</tbody></table>
+  </div>`;
+}
+
+function renderPeriodBreakdown(container, category, breakdowns) {
+  let html = "";
+  switch (category) {
+    case "search-behavior": {
+      const fc = breakdowns["feature_counts.parquet"] ?? [];
+      const agg = new Map();
+      for (const r of fc) {
+        const k = String(r.feature_id);
+        const e = agg.get(k);
+        const cnt = n(r.count);
+        if (e) { if (r.event_type === "click") e.click += cnt; else e.view += cnt; }
+        else agg.set(k, { feature_id: k, feature_name: r.feature_name, click: r.event_type === "click" ? cnt : 0, view: r.event_type === "view" ? cnt : 0 });
+      }
+      const rows = [...agg.values()].sort((a, b) => b.click - a.click);
+      const tot = rows.reduce((s, r) => s + r.click, 0);
+      const trs = rows.map((r, i) => {
+        const p = tot ? `${((r.click / tot) * 100).toFixed(1)}%` : "—";
+        return `<tr><td class="rank">${i+1}</td><td>${r.feature_id}</td><td>${r.feature_name || "—"}</td><td>${fmt(r.click)}</td><td>${fmt(r.view)}</td><td class="pct">${p}</td></tr>`;
+      }).join("");
+      html += `<div class="period-breakdown-section">
+        <h4 class="period-breakdown-title">搜尋功能使用量</h4>
+        <table><thead><tr><th>#</th><th>featureId</th><th>featureName</th><th>Click</th><th>View</th><th>佔比</th></tr></thead>
+        <tbody>${trs}</tbody></table>
+      </div>`;
+      break;
+    }
+    case "apply-conversion": {
+      html += _buildSimpleRankHtml("應徵來源", breakdowns["source.parquet"] ?? [], "name", "count");
+      html += _buildSimpleRankHtml("應徵漏斗", breakdowns["funnel.parquet"] ?? [], "name", "count");
+      break;
+    }
+    case "apply-journey": {
+      const pr = breakdowns["path_ranking.parquet"] ?? [];
+      const pathAgg = new Map();
+      for (const r of pr) {
+        const k = String(r.path);
+        const e = pathAgg.get(k);
+        if (e) e.count += n(r.count);
+        else pathAgg.set(k, { path: k, step_count: n(r.step_count), count: n(r.count) });
+      }
+      const pathRows = [...pathAgg.values()].sort((a, b) => b.count - a.count).slice(0, 30);
+      const pathTot = pathRows.reduce((s, r) => s + r.count, 0);
+      const pathTrs = pathRows.map((r, i) => {
+        const p = pathTot ? `${((r.count / pathTot) * 100).toFixed(1)}%` : "—";
+        return `<tr><td class="rank">${i+1}</td><td>${r.path}</td><td>${r.step_count}</td><td>${fmt(r.count)}</td><td class="pct">${p}</td></tr>`;
+      }).join("");
+      html += `<div class="period-breakdown-section">
+        <h4 class="period-breakdown-title">Top 30 應徵路徑 <small style="color:var(--muted);font-weight:400">（僅顯示前 30 筆）</small></h4>
+        <table><thead><tr><th>#</th><th>路徑</th><th>步數</th><th>次數</th><th>佔比</th></tr></thead>
+        <tbody>${pathTrs}</tbody></table>
+      </div>`;
+      html += _buildSimpleRankHtml("進入頁分佈", breakdowns["entry_page.parquet"] ?? [], "name", "count");
+      break;
+    }
+    case "page-ranking": {
+      const feats = breakdowns["features.parquet"] ?? [];
+      const featAgg = new Map();
+      for (const r of feats) {
+        const k = String(r.featureId);
+        const e = featAgg.get(k);
+        if (e) { e.total += n(r.total); e.views += n(r.views); e.clicks += n(r.clicks); }
+        else featAgg.set(k, { featureId: k, feature_name: r.feature_name, category: r.category, total: n(r.total), views: n(r.views), clicks: n(r.clicks) });
+      }
+      const featRows = [...featAgg.values()].sort((a, b) => b.total - a.total).slice(0, 50);
+      const featTrs = featRows.map((r, i) => {
+        const ctr = r.views ? (r.clicks / r.views * 100).toFixed(2) : "0.00";
+        return `<tr><td class="rank">${i+1}</td><td>${r.featureId}</td><td>${r.feature_name || "—"}</td><td>${fmt(r.total)}</td><td>${fmt(r.views)}</td><td>${fmt(r.clicks)}</td><td class="pct">${ctr}%</td><td>${r.category || "—"}</td></tr>`;
+      }).join("");
+      html += `<div class="period-breakdown-section">
+        <h4 class="period-breakdown-title">Top 50 功能排行</h4>
+        <table><thead><tr><th>#</th><th>featureId</th><th>featureName</th><th>總計</th><th>View</th><th>Click</th><th>CTR</th><th>類別</th></tr></thead>
+        <tbody>${featTrs}</tbody></table>
+      </div>`;
+      html += _buildSimpleRankHtml("功能類別佔比", breakdowns["categories.parquet"] ?? [], "name", "count");
+      break;
+    }
+    case "page-navigation": {
+      const np = (breakdowns["nav_pairs.parquet"] ?? []).filter(r => r.event_type === "click");
+      const pairAgg = new Map();
+      for (const r of np) {
+        const k = `${r.from}→${r.to}`;
+        const e = pairAgg.get(k);
+        if (e) e.count += n(r.count);
+        else pairAgg.set(k, { from: r.from, to: r.to, count: n(r.count) });
+      }
+      const pairRows = [...pairAgg.values()].sort((a, b) => b.count - a.count).slice(0, 30);
+      const pairTrs = pairRows.map((r, i) =>
+        `<tr><td class="rank">${i+1}</td><td>${r.from || "—"}</td><td>${r.to || "—"}</td><td>${fmt(r.count)}</td></tr>`
+      ).join("");
+      html += `<div class="period-breakdown-section">
+        <h4 class="period-breakdown-title">Top 30 頁面轉換路徑（Click）<small style="color:var(--muted);font-weight:400;margin-left:8px">（僅顯示前 30 筆）</small></h4>
+        <table><thead><tr><th>#</th><th>來源頁</th><th>目標頁</th><th>次數</th></tr></thead>
+        <tbody>${pairTrs}</tbody></table>
+      </div>`;
+      const ep = (breakdowns["entry_pages.parquet"] ?? []).filter(r => r.event_type === "click");
+      html += _buildSimpleRankHtml("進入頁分佈（Click）", ep, "name", "count");
+      break;
+    }
+    case "click-heatmap": {
+      const cc = breakdowns["click_counts.parquet"] ?? [];
+      const ccAgg = new Map();
+      for (const r of cc) {
+        const k = `${r.page_path}||${r.feature_id}`;
+        const e = ccAgg.get(k);
+        if (e) e.count += n(r.count);
+        else ccAgg.set(k, { page_path: r.page_path, feature_id: r.feature_id, feature_name: r.feature_name, count: n(r.count) });
+      }
+      const ccRows = [...ccAgg.values()].sort((a, b) => b.count - a.count).slice(0, 50);
+      const ccTot = ccRows.reduce((s, r) => s + r.count, 0);
+      const ccTrs = ccRows.map((r, i) => {
+        const p = ccTot ? `${((r.count / ccTot) * 100).toFixed(1)}%` : "—";
+        return `<tr><td class="rank">${i+1}</td><td>${r.feature_id}</td><td>${r.feature_name || "—"}</td><td>${fmt(r.count)}</td><td class="pct">${p}</td><td>${r.page_path || "—"}</td></tr>`;
+      }).join("");
+      html += `<div class="period-breakdown-section">
+        <h4 class="period-breakdown-title">Top 50 點擊功能排行</h4>
+        <table><thead><tr><th>#</th><th>featureId</th><th>featureName</th><th>點擊數</th><th>佔比</th><th>頁面</th></tr></thead>
+        <tbody>${ccTrs}</tbody></table>
+      </div>`;
+      break;
+    }
+    case "homepage-blocks": {
+      const fc = breakdowns["feature_counts.parquet"] ?? [];
+      const clickAgg = new Map();
+      const viewAgg = {};
+      for (const r of fc) {
+        if (r.event_type === "view") { viewAgg[r.feature_id] = (viewAgg[r.feature_id] ?? 0) + n(r.count); continue; }
+        const k = String(r.feature_id);
+        const e = clickAgg.get(k);
+        if (e) e.count += n(r.count);
+        else clickAgg.set(k, { feature_id: k, feature_name: r.feature_name, count: n(r.count) });
+      }
+      const clickRows = [...clickAgg.values()].sort((a, b) => b.count - a.count);
+      const catSections = MONTHLY_CATEGORIES.map(cat => {
+        const catRows = clickRows.filter(r => cat.test(r.feature_id));
+        return `<div style="margin-bottom:16px"><strong>${cat.label}</strong>${monthlyBuildCatTable(catRows, viewAgg)}</div>`;
+      }).join("");
+      html += `<div class="period-breakdown-section">
+        <h4 class="period-breakdown-title">首頁區塊 featureId 明細</h4>
+        ${catSections}
+      </div>`;
+      break;
+    }
+  }
+  container.innerHTML = html;
+}
+
+function renderPeriodReport(container, category, periodType, period, data) {
+  const catCfg = PERIOD_REPORT_CATEGORIES.find(c => c.key === category) ?? PERIOD_REPORT_CATEGORIES[0];
+  const { summary, breakdowns } = data;
+
+  const kpi = Object.fromEntries(catCfg.kpiCols.map(col => [col, summary.reduce((s, r) => s + n(r[col]), 0)]));
+  const kpiCards = catCfg.kpiCols.map((col, i) =>
+    `<div class="period-kpi-card">
+      <div class="period-kpi-label">${catCfg.kpiLabels[i]}</div>
+      <div class="period-kpi-value">${fmt(kpi[col])}</div>
+    </div>`
   ).join("");
-  const catSections = MONTHLY_CATEGORIES.map(cat => {
-    const catClick = aggClickRows.filter(r => cat.test(r.feature_id));
-    const catClickTotal = catClick.reduce((s, r) => s + r.count, 0);
-    const catViewTotal  = catClick.reduce((s, r) => s + (aggViewMap[r.feature_id] ?? 0), 0);
-    return `<div class="cat-section" id="${cat.navId}">
-      <div class="cat-header">
-        <h4>${cat.label}</h4>
-        <span class="cat-total">點擊 ${catClickTotal.toLocaleString()} / 瀏覽 ${catViewTotal.toLocaleString()}</span>
-      </div>
-      ${monthlyBuildCatTable(catClick, aggViewMap)}
-    </div>`;
-  }).join("");
 
-  detail.innerHTML = `
+  const sorted = [...summary].sort((a, b) => String(a.period).localeCompare(String(b.period)));
+  const mainLabelIdx = catCfg.kpiCols.indexOf(catCfg.mainMetric);
+
+  container.innerHTML = `
     <div class="day-detail-header">
-      <h3>${periodFormatLabel(type, period)}</h3>
-      <span class="day-total">總點擊：${totalClicks.toLocaleString()} ／ 總瀏覽：${totalViews.toLocaleString()}</span>
+      <h3>${catCfg.label} — ${periodFormatLabel(periodType, period)}</h3>
     </div>
+    <div class="period-kpi-row">${kpiCards}</div>
     <div class="period-trend-wrap">
       <canvas id="period-trend-chart"></canvas>
     </div>
-    <div class="day-detail-body">
-      <nav class="cat-sidebar">${sidebarItems}</nav>
-      <div class="cat-content">${catSections}</div>
-    </div>`;
+    <div id="period-breakdown-container"></div>`;
 
-  lineChart("period-trend-chart", trendPeriods, [
-    { label: "總點擊", data: trendPeriods.map(p => trendMap.get(p)), borderColor: "#4361ee", tension: 0.3, fill: false },
-  ]);
+  lineChart("period-trend-chart", sorted.map(r => r.period), [{
+    label: catCfg.kpiLabels[mainLabelIdx] ?? catCfg.mainMetric,
+    data: sorted.map(r => n(r[catCfg.mainMetric])),
+    borderColor: C.blue,
+    tension: 0.3,
+    fill: false,
+  }]);
 
-  initCatNav(detail);
+  const bdContainer = document.getElementById("period-breakdown-container");
+  if (bdContainer) renderPeriodBreakdown(bdContainer, category, breakdowns);
 }
 
-async function monthlyFetchDay(date, runtime) {
-  const detail = document.getElementById("monthly-day-detail");
-  if (!detail) return;
-
-  detail.innerHTML = `<p class='monthly-loading'>載入 ${monthlyFormatDate(date)} 資料中…</p>`;
-  detail.classList.remove("hidden");
-
-  try {
-    const url = new URL(
-      `report/homepage-blocks/date=${date}/feature_counts.parquet`,
-      runtime.datasetRoot
-    ).href;
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-    const buf = new Uint8Array(await resp.arrayBuffer());
-    const alias = `monthly_${date.replace(/-/g, "_")}.parquet`;
-    await runtime.db.dropFile(alias).catch(() => {});
-    await runtime.db.registerFileBuffer(alias, buf);
-
-    const result = await runtime.conn.query(
-      `SELECT feature_id, feature_name, event_type, CAST(count AS BIGINT) AS cnt FROM "${alias}" ORDER BY event_type, cnt DESC`
-    );
-    const rows = result.toArray().map(r => ({
-      feature_id: String(r.feature_id),
-      feature_name: r.feature_name ? String(r.feature_name) : "",
-      event_type: String(r.event_type),
-      count: Number(r.cnt),
-    }));
-
-    const clickRows = rows.filter(r => r.event_type === "click");
-    const viewMap   = Object.fromEntries(rows.filter(r => r.event_type === "view").map(r => [r.feature_id, r.count]));
-    const totalClicks = clickRows.reduce((s, r) => s + r.count, 0);
-    const totalViews  = rows.filter(r => r.event_type === "view").reduce((s, r) => s + r.count, 0);
-
-    const catSections = MONTHLY_CATEGORIES.map(cat => {
-      const catClick = clickRows.filter(r => cat.test(r.feature_id));
-      const catClickTotal = catClick.reduce((s, r) => s + r.count, 0);
-      const catViewTotal  = catClick.reduce((s, r) => s + (viewMap[r.feature_id] ?? 0), 0);
-      return `<div class="cat-section" id="${cat.navId}">
-        <div class="cat-header">
-          <h4>${cat.label}</h4>
-          <span class="cat-total">點擊 ${catClickTotal.toLocaleString()} / 瀏覽 ${catViewTotal.toLocaleString()}</span>
-        </div>
-        ${monthlyBuildCatTable(catClick, viewMap)}
-      </div>`;
-    }).join("");
-
-    const sidebarItems = MONTHLY_CATEGORIES.map(cat =>
-      `<button class="cat-sidebar-item" data-nav="${cat.navId}" type="button">${cat.label}</button>`
-    ).join("");
-
-    detail.innerHTML = `
-      <div class="day-detail-header">
-        <h3>${monthlyFormatDate(date)} 日報表</h3>
-        <span class="day-total">總點擊：${totalClicks.toLocaleString()} ／ 總瀏覽：${totalViews.toLocaleString()}</span>
-      </div>
-      <div class="day-detail-body">
-        <nav class="cat-sidebar">${sidebarItems}</nav>
-        <div class="cat-content">${catSections}</div>
-      </div>`;
-
-    initCatNav(detail);
-  } catch (err) {
-    detail.innerHTML = `<p class='monthly-error'>載入失敗：${err.message}</p>`;
-  }
-}
-
+// ════════════════════════════════════════════════════════════════
+// 10. 週期報表中心 — monthly-report
+// ════════════════════════════════════════════════════════════════
 function monthlyReportRenderer(runtime) {
   const section = document.getElementById("monthly-section");
   if (!section || !runtime) return;
 
-  const datesByMonth = runtime.datesByMonth ?? {};
-  const months = Object.keys(datesByMonth).sort().reverse();
+  const params = new URLSearchParams(location.search);
+  const initPeriodType = ["monthly","quarterly","yearly"].includes(params.get("period_type"))
+    ? params.get("period_type") : "monthly";
+  const initPeriod   = runtime.pendingPeriod ?? params.get("period") ?? null;
+  const initCategory = runtime.pendingCategory ?? params.get("report_category") ?? PERIOD_REPORT_CATEGORIES[0].key;
 
-  const urlDate       = runtime.pendingDate ?? new URLSearchParams(location.search).get("date_from");
-  const urlPeriodType = runtime.pendingPeriodType ?? new URLSearchParams(location.search).get("period_type") ?? "daily";
-  const urlPeriod     = runtime.pendingPeriod ?? new URLSearchParams(location.search).get("period");
+  const catTabsHtml = PERIOD_REPORT_CATEGORIES.map(c =>
+    `<button class="report-category-tab${c.key === initCategory ? " is-active" : ""}" data-cat="${c.key}" type="button">${c.label}</button>`
+  ).join("");
 
-  const periodTypeDefs = [
-    { key: "daily",     label: "日報" },
+  const ptTabsHtml = [
     { key: "monthly",   label: "月報" },
     { key: "quarterly", label: "季報" },
     { key: "yearly",    label: "年報" },
-  ];
-
-  const tabsHtml = periodTypeDefs.map(t =>
-    `<button class="period-type-tab${t.key === urlPeriodType ? " is-active" : ""}" data-ptype="${t.key}" type="button">${t.label}</button>`
+  ].map(t =>
+    `<button class="period-type-tab${t.key === initPeriodType ? " is-active" : ""}" data-ptype="${t.key}" type="button">${t.label}</button>`
   ).join("");
 
   section.innerHTML = `
     <div class="monthly-layout">
-      <nav class="period-type-tabs">${tabsHtml}</nav>
+      <nav class="report-category-tabs">${catTabsHtml}</nav>
+      <nav class="period-type-tabs">${ptTabsHtml}</nav>
       <div class="period-selector"></div>
       <div class="monthly-detail">
         <div id="monthly-day-detail" class="monthly-day-detail">
@@ -1048,79 +1153,50 @@ function monthlyReportRenderer(runtime) {
       </div>
     </div>`;
 
+  let currentCategory  = initCategory;
+  let currentPeriodType = initPeriodType;
+  let currentPeriod    = initPeriod;
+
   const selectorEl = section.querySelector(".period-selector");
   const detailEl   = () => document.getElementById("monthly-day-detail");
 
-  function buildDailySelector() {
-    const curDate  = runtime.pendingDate ?? new URLSearchParams(location.search).get("date_from");
-    const curMonth = curDate ? curDate.slice(0, 7) : null;
-    const initMonth = (curMonth && datesByMonth[curMonth]) ? curMonth : months[0];
+  function updateUrl() {
+    const p = new URLSearchParams(location.search);
+    p.set("period_type", currentPeriodType);
+    p.set("report_category", currentCategory);
+    if (currentPeriod) p.set("period", currentPeriod);
+    else p.delete("period");
+    p.delete("date_from"); p.delete("date_to");
+    history.replaceState(null, "", `?${p.toString()}`);
+  }
 
-    function buildDayButtons(ym) {
-      return [...(datesByMonth[ym] ?? [])].sort().reverse().map(d =>
-        `<button class="day-btn" data-date="${d}" type="button">${d.slice(5)}</button>`
-      ).join("");
-    }
-
-    const monthTabs = months.map(ym =>
-      `<button class="month-tab${ym === initMonth ? " is-active" : ""}" data-month="${ym}" type="button">${monthlyFormatMonth(ym)}</button>`
-    ).join("");
-
-    selectorEl.innerHTML = `
-      <nav class="monthly-nav-months">${monthTabs}</nav>
-      <div class="monthly-nav-days">${buildDayButtons(initMonth)}</div>`;
-
-    function bindDayButtons() {
-      selectorEl.querySelectorAll(".day-btn").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          selectorEl.querySelectorAll(".day-btn").forEach(b => b.classList.remove("is-active"));
-          btn.classList.add("is-active");
-          const params = new URLSearchParams(location.search);
-          params.set("date_from", btn.dataset.date);
-          params.delete("period_type"); params.delete("period");
-          history.replaceState(null, "", `?${params.toString()}`);
-          await monthlyFetchDay(btn.dataset.date, runtime);
-        });
-      });
-    }
-
-    selectorEl.querySelectorAll(".month-tab").forEach(tab => {
-      tab.addEventListener("click", () => {
-        selectorEl.querySelectorAll(".month-tab").forEach(t => t.classList.remove("is-active"));
-        tab.classList.add("is-active");
-        selectorEl.querySelector(".monthly-nav-days").innerHTML = buildDayButtons(tab.dataset.month);
-        const d = detailEl();
-        if (d) d.innerHTML = `<p class="monthly-empty">點選上方日期查看當日明細</p>`;
-        bindDayButtons();
-      });
-    });
-
-    bindDayButtons();
-
-    if (curDate) {
-      const target = selectorEl.querySelector(`.day-btn[data-date="${curDate}"]`);
-      if (target) { target.scrollIntoView({ block: "nearest", inline: "center" }); target.click(); }
+  async function loadAndRender(cat, ptype, period) {
+    const d = detailEl();
+    if (!d) return;
+    const catLabel = PERIOD_REPORT_CATEGORIES.find(c => c.key === cat)?.label ?? cat;
+    d.innerHTML = `<p class="monthly-loading">載入 ${periodFormatLabel(ptype, period)} · ${catLabel} 中…</p>`;
+    try {
+      const data = await fetchPeriodReport(cat, ptype, period, runtime);
+      renderPeriodReport(d, cat, ptype, period, data);
+    } catch (err) {
+      d.innerHTML = `<p class="monthly-error">載入失敗：${err.message}</p>`;
     }
   }
 
   function buildPeriodSelector(ptype) {
-    const listMap = {
-      monthly:   runtime.availableMonths   ?? [],
-      quarterly: runtime.availableQuarters ?? [],
-      yearly:    runtime.availableYears    ?? [],
-    };
+    const listMap = { monthly: runtime.availableMonths ?? [], quarterly: runtime.availableQuarters ?? [], yearly: runtime.availableYears ?? [] };
     const labelFn = {
-      monthly:   p => `${p.slice(0, 4)}年${p.slice(5, 7)}月`,
-      quarterly: p => { const [y, q] = p.split("-"); return `${y}年 ${q}`; },
+      monthly:   p => `${p.slice(0,4)}年${p.slice(5,7)}月`,
+      quarterly: p => { const [y,q] = p.split("-"); return `${y}年 ${q}`; },
       yearly:    p => `${p}年`,
     };
     const items = listMap[ptype] ?? [];
     if (!items.length) {
-      selectorEl.innerHTML = `<p class="monthly-empty">尚無${ptype}資料，請先執行 build_period_summary.py</p>`;
+      selectorEl.innerHTML = `<p class="monthly-empty" style="padding:8px 12px">尚無${ptype}資料，請先執行 build_period_summary.py</p>`;
       return;
     }
     const tabs = items.map(p =>
-      `<button class="month-tab${p === urlPeriod ? " is-active" : ""}" data-period="${p}" type="button">${labelFn[ptype](p)}</button>`
+      `<button class="month-tab${p === currentPeriod ? " is-active" : ""}" data-period="${p}" type="button">${labelFn[ptype](p)}</button>`
     ).join("");
     selectorEl.innerHTML = `<nav class="monthly-nav-months">${tabs}</nav>`;
 
@@ -1128,47 +1204,49 @@ function monthlyReportRenderer(runtime) {
       btn.addEventListener("click", async () => {
         selectorEl.querySelectorAll("[data-period]").forEach(b => b.classList.remove("is-active"));
         btn.classList.add("is-active");
-        const p = btn.dataset.period;
-        const params = new URLSearchParams(location.search);
-        params.set("period_type", ptype); params.set("period", p);
-        params.delete("date_from");
-        history.replaceState(null, "", `?${params.toString()}`);
-        const d = detailEl();
-        if (d) d.innerHTML = `<p class="monthly-loading">載入 ${periodFormatLabel(ptype, p)} 資料中…</p>`;
-        try {
-          const rows = await fetchPeriodData(ptype, p, runtime);
-          renderPeriodDetail(d, ptype, p, rows);
-        } catch (err) {
-          if (d) d.innerHTML = `<p class="monthly-error">載入失敗：${err.message}</p>`;
-        }
+        currentPeriod = btn.dataset.period;
+        updateUrl();
+        await loadAndRender(currentCategory, currentPeriodType, currentPeriod);
       });
     });
 
-    const initTarget = urlPeriod
-      ? selectorEl.querySelector(`[data-period="${urlPeriod}"]`)
+    // Auto-select: URL period → first available
+    const initBtn = currentPeriod
+      ? selectorEl.querySelector(`[data-period="${currentPeriod}"]`)
       : selectorEl.querySelector("[data-period]");
-    if (initTarget) initTarget.click();
+    if (initBtn) {
+      initBtn.classList.add("is-active");
+      currentPeriod = initBtn.dataset.period;
+    }
   }
 
-  function switchPeriodType(ptype) {
-    section.querySelectorAll(".period-type-tab").forEach(t => t.classList.toggle("is-active", t.dataset.ptype === ptype));
-    const d = detailEl();
-    if (d) d.innerHTML = `<p class="monthly-empty">點選上方期間查看明細</p>`;
-    if (ptype === "daily") buildDailySelector();
-    else buildPeriodSelector(ptype);
-  }
-
-  section.querySelectorAll(".period-type-tab").forEach(tab => {
+  // Category tab handlers
+  section.querySelectorAll(".report-category-tab").forEach(tab => {
     tab.addEventListener("click", () => {
-      const params = new URLSearchParams(location.search);
-      params.set("period_type", tab.dataset.ptype);
-      params.delete("period"); params.delete("date_from");
-      history.replaceState(null, "", `?${params.toString()}`);
-      switchPeriodType(tab.dataset.ptype);
+      section.querySelectorAll(".report-category-tab").forEach(t => t.classList.remove("is-active"));
+      tab.classList.add("is-active");
+      currentCategory = tab.dataset.cat;
+      updateUrl();
+      if (currentPeriod) loadAndRender(currentCategory, currentPeriodType, currentPeriod);
     });
   });
 
-  switchPeriodType(urlPeriodType);
+  // Period-type tab handlers
+  section.querySelectorAll(".period-type-tab").forEach(tab => {
+    tab.addEventListener("click", async () => {
+      section.querySelectorAll(".period-type-tab").forEach(t => t.classList.remove("is-active"));
+      tab.classList.add("is-active");
+      currentPeriodType = tab.dataset.ptype;
+      currentPeriod = null;
+      buildPeriodSelector(currentPeriodType);
+      updateUrl();
+      if (currentPeriod) await loadAndRender(currentCategory, currentPeriodType, currentPeriod);
+    });
+  });
+
+  // Initial render
+  buildPeriodSelector(currentPeriodType);
+  if (currentPeriod) loadAndRender(currentCategory, currentPeriodType, currentPeriod);
 }
 
 // ── 路由 ────────────────────────────────────────────────────────

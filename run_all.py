@@ -165,21 +165,24 @@ def _collect_t2_available_dates(dataset_dir: Path) -> list[str]:
     return sorted(dates)
 
 
-def _collect_t2_available_periods(dataset_dir: Path, report_name: str = "homepage-blocks") -> dict:
-    """掃描 homepage-blocks report 目錄，回傳 monthly/quarterly/yearly 各自的可用清單。"""
-    report_dir = dataset_dir / "report" / report_name
+def _collect_t2_available_periods(dataset_dir: Path) -> dict:
+    """掃描所有 report 類別目錄，回傳 monthly/quarterly/yearly 各自的聯集。"""
+    report_dir = dataset_dir / "report"
     if not report_dir.exists():
         return {"available_months": [], "available_quarters": [], "available_years": []}
     months, quarters, years = set(), set(), set()
-    for part in report_dir.iterdir():
-        if not part.is_dir():
+    for category in report_dir.iterdir():
+        if not category.is_dir():
             continue
-        if part.name.startswith("monthly="):
-            months.add(part.name[8:])
-        elif part.name.startswith("quarterly="):
-            quarters.add(part.name[10:])
-        elif part.name.startswith("yearly="):
-            years.add(part.name[7:])
+        for part in category.iterdir():
+            if not part.is_dir():
+                continue
+            if part.name.startswith("monthly="):
+                months.add(part.name[8:])
+            elif part.name.startswith("quarterly="):
+                quarters.add(part.name[10:])
+            elif part.name.startswith("yearly="):
+                years.add(part.name[7:])
     return {
         "available_months": sorted(months, reverse=True),
         "available_quarters": sorted(quarters, reverse=True),
@@ -308,7 +311,7 @@ def main() -> None:
 
         print(f"{'─'*60}")
         print("[📆] 週期彙總（Period Summary）")
-        ok, elapsed = run_report("builders/build_period_summary.py", [])
+        ok, elapsed = run_report("builders/build_period_summary.py", extra_args)
         print(f"  → {'✓ 完成' if ok else '✗ 失敗'}（耗時 {elapsed}s）")
 
     total_elapsed = round(time.time() - total_start, 1)
