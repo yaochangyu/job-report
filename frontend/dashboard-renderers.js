@@ -847,6 +847,17 @@ function monthlyBuildCatTable(clickRows, viewMap) {
   </table>`;
 }
 
+function initCatNav(detail) {
+  const btns     = detail.querySelectorAll(".cat-sidebar-item");
+  const sections = detail.querySelectorAll(".cat-section");
+  function activate(navId) {
+    btns.forEach(b => b.classList.toggle("is-active", b.dataset.nav === navId));
+    sections.forEach(s => s.classList.toggle("is-active", s.id === navId));
+  }
+  btns.forEach(btn => btn.addEventListener("click", () => activate(btn.dataset.nav)));
+  if (btns.length) activate(btns[0].dataset.nav);
+}
+
 function periodFormatLabel(type, period) {
   if (type === "monthly") return `${period.slice(0, 4)}年${period.slice(5, 7)}月 月報`;
   if (type === "quarterly") { const [y, q] = period.split("-"); return `${y}年 ${q} 季報`; }
@@ -934,21 +945,7 @@ function renderPeriodDetail(detail, type, period, rows) {
     { label: "總點擊", data: trendPeriods.map(p => trendMap.get(p)), borderColor: "#4361ee", tension: 0.3, fill: false },
   ]);
 
-  detail.querySelectorAll(".cat-sidebar-item").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const target = detail.querySelector(`#${btn.dataset.nav}`);
-      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-  });
-  const catSectionEls = detail.querySelectorAll(".cat-section");
-  const sidebarBtns   = detail.querySelectorAll(".cat-sidebar-item");
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting)
-        sidebarBtns.forEach(btn => btn.classList.toggle("is-active", btn.dataset.nav === entry.target.id));
-    });
-  }, { rootMargin: "0px 0px -60% 0px" });
-  catSectionEls.forEach(el => observer.observe(el));
+  initCatNav(detail);
 }
 
 async function monthlyFetchDay(date, runtime) {
@@ -1012,23 +1009,7 @@ async function monthlyFetchDay(date, runtime) {
         <div class="cat-content">${catSections}</div>
       </div>`;
 
-    detail.querySelectorAll(".cat-sidebar-item").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const target = detail.querySelector(`#${btn.dataset.nav}`);
-        if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    });
-
-    const catSectionEls = detail.querySelectorAll(".cat-section");
-    const sidebarBtns   = detail.querySelectorAll(".cat-sidebar-item");
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          sidebarBtns.forEach(btn => btn.classList.toggle("is-active", btn.dataset.nav === entry.target.id));
-        }
-      });
-    }, { rootMargin: "0px 0px -60% 0px" });
-    catSectionEls.forEach(el => observer.observe(el));
+    initCatNav(detail);
   } catch (err) {
     detail.innerHTML = `<p class='monthly-error'>載入失敗：${err.message}</p>`;
   }
