@@ -57,10 +57,14 @@ def expected_feature(dates: list[str]) -> dict[str, Any]:
     frame = load_days("feature-engagement", dates, "daily_summary.parquet")
     return {
         "kpi": {
-            "explore_jobs": int(frame["explore_jobs"].sum()),
-            "explore_corp": int(frame["explore_corp"].sum()),
-            "identity_total": int(frame["identity"].sum()),
-            "news_total": int(frame["news"].sum()),
+            "explore_jobs_click": int(frame["explore_jobs_click"].sum()),
+            "explore_jobs_view":  int(frame["explore_jobs_view"].sum()),
+            "explore_corp_click": int(frame["explore_corp_click"].sum()),
+            "explore_corp_view":  int(frame["explore_corp_view"].sum()),
+            "identity_click":     int(frame["identity_click"].sum()),
+            "identity_view":      int(frame["identity_view"].sum()),
+            "news_click":         int(frame["news_click"].sum()),
+            "news_view":          int(frame["news_view"].sum()),
         }
     }
 
@@ -127,9 +131,11 @@ def expected_navigation(dates: list[str]) -> dict[str, Any]:
     page_count = len(set(sources["page"]).union(set(targets["page"])))
     return {
         "kpi": {
-            "nav_total": int(summary["nav_total"].sum()),
-            "entry_total": int(summary["entry_total"].sum()),
-            "page_count": int(page_count),
+            "nav_click":   int(summary["nav_click"].sum()),
+            "nav_total":   int(summary["nav_click"].sum() + summary["nav_view"].sum()),
+            "entry_click": int(summary["entry_click"].sum()),
+            "entry_total": int(summary["entry_click"].sum() + summary["entry_view"].sum()),
+            "tracked_pages": int(page_count),
         },
         "page_sources_len": NAVIGATION_PAGE_LIMIT,
         "page_targets_len": NAVIGATION_PAGE_LIMIT,
