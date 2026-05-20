@@ -18,6 +18,7 @@ const runtime = {
   pendingDate: null,
   pendingPeriodType: null,
   pendingPeriod: null,
+  pendingCategory: null,
 };
 
 const defaultState = {
@@ -103,9 +104,9 @@ const VIEW_META = {
     desc: "搜尋、身分類別、探索工作、探索企業各區塊每日點擊數。",
   },
   "monthly-report": {
-    title: "月報表",
-    subtitle: "Monthly Report",
-    desc: "依月份瀏覽首頁區塊點擊日報表，點擊月份展開各日明細。",
+    title: "週期報表",
+    subtitle: "Period Report",
+    desc: "依月份、季度、年度查看各類別聚合趨勢與明細報表。",
   },
 };
 
@@ -263,6 +264,7 @@ async function runQuery(state, filters) {
     runtime.pendingDate = p.get("date_from") || null;
     runtime.pendingPeriodType = p.get("period_type") || null;
     runtime.pendingPeriod = p.get("period") || null;
+    runtime.pendingCategory = p.get("report_category") || null;
     syncUrlParams(filters);
     renderDashboard("monthly-report", [], runtime);
     runtime.pendingDate = null;
@@ -362,6 +364,7 @@ function syncUrlParams(filters) {
     url.searchParams.delete("date_to");
     url.searchParams.delete("period_type");
     url.searchParams.delete("period");
+    url.searchParams.delete("report_category");
   } else {
     url.searchParams.set("date_from", filters.dateFrom);
     url.searchParams.set("date_to", filters.dateTo);
