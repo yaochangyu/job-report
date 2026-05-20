@@ -2,7 +2,7 @@
 
 - [x] 建立備份分支 `v1-3-backup`
     - 為什麼需要：改寫 Git 歷史是危險操作，需要保留原始狀態以便在失敗時還原。
-- [ ] 執行 `git filter-branch` 移除 `v1-3` 分支上的 AI 標記
+- [x] 執行 `git filter-branch` 移除 `v1-3` 分支上的 AI 標記
     - 為什麼需要：利用過濾器自動刪除 Commit 訊息中所有包含 `Co-authored-by` (不分大小寫) 的行。
-- [ ] 驗證 `v1-3` 的 Commit Log
+- [x] 驗證 `v1-3` 的 Commit Log
     - 為什麼需要：手動與自動確認改寫結果，確保沒有遺漏。

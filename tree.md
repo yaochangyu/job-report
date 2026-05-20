@@ -17,7 +17,8 @@ job-report/
 │   ├── remove-session-ids.plan.md     # ✅ 已完成：移除 session_ids.parquet 計畫
 │   ├── fix-apply-journey-page-path.plan.md  # ✅ 已完成：apply 事件補入當前頁面修正計畫
 │   ├── backfill-apply-journey.plan.md       # ✅ 已完成：apply-journey 45 天歷史資料補跑計畫
-│   └── monthly-report-day-nav.plan.md       # ✅ 已完成：月報表日期導覽與側邊類別欄實作計畫
+│   ├── monthly-report-day-nav.plan.md       # ✅ 已完成：月報表日期導覽與側邊類別欄實作計畫
+│   └── period-summary-report.plan.md        # ✅ 已完成：月報/季報/年報聚合 + period-type tabs 實作計畫
 ├── builders/                          # 從 T1 產出 T2 parquet 的建置腳本
 │   ├── build_apply_conversion_t2.py
 │   ├── build_apply_journey_t2.py      # 應徵路徑分析
@@ -25,6 +26,7 @@ job-report/
 │   ├── build_device_platform_t2.py
 │   ├── build_feature_engagement_t2.py
 │   ├── build_homepage_blocks_t2.py
+│   ├── build_period_summary.py             # 月報/季報/年報聚合 parquet builder
 │   ├── build_page_navigation_t2.py
 │   ├── build_page_ranking_t2.py
 │   ├── build_search_behavior_t2.py

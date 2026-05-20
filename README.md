@@ -3,7 +3,7 @@
 1111人力銀行前端行為分析報告系統。從 Elasticsearch 抽取使用者事件，經三層資料管線處理，產出可部署至 GitHub Pages 的靜態分析報表。
 
 **已部署網址：**
-- 最新版：`https://yaochangyu.github.io/job-report/v1-2/`
+- 最新版：`https://yaochangyu.github.io/job-report/v1-3/`
 - 根目錄：`https://yaochangyu.github.io/job-report/`
 
 ## 架構概覽
@@ -32,12 +32,14 @@ output/<報表名>/index.html                        ← T3 前端殼（空 HTML
 | 1 | Traffic Overview | KPI 指標、每日流量趨勢、每小時分佈、裝置與 OS 分佈 |
 | 2 | Search Behavior | AI vs 一般搜尋趨勢、搜尋結果頁分佈、AI 互動方式 |
 | 3 | Apply Conversion | 應徵漏斗、每日趨勢、來源分佈、裝置與時段分析 |
-| 4 | Feature Engagement | 探索職缺/企業、身份辨識、產業 Tab、新聞互動 |
-| 5 | Device & Platform | Mobile/Desktop 趨勢、OS 與瀏覽器分佈 |
-| 6 | Page Ranking | featureId 排行 Top 20、功能類別佔比 |
-| 7 | Page Navigation Flow | 頁面轉換路徑排行、各頁面來源/目標 |
-| 8 | Page Click Heatmap | 截圖疊加點擊次數，呈現各頁面按鈕點擊熱點 |
-| 9 | Homepage Blocks | 搜尋、身分類別、探索工作、探索企業各區塊每日點擊數 |
+| 4 | Apply Journey | 使用者從進站到送出應徵的完整頁面路徑排行與步驟分佈 |
+| 5 | Feature Engagement | 探索職缺/企業、身份辨識、產業 Tab、新聞互動 |
+| 6 | Device & Platform | Mobile/Desktop 趨勢、OS 與瀏覽器分佈 |
+| 7 | Page Ranking | featureId 排行 Top 20、功能類別佔比 |
+| 8 | Page Navigation Flow | 頁面轉換路徑排行、各頁面來源/目標 |
+| 9 | Page Click Heatmap | 截圖疊加點擊次數，呈現各頁面按鈕點擊熱點 |
+| 10 | Homepage Blocks | 搜尋、身分類別、探索工作、探索企業各區塊每日點擊數 |
+| 11 | Monthly Report | 依月份瀏覽首頁區塊點擊日報表，點擊月份展開各日明細（使用 homepage-blocks 資料） |
 
 ## 資料管線詳細說明
 
@@ -87,6 +89,11 @@ dataset/report/
   apply-conversion/date=YYYY-MM-DD/
     daily_summary.parquet  # date, applies, job_views
     funnel.parquet / device.parquet / os.parquet / source.parquet
+  apply-journey/date=YYYY-MM-DD/
+    daily_summary.parquet    # date, total_sessions, apply_sessions, apply_rate
+    path_ranking.parquet     # path（頁面序列）× session_count
+    step_distribution.parquet # step（第幾步）× count
+    entry_page.parquet       # page_path × session_count（第一頁分佈）
   feature-engagement/date=YYYY-MM-DD/
     daily_summary.parquet  # date, explore_jobs, explore_corp, identity, news
     explore_jobs_features.parquet / explore_jobs_category_tabs.parquet
@@ -106,8 +113,9 @@ dataset/report/
     daily_summary.parquet  # date, total_clicks, feature_count, top_feature_id, top_count
     click_counts.parquet   # page_path × feature_id × count
   homepage-blocks/date=YYYY-MM-DD/
-    daily_summary.parquet  # date, total_clicks, feature_count, top_feature_id, top_count
-    click_counts.parquet   # feature_id × count × date
+    daily_summary.parquet   # date, total_clicks, total_views, feature_count, top_feature_id, top_count
+    feature_counts.parquet  # event_type × feature_id × feature_name × count × date
+    click_counts.parquet    # feature_id × count × date（點擊熱點視角用）
 ```
 
 ### T3 — 報表頁（前端殼 + DuckDB-WASM）
@@ -132,12 +140,14 @@ output/
   traffic-overview/index.html
   search-behavior/index.html
   apply-conversion/index.html
+  apply-journey/index.html
   feature-engagement/index.html
   device-platform/index.html
   page-ranking/index.html
   page-navigation/index.html
   click-heatmap/index.html
   homepage-blocks/index.html
+  monthly-report/index.html
 ```
 
 > **注意**：T1 原始事件（`dataset/events/`）**不進入** `output/`，不部署至 GitHub Pages。
@@ -238,18 +248,19 @@ uv run python tests/validation/validate_dashboard_data.py --from 2025-01-01 --to
 bash deploy.sh
 
 # 部署至版本子目錄（保留舊版）
-bash deploy.sh 7 v1-2
+bash deploy.sh 7 v1-3
 ```
 
 部署後網址：
 - 根目錄：`https://yaochangyu.github.io/job-report/`
-- 版本目錄：`https://yaochangyu.github.io/job-report/v1-2/`
+- 版本目錄：`https://yaochangyu.github.io/job-report/v1-3/`
 
 ## 專案結構
 
 ```
 ├── builders/
-│   └── build_*_t2.py        # T2 day-keyed 聚合（各報表）
+│   ├── build_*_t2.py        # T2 day-keyed 聚合（各報表）
+│   └── build_period_summary.py  # 月報/季報/年報聚合（planned）
 │
 ├── common/
 │   ├── data_pipeline.py     # T1/T2/T3 路徑與契約定義

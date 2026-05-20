@@ -12,6 +12,12 @@ const runtime = {
   hasEventsView: false,
   datasetRoot: null,
   datesByMonth: {},
+  availableMonths: [],
+  availableQuarters: [],
+  availableYears: [],
+  pendingDate: null,
+  pendingPeriodType: null,
+  pendingPeriod: null,
 };
 
 const defaultState = {
@@ -253,10 +259,15 @@ async function runQuery(state, filters) {
 
   // monthly-report 管理自己的渲染，不走標準查詢流程
   if (filters.viewMode === "monthly-report") {
-    runtime.pendingDate = new URLSearchParams(location.search).get("date_from") || null;
+    const p = new URLSearchParams(location.search);
+    runtime.pendingDate = p.get("date_from") || null;
+    runtime.pendingPeriodType = p.get("period_type") || null;
+    runtime.pendingPeriod = p.get("period") || null;
     syncUrlParams(filters);
     renderDashboard("monthly-report", [], runtime);
     runtime.pendingDate = null;
+    runtime.pendingPeriodType = null;
+    runtime.pendingPeriod = null;
     renderState(state);
     return true;
   }
@@ -349,6 +360,8 @@ function syncUrlParams(filters) {
   if (filters.viewMode === "monthly-report") {
     url.searchParams.delete("date_from");
     url.searchParams.delete("date_to");
+    url.searchParams.delete("period_type");
+    url.searchParams.delete("period");
   } else {
     url.searchParams.set("date_from", filters.dateFrom);
     url.searchParams.set("date_to", filters.dateTo);
@@ -485,6 +498,9 @@ async function bootstrap() {
     state.manifestLoaded = true;
     state.availableDates = manifest.available_dates || [];
     runtime.datesByMonth = groupDatesByMonth(state.availableDates);
+    runtime.availableMonths = manifest.available_months || [];
+    runtime.availableQuarters = manifest.available_quarters || [];
+    runtime.availableYears = manifest.available_years || [];
     if (manifest.branch) setText("branch-badge", manifest.branch);
     renderState(state);
 

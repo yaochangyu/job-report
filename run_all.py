@@ -165,6 +165,28 @@ def _collect_t2_available_dates(dataset_dir: Path) -> list[str]:
     return sorted(dates)
 
 
+def _collect_t2_available_periods(dataset_dir: Path, report_name: str = "homepage-blocks") -> dict:
+    """掃描 homepage-blocks report 目錄，回傳 monthly/quarterly/yearly 各自的可用清單。"""
+    report_dir = dataset_dir / "report" / report_name
+    if not report_dir.exists():
+        return {"available_months": [], "available_quarters": [], "available_years": []}
+    months, quarters, years = set(), set(), set()
+    for part in report_dir.iterdir():
+        if not part.is_dir():
+            continue
+        if part.name.startswith("monthly="):
+            months.add(part.name[8:])
+        elif part.name.startswith("quarterly="):
+            quarters.add(part.name[10:])
+        elif part.name.startswith("yearly="):
+            years.add(part.name[7:])
+    return {
+        "available_months": sorted(months, reverse=True),
+        "available_quarters": sorted(quarters, reverse=True),
+        "available_years": sorted(years, reverse=True),
+    }
+
+
 def copy_frontend_bundle(output_dir: Path) -> None:
     output_dir.mkdir(parents=True, exist_ok=True)
     for asset_name in FRONTEND_ASSETS:
@@ -175,10 +197,12 @@ def copy_frontend_bundle(output_dir: Path) -> None:
 
     # available_dates 從 T2 實際產出目錄掃描，確保與前端 fetch 路徑一致
     available_dates = _collect_t2_available_dates(DATASET_DIR)
+    periods = _collect_t2_available_periods(DATASET_DIR)
     (dataset_output / "manifest.json").write_text(
         json.dumps(
             {
                 "available_dates": available_dates,
+                **periods,
                 "generated_at": generated_now(),
                 "branch": _get_git_branch(),
             },
@@ -281,6 +305,11 @@ def main() -> None:
             status = "✓ 完成" if ok else "✗ 失敗"
             print(f"  → {status}（耗時 {elapsed}s）")
             results.append({**report, "ok": ok, "elapsed": elapsed})
+
+        print(f"{'─'*60}")
+        print("[📆] 週期彙總（Period Summary）")
+        ok, elapsed = run_report("builders/build_period_summary.py", [])
+        print(f"  → {'✓ 完成' if ok else '✗ 失敗'}（耗時 {elapsed}s）")
 
     total_elapsed = round(time.time() - total_start, 1)
 
