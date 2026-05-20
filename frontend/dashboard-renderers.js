@@ -25,6 +25,9 @@ function makeChart(id, config) {
   destroyChart(id);
   const canvas = document.getElementById(id);
   if (!canvas) return;
+  // 清除 canvas 上任何未被 chartCache 追蹤的殘留 chart instance
+  const stale = Chart.getChart(canvas);
+  if (stale) stale.destroy();
   chartCache.set(id, new Chart(canvas, config));
 }
 
@@ -77,7 +80,7 @@ function emptyChart(id, type = "bar") {
   makeChart(id, {
     type,
     data: { labels: [], datasets: [{ label: "—", data: [] }] },
-    options: baseOpts,
+    options: { ...baseOpts },
   });
 }
 
@@ -149,6 +152,12 @@ const VIEW_PANEL_TEXT = {
     table1: ["應徵裝置詳細", ""],
     table2: ["應徵 OS 分佈", ""],
     table3: ["應徵來源詳細數據", ""],
+  },
+  "apply-journey": {
+    chart1: ["Top 20 應徵路徑排行", "最常見的頁面路徑（前 20）"],
+    chart2: ["步數分佈", "應徵前經過的頁面數量"],
+    chart3: ["進入頁分佈", "應徵 session 的第一個頁面"],
+    table1: ["完整路徑排行", ""],
   },
   feature: {
     chart1: ["探索職缺 — categoryTab 分佈", "各 Tab 點擊分佈"],
@@ -222,13 +231,13 @@ function showPanels(viewMode) {
   }
 
   // chart panels
-  const charts3 = ["overview","search","apply","feature","device","homepage-blocks"];
+  const charts3 = ["overview","search","apply","apply-journey","feature","device","homepage-blocks"];
   const charts2 = ["ranking","navigation","heatmap"];
   document.getElementById("chart3-panel")?.classList.toggle("hidden", charts2.includes(viewMode));
 
   // table panels — 各視角顯示不同數量
   const tableCount = {
-    overview: 2, search: 1, apply: 3, feature: 2,
+    overview: 2, search: 1, apply: 3, "apply-journey": 1, feature: 2,
     device: 4, ranking: 1, navigation: 3, heatmap: 1,
     "homepage-blocks": 1,
   };
@@ -408,7 +417,60 @@ function applyRenderer(data) {
 }
 
 // ════════════════════════════════════════════════════════════════
-// 4. 功能互動
+// 4. 應徵路徑
+// ════════════════════════════════════════════════════════════════
+function applyJourneyRenderer(data) {
+  const kpi           = data.kpi?.[0] ?? {};
+  const applies       = n(kpi.applies);
+  const applySessions = n(kpi.apply_sessions);
+  const avgSteps      = n(kpi.avg_steps);
+  const topPath       = data.path_ranking?.[0]?.path ?? "—";
+  const topCount      = n(data.path_ranking?.[0]?.count ?? 0);
+
+  setKpiCard("1", "總應徵次數",    fmt(applies),       "action=apply 事件數");
+  setKpiCard("2", "涉及 Session 數", fmt(applySessions), "有應徵行為的 session");
+  setKpiCard("3", "平均步數",      avgSteps.toFixed(1), "應徵前平均頁面數（含 apply）");
+  setKpiCard("4", "Top 1 路徑",    `${fmt(topCount)} 次`, topPath);
+  setKpiCard("5", "—", "—", "");
+  setKpiCard("6", "—", "—", "");
+  setKpiCard("7", "—", "—", "");
+  setKpiCard("8", "—", "—", "");
+
+  // 圖表 1 — Top 20 路徑排行（bar-H）
+  const ranking = data.path_ranking ?? [];
+  const top20   = ranking.slice(0, 20);
+  barHChart("chart1", top20.map(r => r.path), [
+    { label: "次數", data: top20.map(r => n(r.count)), backgroundColor: C.palette },
+  ]);
+
+  // 圖表 2 — 步數分佈（doughnut）
+  const stepLabels = { 1: "1步", 2: "2步", 3: "3步", 4: "4步", 5: "5步以上" };
+  const stepDist = (data.step_distribution ?? []).map(r => ({
+    name:  stepLabels[n(r.steps_group)] ?? `${n(r.steps_group)}步`,
+    count: n(r.count),
+  }));
+  doughnutChart("chart2", stepDist);
+
+  // 圖表 3 — 進入頁分佈（doughnut）
+  doughnutChart("chart3", data.entry_page ?? []);
+
+  // 表格 1 — 完整路徑排行
+  buildTableHead("table1-head", ["#", "路徑", "步數", "次數", "佔比"]);
+  const total = ranking.reduce((s, r) => s + n(r.count), 0);
+  buildTableBody("table1-body", ranking, (r, i) => {
+    const pctStr = total ? `${((n(r.count) / total) * 100).toFixed(1)}%` : "—";
+    return `<tr>
+      <td class="rank">${i + 1}</td>
+      <td>${r.path ?? "—"}</td>
+      <td>${n(r.step_count)}</td>
+      <td>${fmt(n(r.count))}</td>
+      <td class="pct">${pctStr}</td>
+    </tr>`;
+  });
+}
+
+// ════════════════════════════════════════════════════════════════
+// 5. 功能互動
 // ════════════════════════════════════════════════════════════════
 function featureRenderer(data) {
   const kpi = data.kpi?.[0] ?? {};
@@ -918,8 +980,9 @@ function monthlyReportRenderer(runtime) {
 const renderers = {
   overview:   overviewRenderer,
   search:     searchRenderer,
-  apply:      applyRenderer,
-  feature:    featureRenderer,
+  apply:           applyRenderer,
+  "apply-journey": applyJourneyRenderer,
+  feature:         featureRenderer,
   device:     deviceRenderer,
   ranking:    rankingRenderer,
   navigation:          navigationRenderer,
