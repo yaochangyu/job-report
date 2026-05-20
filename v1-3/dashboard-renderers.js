@@ -885,9 +885,10 @@ async function _loadParquetRows(url, db, conn, alias) {
   const resp = await fetch(url);
   if (!resp.ok) throw new Error(`HTTP ${resp.status} ${url}`);
   const buf = new Uint8Array(await resp.arrayBuffer());
-  await db.dropFile(alias).catch(() => {});
-  await db.registerFileBuffer(alias, buf);
-  const result = await conn.query(`SELECT * FROM "${alias}"`);
+  const fname = alias + ".parquet";
+  await db.dropFile(fname).catch(() => {});
+  await db.registerFileBuffer(fname, buf);
+  const result = await conn.query(`SELECT * FROM read_parquet('${fname}')`);
   return result.toArray().map(r =>
     Object.fromEntries(Object.entries(r).map(([k, v]) => [k, typeof v === "bigint" ? Number(v) : v]))
   );
