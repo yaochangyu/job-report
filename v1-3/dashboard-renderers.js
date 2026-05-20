@@ -25,6 +25,9 @@ function makeChart(id, config) {
   destroyChart(id);
   const canvas = document.getElementById(id);
   if (!canvas) return;
+  // 清除 canvas 上任何未被 chartCache 追蹤的殘留 chart instance
+  const stale = Chart.getChart(canvas);
+  if (stale) stale.destroy();
   chartCache.set(id, new Chart(canvas, config));
 }
 
@@ -51,7 +54,6 @@ function barChart(id, labels, datasets, opts = {}) {
 }
 
 function barHChart(id, labels, datasets) {
-  if (id === 'chart3') console.log('[DEBUG barHChart]', id, 'labels:', labels?.slice(0,3), 'data:', datasets?.[0]?.data?.slice(0,3), 'dataTypes:', datasets?.[0]?.data?.slice(0,3)?.map(v => typeof v));
   makeChart(id, {
     type: "bar",
     data: { labels, datasets },
@@ -78,7 +80,7 @@ function emptyChart(id, type = "bar") {
   makeChart(id, {
     type,
     data: { labels: [], datasets: [{ label: "—", data: [] }] },
-    options: baseOpts,
+    options: { ...baseOpts },
   });
 }
 
@@ -539,10 +541,8 @@ function deviceRenderer(data) {
 
   // 圖表 3 — 瀏覽器分佈 (bar-H)
   const bDist = data.browser_dist ?? [];
-  const bDistData = bDist.map(r => n(r.count));
-  console.log('[DEBUG browser_dist]', 'length:', bDist.length, 'sample r:', bDist[0], 'count type:', typeof bDist[0]?.count, 'count val:', bDist[0]?.count, 'n(count):', bDistData[0]);
   barHChart("chart3", bDist.map(r => r.name), [
-    { label: "事件數", data: bDistData, backgroundColor: C.palette },
+    { label: "事件數", data: bDist.map(r => n(r.count)), backgroundColor: C.palette },
   ]);
 
   // 表格 1 — OS 詳細
