@@ -201,6 +201,13 @@ const VIEW_PANEL_TEXT = {
     chart3: ["Top featureId 點擊", "依點擊數排序"],
     table1: ["各 featureId 點擊詳細", "含所屬區塊"],
   },
+  "apply-job-category": {
+    chart1: ["應徵職類 TOP 20", "依應徵次數排序（水平長條）"],
+    chart2: ["應徵產業 TOP 20", "依應徵次數排序（水平長條）"],
+    chart3: ["TOP 5 職類每日趨勢", "各職類每日應徵次數變化"],
+    table1: ["職類排行（TOP 30）", ""],
+    table2: ["產業排行（TOP 30）", ""],
+  },
 };
 
 // ── panel title 更新 ─────────────────────────────────────────────
@@ -217,21 +224,21 @@ function applyPanelText(viewMode) {
 
 // ── panel 顯示/隱藏 ──────────────────────────────────────────────
 function showPanels(viewMode) {
-  const isMonthly = viewMode === "monthly-report";
+  const isPeriodReport = viewMode === "period-report" || viewMode === "monthly-report";
 
-  // monthly-report 用自訂區塊，隱藏所有標準面板
-  document.querySelector(".kpi-grid")?.classList.toggle("hidden", isMonthly);
-  document.querySelector(".chart-grid")?.classList.toggle("hidden", isMonthly);
-  document.getElementById("monthly-section")?.classList.toggle("hidden", !isMonthly);
+  // period-report 用自訂區塊，隱藏所有標準面板
+  document.querySelector(".kpi-grid")?.classList.toggle("hidden", isPeriodReport);
+  document.querySelector(".chart-grid")?.classList.toggle("hidden", isPeriodReport);
+  document.getElementById("monthly-section")?.classList.toggle("hidden", !isPeriodReport);
 
-  if (isMonthly) {
+  if (isPeriodReport) {
     for (let i = 1; i <= 4; i++) document.getElementById(`table${i}-panel`)?.classList.add("hidden");
     document.getElementById("chart3-panel")?.classList.add("hidden");
     return;
   }
 
   // chart panels
-  const charts3 = ["overview","search","apply","apply-journey","feature","device","homepage-blocks"];
+  const charts3 = ["overview","search","apply","apply-journey","feature","device","homepage-blocks","apply-job-category"];
   const charts2 = ["ranking","navigation","heatmap"];
   document.getElementById("chart3-panel")?.classList.toggle("hidden", charts2.includes(viewMode));
 
@@ -239,7 +246,7 @@ function showPanels(viewMode) {
   const tableCount = {
     overview: 2, search: 1, apply: 3, "apply-journey": 1, feature: 2,
     device: 4, ranking: 1, navigation: 3, heatmap: 1,
-    "homepage-blocks": 1,
+    "homepage-blocks": 1, "apply-job-category": 2,
   };
   const count = tableCount[viewMode] ?? 1;
   for (let i = 1; i <= 4; i++) {
@@ -718,6 +725,67 @@ function heatmapRenderer(data) {
 }
 
 // ════════════════════════════════════════════════════════════════
+// 11. 應徵職類／產業分析
+// ════════════════════════════════════════════════════════════════
+function applyJobCategoryRenderer(data) {
+  const kpi        = data.kpi?.[0] ?? {};
+  const total      = n(kpi.total_applies);
+  const withMeta   = n(kpi.applies_with_metadata);
+  const coverage   = kpi.avg_coverage_rate != null ? (kpi.avg_coverage_rate * 100).toFixed(1) + "%" : "—";
+
+  setKpiCard("1", "總應徵數",     fmt(total),   "action=apply 事件數");
+  setKpiCard("2", "有職缺資料",   fmt(withMeta), "成功對應到職缺資訊的應徵");
+  setKpiCard("3", "職缺覆蓋率",   coverage,      "已對應職缺 / 總應徵");
+  setKpiCard("4", "—", "—", "");
+  setKpiCard("5", "—", "—", "");
+  setKpiCard("6", "—", "—", "");
+  setKpiCard("7", "—", "—", "");
+  setKpiCard("8", "—", "—", "");
+
+  // 圖表 1 — 職類 TOP 20（水平長條）
+  const jpTop = (data.job_position_top ?? []).slice(0, 20);
+  const jpLabels = jpTop.map(r => r.name);
+  const jpCounts = jpTop.map(r => n(r.count));
+  barHChart("chart1", jpLabels, [
+    { label: "應徵次數", data: jpCounts, backgroundColor: C.palette.slice(0, jpLabels.length).map(() => C.blue) },
+  ]);
+
+  // 圖表 2 — 產業 TOP 20（水平長條）
+  const ciTop = (data.company_industry_top ?? []).slice(0, 20);
+  const ciLabels = ciTop.map(r => r.name);
+  const ciCounts = ciTop.map(r => n(r.count));
+  barHChart("chart2", ciLabels, [
+    { label: "應徵次數", data: ciCounts, backgroundColor: ciLabels.map(() => C.teal) },
+  ]);
+
+  // 圖表 3 — TOP 5 職類每日趨勢（折線）
+  const jpDaily = data.job_position_daily ?? [];
+  const jpDates = [...new Set(jpDaily.map(r => r.date))].sort();
+  const jpNames = [...new Set(jpDaily.map(r => r.name))].slice(0, 5);
+  const countMap = {};
+  jpDaily.forEach(r => { countMap[`${r.date}__${r.name}`] = n(r.count); });
+  lineChart("chart3", jpDates, jpNames.map((name, i) => ({
+    label: name,
+    data: jpDates.map(d => countMap[`${d}__${name}`] ?? 0),
+    borderColor: C.palette[i % C.palette.length],
+    tension: 0.3,
+    fill: false,
+  })));
+
+  // 表格 1 — 職類排行 TOP 30
+  const jpAll = data.job_position_top ?? [];
+  const jpTotal = jpAll.reduce((s, r) => s + n(r.count), 0);
+  buildTableHead("table1-head", ["#", "職類", "應徵次數", "", "佔比"]);
+  buildTableBody("table1-body", jpAll, (r, i) => rankRow(i, r.name, n(r.count), jpTotal));
+
+  // 表格 2 — 產業排行 TOP 30
+  const ciAll = data.company_industry_top ?? [];
+  const ciTotal = ciAll.reduce((s, r) => s + n(r.count), 0);
+  buildTableHead("table2-head", ["#", "產業", "應徵次數", "", "佔比"]);
+  buildTableBody("table2-body", ciAll, (r, i) => rankRow(i, r.name, n(r.count), ciTotal));
+}
+
+// ════════════════════════════════════════════════════════════════
 // 9. 首頁區塊點擊
 // ════════════════════════════════════════════════════════════════
 function homepageBlocksRenderer(data) {
@@ -804,7 +872,7 @@ function resetTables() {
 }
 
 // ════════════════════════════════════════════════════════════════
-// 10. 月報表瀏覽器 — monthly-report
+// 10. 週期報表瀏覽器 — period-report
 // ════════════════════════════════════════════════════════════════
 
 const MONTHLY_CATEGORIES = [
@@ -1136,9 +1204,9 @@ function renderPeriodReport(container, category, periodType, period, data, runti
 }
 
 // ════════════════════════════════════════════════════════════════
-// 10. 週期報表中心 — monthly-report
+// 10. 週期報表中心 — period-report
 // ════════════════════════════════════════════════════════════════
-function monthlyReportRenderer(runtime) {
+function periodReportRenderer(runtime) {
   const section = document.getElementById("monthly-section");
   if (!section || !runtime) return;
 
@@ -1186,6 +1254,7 @@ function monthlyReportRenderer(runtime) {
 
   function updateUrl() {
     const p = new URLSearchParams(location.search);
+    p.set("view", "period-report");
     p.set("period_type", currentPeriodType);
     p.set("report_category", currentCategory);
     if (currentPeriod) p.set("period", currentPeriod);
@@ -1411,14 +1480,15 @@ const renderers = {
   ranking:    rankingRenderer,
   navigation:          navigationRenderer,
   heatmap:             heatmapRenderer,
-  "homepage-blocks":   homepageBlocksRenderer,
+  "homepage-blocks":     homepageBlocksRenderer,
+  "apply-job-category":  applyJobCategoryRenderer,
 };
 
 export function renderDashboard(viewMode, outputs, runtime = null) {
   showPanels(viewMode);
   applyPanelText(viewMode);
-  if (viewMode === "monthly-report") {
-    monthlyReportRenderer(runtime);
+  if (viewMode === "period-report" || viewMode === "monthly-report") {
+    periodReportRenderer(runtime);
     return;
   }
   const data = Object.fromEntries(outputs.map(o => [o.name, o.rows]));

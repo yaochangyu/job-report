@@ -49,7 +49,7 @@ const VIEW_FILTER_FIELDS = {
   navigation:        { pagePath: true  },
   heatmap:           { pagePath: true  },
   "homepage-blocks":   { pagePath: false },
-  "monthly-report":    { pagePath: false },
+  "period-report":     { pagePath: false },
 };
 
 const VIEW_META = {
@@ -103,15 +103,24 @@ const VIEW_META = {
     subtitle: "Homepage Blocks",
     desc: "搜尋、身分類別、探索工作、探索企業各區塊每日點擊數。",
   },
-  "monthly-report": {
+  "period-report": {
     title: "週期報表",
     subtitle: "Period Report",
     desc: "依月份、季度、年度查看各類別聚合趨勢與明細報表。",
   },
 };
 
+const LEGACY_VIEW_MODE_ALIASES = {
+  "monthly-report": "period-report",
+};
+
+function normalizeViewMode(viewMode) {
+  return LEGACY_VIEW_MODE_ALIASES[viewMode] ?? viewMode;
+}
+
 function isValidViewMode(viewMode) {
-  return Boolean(viewMode && viewMode in VIEW_META);
+  const normalized = normalizeViewMode(viewMode);
+  return Boolean(normalized && normalized in VIEW_META);
 }
 
 function groupDatesByMonth(dates) {
@@ -196,8 +205,8 @@ function renderViewMeta(state) {
 
   updateFilterFields(state.selectedViewMode);
 
-  const isMonthly = state.selectedViewMode === "monthly-report";
-  document.querySelector(".filter-wrap")?.classList.toggle("hidden", isMonthly);
+  const isPeriodReport = state.selectedViewMode === "period-report";
+  document.querySelector(".filter-wrap")?.classList.toggle("hidden", isPeriodReport);
 }
 
 function summarizeQueryResult(outputs) {
@@ -257,19 +266,22 @@ let _queryInFlight = false;
 
 async function runQuery(state, filters) {
   if (_queryInFlight) return false;
+  const normalizedViewMode = normalizeViewMode(filters.viewMode);
+  const normalizedFilters = { ...filters, viewMode: normalizedViewMode };
 
-  // monthly-report 管理自己的渲染，不走標準查詢流程
-  if (filters.viewMode === "monthly-report") {
+  // period-report 管理自己的渲染，不走標準查詢流程
+  if (normalizedViewMode === "period-report") {
     const p = new URLSearchParams(location.search);
     runtime.pendingDate = p.get("date_from") || null;
     runtime.pendingPeriodType = p.get("period_type") || null;
     runtime.pendingPeriod = p.get("period") || null;
     runtime.pendingCategory = p.get("report_category") || null;
-    syncUrlParams(filters);
-    renderDashboard("monthly-report", [], runtime);
+    syncUrlParams(normalizedFilters);
+    renderDashboard("period-report", [], runtime);
     runtime.pendingDate = null;
     runtime.pendingPeriodType = null;
     runtime.pendingPeriod = null;
+    runtime.pendingCategory = null;
     renderState(state);
     return true;
   }
@@ -277,18 +289,18 @@ async function runQuery(state, filters) {
   if (!runtime.conn || !runtime.hasEventsView) {
     state.lastQuery = "目前沒有 events view，可先執行 extract_events.py 匯出 Parquet";
     state.queryResult = null;
-    resetDashboard(filters.viewMode);
+    resetDashboard(normalizedViewMode);
     renderState(state);
     return false;
   }
 
-  const fetchDates = enumerateDates(filters.dateFrom, filters.dateTo)
+  const fetchDates = enumerateDates(normalizedFilters.dateFrom, normalizedFilters.dateTo)
     .filter(d => state.availableDates.includes(d));
 
   if (!fetchDates.length) {
     state.lastQuery = "所選日期區間無可用 T2 資料";
     state.queryResult = null;
-    resetDashboard(filters.viewMode);
+    resetDashboard(normalizedViewMode);
     showMissingDatesWarning([], []);
     renderState(state);
     return false;
@@ -297,8 +309,8 @@ async function runQuery(state, filters) {
   _queryInFlight = true;
   setQueryRunning(true);
   try {
-    const enrichedFilters = { ...filters, fetchDates };
-    syncUrlParams(filters);
+    const enrichedFilters = { ...normalizedFilters, fetchDates };
+    syncUrlParams(normalizedFilters);
     const registerFile = async (alias, url) => {
       const resp = await fetch(url);
       if (!resp.ok) throw new Error(`${resp.status} ${url}`);
@@ -308,18 +320,18 @@ async function runQuery(state, filters) {
     state.lastQuery = result.summary;
     state.queryResult = summarizeQueryResult(result.outputs);
     state.lastSuccessfulFilters = {
-      dateFrom: filters.dateFrom,
-      dateTo:   filters.dateTo,
-      pagePath: filters.pagePath,
+      dateFrom: normalizedFilters.dateFrom,
+      dateTo:   normalizedFilters.dateTo,
+      pagePath: normalizedFilters.pagePath,
     };
     showMissingDatesWarning(result.missingDates, fetchDates);
-    renderDashboard(filters.viewMode, result.outputs, runtime);
+    renderDashboard(normalizedViewMode, result.outputs, runtime);
     renderState(state);
     return true;
   } catch (error) {
     state.lastQuery = error instanceof Error ? error.message : String(error);
     state.queryResult = null;
-    resetDashboard(filters.viewMode);
+    resetDashboard(normalizedViewMode);
     showMissingDatesWarning([], []);
     renderState(state);
     return false;
@@ -358,16 +370,24 @@ function readInitialFilters(viewMode) {
 
 function syncUrlParams(filters) {
   const url = new URL(window.location.href);
-  url.searchParams.set("view", filters.viewMode);
-  if (filters.viewMode === "monthly-report") {
+  const normalizedViewMode = normalizeViewMode(filters.viewMode);
+  url.searchParams.set("view", normalizedViewMode);
+  if (normalizedViewMode === "period-report") {
     url.searchParams.delete("date_from");
     url.searchParams.delete("date_to");
     url.searchParams.delete("period_type");
     url.searchParams.delete("period");
     url.searchParams.delete("report_category");
+    url.searchParams.delete("sub_view");
+    url.searchParams.delete("day");
   } else {
     url.searchParams.set("date_from", filters.dateFrom);
     url.searchParams.set("date_to", filters.dateTo);
+    url.searchParams.delete("period_type");
+    url.searchParams.delete("period");
+    url.searchParams.delete("report_category");
+    url.searchParams.delete("sub_view");
+    url.searchParams.delete("day");
   }
   if (filters.pagePath) url.searchParams.set("page_path", filters.pagePath);
   else url.searchParams.delete("page_path");
@@ -376,9 +396,9 @@ function syncUrlParams(filters) {
 
 function resolveInitialViewMode() {
   const params = new URLSearchParams(window.location.search);
-  const viewFromUrl = params.get("view");
+  const viewFromUrl = normalizeViewMode(params.get("view"));
   if (isValidViewMode(viewFromUrl)) return viewFromUrl;
-  const bodyView = document.body.dataset.initialView;
+  const bodyView = normalizeViewMode(document.body.dataset.initialView);
   if (isValidViewMode(bodyView)) return bodyView;
   return "overview";
 }
