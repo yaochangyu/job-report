@@ -39,7 +39,8 @@ output/<報表名>/index.html                        ← T3 前端殼（空 HTML
 | 8 | Page Navigation Flow | 頁面轉換路徑排行、各頁面來源/目標 |
 | 9 | Page Click Heatmap | 截圖疊加點擊次數，呈現各頁面按鈕點擊熱點 |
 | 10 | Homepage Blocks | 搜尋、身分類別、探索工作、探索企業各區塊每日點擊數 |
-| 11 | Period Report | 依月份、季度、年度瀏覽各類別聚合趨勢與明細報表，月報可切換日報明細 |
+| 11 | Apply Job Category | 應徵者最常應徵的職類與產業 TOP 30 排行及每日趨勢（JOIN Matching ES job metadata） |
+| 12 | Period Report | 依月份、季度、年度瀏覽各類別聚合趨勢與明細報表，月報可切換日報明細 |
 
 ## 資料管線詳細說明
 
@@ -67,6 +68,7 @@ dataset/manifest/t1-raw-manifest.json
 | `page_path` / `previous_page_path` | 正規化後的頁面路徑 |
 | `device_type` / `os` / `browser` | 裝置資訊 |
 | `source` / `category_tab` / `identity_type` / `industry_tab` | 來自 ES `metadata` 的額外維度 |
+| `job_id` / `company_id` | 來自 ES `metadata.jobId` / `metadata.companyId`，apply 事件帶有職缺與公司 ID |
 
 ### T2 — 聚合結果（部署至 GitHub Pages）
 
@@ -116,7 +118,15 @@ dataset/report/
     daily_summary.parquet   # date, total_clicks, total_views, feature_count, top_feature_id, top_count
     feature_counts.parquet  # event_type × feature_id × feature_name × count × date
     click_counts.parquet    # feature_id × count × date（點擊熱點視角用）
+  apply-job-category/date=YYYY-MM-DD/
+    daily_summary.parquet         # date, total_applies, applies_with_metadata, coverage_rate
+    job_position_top.parquet      # name（職類）× count，TOP 30
+    company_industry_top.parquet  # name（產業）× count，TOP 30
+    job_position_daily.parquet    # date × name × count（TOP 10 職類每日趨勢）
+    company_industry_daily.parquet # date × name × count（TOP 10 產業每日趨勢）
 ```
+
+> **apply-job-category 資料來源**：apply 事件的 `job_id` 取自 `metadata.jobId`，再批次查詢內部 Matching ES（`search-jobs-v1-*`）取得 `jobPositionNames`（職類）與 `companyIndustryNames`（產業）。只有現存職缺可以 JOIN，已下架職缺不計入（覆蓋率約 98%）。
 
 ### T3 — 報表頁（前端殼 + DuckDB-WASM）
 
@@ -265,6 +275,7 @@ bash deploy.sh 7 v1-3
 ├── common/
 │   ├── data_pipeline.py     # T1/T2/T3 路徑與契約定義
 │   ├── es_client.py         # Grafana _msearch 封裝
+│   ├── job_metadata.py      # 批次查詢 search-jobs-v1-* 取職類/產業（Matching ES）
 │   ├── raw_events.py        # T1 欄位契約與正規化
 │   ├── t1_reader.py         # T1 Parquet 讀取工具
 │   ├── frontend_shell.py    # 前端殼 HTML 模板
