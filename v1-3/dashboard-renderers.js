@@ -881,7 +881,7 @@ const HM_ELEMENTS = [
   { feature_id: "identify-personal-tab-3", cx: 144,  cy: 1071 },
 ];
 const HM_VW = 1440;
-const HM_VH = 1100;
+const HM_VH = 5443;
 const HM_LOCATED = new Set(HM_ELEMENTS.map(e => e.feature_id));
 const HM_IMG = "./homepage_screenshot.png";
 
