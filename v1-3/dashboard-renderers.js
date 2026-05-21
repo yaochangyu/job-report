@@ -1080,7 +1080,77 @@ function renderPeriodBreakdown(container, category, breakdowns) {
   container.innerHTML = html;
 }
 
-function renderPeriodReport(container, category, periodType, period, data) {
+async function fetchDailyBreakdown(category, date, runtime) {
+  const catCfg = PERIOD_REPORT_CATEGORIES.find(c => c.key === category);
+  const dir = `report/${category}/date=${date}`;
+  const safe = s => String(s).replace(/[^a-z0-9]/gi, "_");
+  const base = `dd_${safe(category)}_${safe(date)}`;
+  const breakdowns = {};
+  for (const fn of catCfg?.breakdowns ?? []) {
+    const bdUrl = new URL(`${dir}/${fn}`, runtime.datasetRoot).href;
+    try {
+      breakdowns[fn] = await _loadParquetRows(bdUrl, runtime.db, runtime.conn, `${base}_${safe(fn)}`);
+    } catch {
+      breakdowns[fn] = [];
+    }
+  }
+  return breakdowns;
+}
+
+function renderDailyDrilldown(container, catCfg, summary, category, runtime) {
+  const hasBreakdowns = catCfg.breakdowns.length > 0;
+  const mainLabelIdx  = catCfg.kpiCols.indexOf(catCfg.mainMetric);
+  const mainLabel     = catCfg.kpiLabels[mainLabelIdx] ?? catCfg.mainMetric;
+  const desc = [...summary].sort((a, b) => String(b.period).localeCompare(String(a.period)));
+
+  const rowsHtml = desc.map(r => {
+    const [y, m, d] = String(r.period).split("-");
+    const preDetail = !hasBreakdowns
+      ? `<div class="period-kpi-row">${catCfg.kpiCols.map((col, i) =>
+          `<div class="period-kpi-card">
+            <div class="period-kpi-label">${catCfg.kpiLabels[i]}</div>
+            <div class="period-kpi-value">${fmt(n(r[col]))}</div>
+          </div>`).join("")}</div>`
+      : "";
+    return `<div class="daily-drilldown-row" data-date="${r.period}" data-loaded="${!hasBreakdowns}">
+      <div class="daily-drilldown-header">
+        <span class="daily-drilldown-date">${y}/${m}/${d}</span>
+        <span class="daily-drilldown-metric">${mainLabel}：<strong>${fmt(n(r[catCfg.mainMetric]))}</strong></span>
+        <span class="daily-drilldown-arrow">▶</span>
+      </div>
+      <div class="daily-drilldown-detail">${preDetail}</div>
+    </div>`;
+  }).join("");
+
+  container.innerHTML = `
+    <div class="period-breakdown-section">
+      <h4 class="period-breakdown-title">各日明細</h4>
+      <div class="daily-drilldown-list">${rowsHtml}</div>
+    </div>`;
+
+  container.querySelectorAll(".daily-drilldown-header").forEach(header => {
+    header.addEventListener("click", async () => {
+      const row    = header.closest(".daily-drilldown-row");
+      const detail = row.querySelector(".daily-drilldown-detail");
+      const isOpen = row.classList.toggle("is-open");
+      if (!isOpen || row.dataset.loaded !== "false") return;
+      row.dataset.loaded = "loading";
+      detail.innerHTML   = `<p class="monthly-loading">載入中…</p>`;
+      try {
+        const breakdowns = await fetchDailyBreakdown(category, row.dataset.date, runtime);
+        detail.innerHTML  = "";
+        renderPeriodBreakdown(detail, category, breakdowns);
+        if (!detail.innerHTML.trim()) detail.innerHTML = `<p class="monthly-empty">無明細資料</p>`;
+        row.dataset.loaded = "true";
+      } catch (e) {
+        detail.innerHTML   = `<p class="monthly-error">載入失敗：${e.message}</p>`;
+        row.dataset.loaded = "false";
+      }
+    });
+  });
+}
+
+function renderPeriodReport(container, category, periodType, period, data, runtime = null) {
   const catCfg = PERIOD_REPORT_CATEGORIES.find(c => c.key === category) ?? PERIOD_REPORT_CATEGORIES[0];
   const { summary, breakdowns } = data;
 
@@ -1103,7 +1173,8 @@ function renderPeriodReport(container, category, periodType, period, data) {
     <div class="period-trend-wrap">
       <canvas id="period-trend-chart"></canvas>
     </div>
-    <div id="period-breakdown-container"></div>`;
+    <div id="period-breakdown-container"></div>
+    ${periodType === "monthly" ? '<div id="period-daily-drilldown"></div>' : ""}`;
 
   lineChart("period-trend-chart", sorted.map(r => r.period), [{
     label: catCfg.kpiLabels[mainLabelIdx] ?? catCfg.mainMetric,
@@ -1115,6 +1186,11 @@ function renderPeriodReport(container, category, periodType, period, data) {
 
   const bdContainer = document.getElementById("period-breakdown-container");
   if (bdContainer) renderPeriodBreakdown(bdContainer, category, breakdowns);
+
+  if (periodType === "monthly" && runtime) {
+    const ddContainer = document.getElementById("period-daily-drilldown");
+    if (ddContainer) renderDailyDrilldown(ddContainer, catCfg, summary, category, runtime);
+  }
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -1178,7 +1254,7 @@ function monthlyReportRenderer(runtime) {
     d.innerHTML = `<p class="monthly-loading">載入 ${periodFormatLabel(ptype, period)} · ${catLabel} 中…</p>`;
     try {
       const data = await fetchPeriodReport(cat, ptype, period, runtime);
-      renderPeriodReport(d, cat, ptype, period, data);
+      renderPeriodReport(d, cat, ptype, period, data, runtime);
     } catch (err) {
       d.innerHTML = `<p class="monthly-error">載入失敗：${err.message}</p>`;
     }
