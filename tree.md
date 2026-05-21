@@ -25,7 +25,8 @@ job-report/
 │   ├── sidebar-scroll-container.plan.md     # ✅ 已完成：分析角度導覽固定框捲動修正計畫
 │   ├── builder-unit-tests.plan.md           # ✅ 已完成：10 個 T2 builder 單元測試實作計畫
 │   ├── apply-demographics.plan.md           # ✅ 已完成：應徵者性別／年齡分析實作計畫
-│   └── page-navigation-lazy-load.plan.md   # ✅ 已完成：page-navigation lazy load / conditional fetch 實作計畫
+│   ├── page-navigation-lazy-load.plan.md   # ✅ 已完成：page-navigation lazy load / conditional fetch 實作計畫
+│   └── page-navigation-shrink.plan.md      # ✅ 已完成：page-navigation parquet 縮減評估（決定不實作）
 ├── builders/                          # 從 T1 產出 T2 parquet 的建置腳本
 │   ├── build_apply_conversion_t2.py
 │   ├── build_apply_job_category_t2.py # 應徵職類／產業 TOP N 分析
@@ -102,7 +103,6 @@ job-report/
 │   ├── enrich_t1_events.py            # 讀 T0，批次補強 Solr/Matching ES，寫 T1（dataset/t1-enrich/）
 │   ├── extract_raw_events.py          # 從 ES 抽取純原始事件，寫 T0（dataset/t0-raw/）
 │   └── query_homepage_blocks.py       # 從 ES 查詢首頁四大區塊每日點擊數
-├── page-navigation-shrink.plan.md     # page-navigation parquet 縮減實作計畫
 ├── app.css                            # v1-2 / GitHub Pages 共用前端殼樣式
 ├── app.js                             # v1-2 / GitHub Pages 共用前端殼啟動邏輯
 ├── click_heatmap_config.json          # 頁面 URL + featureId → 元素位置 對應表
