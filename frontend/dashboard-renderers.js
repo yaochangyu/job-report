@@ -1097,60 +1097,6 @@ async function fetchDailyBreakdown(category, date, runtime) {
   return breakdowns;
 }
 
-function renderDailyDrilldown(container, catCfg, summary, category, runtime) {
-  const hasBreakdowns = catCfg.breakdowns.length > 0;
-  const byDate = Object.fromEntries(summary.map(r => [String(r.period), r]));
-  const asc    = [...summary].sort((a, b) => String(a.period).localeCompare(String(b.period)));
-
-  const btnHtml = asc.map(r => {
-    const [,, d] = String(r.period).split("-");
-    return `<button class="daily-date-btn" data-date="${r.period}" data-loaded="false" type="button">${Number(d)}日</button>`;
-  }).join("");
-
-  container.innerHTML = `
-    <div class="period-breakdown-section">
-      <h4 class="period-breakdown-title">各日明細</h4>
-      <div class="daily-date-tabs">${btnHtml}</div>
-      <div class="daily-date-detail"></div>
-    </div>`;
-
-  const detailEl = container.querySelector(".daily-date-detail");
-
-  container.querySelectorAll(".daily-date-btn").forEach(btn => {
-    btn.addEventListener("click", async () => {
-      const isActive = btn.classList.contains("is-active");
-      container.querySelectorAll(".daily-date-btn").forEach(b => b.classList.remove("is-active"));
-      if (isActive) { detailEl.innerHTML = ""; return; }
-      btn.classList.add("is-active");
-      const date = btn.dataset.date;
-      const r    = byDate[date];
-
-      if (btn.dataset.loaded === "true") return;
-      if (!hasBreakdowns) {
-        const kpiCards = catCfg.kpiCols.map((col, i) =>
-          `<div class="period-kpi-card">
-            <div class="period-kpi-label">${catCfg.kpiLabels[i]}</div>
-            <div class="period-kpi-value">${fmt(n(r[col]))}</div>
-          </div>`).join("");
-        detailEl.innerHTML = `<div class="period-kpi-row" style="padding:12px 0">${kpiCards}</div>`;
-        btn.dataset.loaded = "true";
-        return;
-      }
-      btn.dataset.loaded = "loading";
-      detailEl.innerHTML = `<p class="monthly-loading">載入中…</p>`;
-      try {
-        const breakdowns = await fetchDailyBreakdown(category, date, runtime);
-        detailEl.innerHTML = "";
-        renderPeriodBreakdown(detailEl, category, breakdowns);
-        if (!detailEl.innerHTML.trim()) detailEl.innerHTML = `<p class="monthly-empty">無明細資料</p>`;
-        btn.dataset.loaded = "true";
-      } catch (e) {
-        detailEl.innerHTML = `<p class="monthly-error">載入失敗：${e.message}</p>`;
-        btn.dataset.loaded = "false";
-      }
-    });
-  });
-}
 
 function renderPeriodReport(container, category, periodType, period, data, runtime = null) {
   const catCfg = PERIOD_REPORT_CATEGORIES.find(c => c.key === category) ?? PERIOD_REPORT_CATEGORIES[0];
@@ -1175,8 +1121,7 @@ function renderPeriodReport(container, category, periodType, period, data, runti
     <div class="period-trend-wrap">
       <canvas id="period-trend-chart"></canvas>
     </div>
-    <div id="period-breakdown-container"></div>
-    ${periodType === "monthly" ? '<div id="period-daily-drilldown"></div>' : ""}`;
+    <div id="period-breakdown-container"></div>`;
 
   lineChart("period-trend-chart", sorted.map(r => r.period), [{
     label: catCfg.kpiLabels[mainLabelIdx] ?? catCfg.mainMetric,
@@ -1202,6 +1147,8 @@ function monthlyReportRenderer(runtime) {
     ? params.get("period_type") : "monthly";
   const initPeriod   = runtime.pendingPeriod ?? params.get("period") ?? null;
   const initCategory = runtime.pendingCategory ?? params.get("report_category") ?? PERIOD_REPORT_CATEGORIES[0].key;
+  const initSubView  = ["monthly","daily"].includes(params.get("sub_view")) ? params.get("sub_view") : "monthly";
+  const initDay      = params.get("day") ?? null;
 
   const catTabsHtml = PERIOD_REPORT_CATEGORIES.map(c =>
     `<button class="report-category-tab${c.key === initCategory ? " is-active" : ""}" data-cat="${c.key}" type="button">${c.label}</button>`
@@ -1227,9 +1174,12 @@ function monthlyReportRenderer(runtime) {
       </div>
     </div>`;
 
-  let currentCategory  = initCategory;
+  let currentCategory   = initCategory;
   let currentPeriodType = initPeriodType;
-  let currentPeriod    = initPeriod;
+  let currentPeriod     = initPeriod;
+  let currentSubView    = initSubView;
+  let currentDay        = initDay;
+  let lastData          = null;
 
   const selectorEl = section.querySelector(".period-selector");
   const detailEl   = () => document.getElementById("monthly-day-detail");
@@ -1240,63 +1190,118 @@ function monthlyReportRenderer(runtime) {
     p.set("report_category", currentCategory);
     if (currentPeriod) p.set("period", currentPeriod);
     else p.delete("period");
+    if (currentPeriodType === "monthly") {
+      p.set("sub_view", currentSubView);
+      if (currentSubView === "daily" && currentDay) p.set("day", currentDay);
+      else p.delete("day");
+    } else {
+      p.delete("sub_view");
+      p.delete("day");
+    }
     p.delete("date_from"); p.delete("date_to");
     history.replaceState(null, "", `?${p.toString()}`);
   }
 
-  function buildDaySelectorButtons(summary, catCfg, cat, container) {
-    const byDate = Object.fromEntries(summary.map(r => [String(r.period), r]));
-    const asc    = [...summary].sort((a, b) => String(a.period).localeCompare(String(b.period)));
+  function buildSubViewTabs(container) {
+    container.innerHTML = `
+      <div class="sub-view-tabs">
+        <button class="sub-view-tab${currentSubView === "monthly" ? " is-active" : ""}" data-subview="monthly" type="button">月報</button>
+        <button class="sub-view-tab${currentSubView === "daily"   ? " is-active" : ""}" data-subview="daily"   type="button">日報</button>
+      </div>`;
+    container.querySelectorAll(".sub-view-tab").forEach(btn => {
+      btn.addEventListener("click", () => {
+        if (btn.dataset.subview === currentSubView) return;
+        container.querySelectorAll(".sub-view-tab").forEach(b => b.classList.remove("is-active"));
+        btn.classList.add("is-active");
+        currentSubView = btn.dataset.subview;
+        updateUrl();
+        if (lastData) renderForSubView(lastData);
+      });
+    });
+  }
+
+  function renderForSubView(data) {
+    const d = detailEl();
+    if (!d) return;
+    if (currentSubView === "daily") {
+      renderDailyView(d, data, currentCategory, runtime);
+    } else {
+      renderPeriodReport(d, currentCategory, "monthly", currentPeriod, data, runtime);
+    }
+  }
+
+  function renderDailyView(container, data, cat, rt) {
+    const catCfg = PERIOD_REPORT_CATEGORIES.find(c => c.key === cat) ?? PERIOD_REPORT_CATEGORIES[0];
+    const summary = data.summary ?? [];
+    const asc = [...summary].sort((a, b) => String(a.period).localeCompare(String(b.period)));
+    const firstDay = asc[0] ? String(asc[0].period) : null;
+    if (!currentDay || !asc.find(r => String(r.period) === currentDay)) {
+      currentDay = firstDay;
+    }
+
     const btnHtml = asc.map(r => {
-      const [,, d] = String(r.period).split("-");
-      return `<button class="daily-date-btn" data-date="${r.period}" data-loaded="false" type="button">${Number(d)}日</button>`;
+      const d = String(r.period);
+      const dayNum = Number(d.split("-")[2]);
+      return `<button class="daily-date-btn${d === currentDay ? " is-active" : ""}" data-date="${d}" data-loaded="false" type="button">${dayNum}日</button>`;
     }).join("");
-    container.innerHTML = btnHtml;
+
+    container.innerHTML = `<div class="daily-date-tabs">${btnHtml}</div><div id="period-daily-drilldown"></div>`;
+
+    const byDate = Object.fromEntries(summary.map(r => [String(r.period), r]));
+    const hasBreakdowns = catCfg.breakdowns.length > 0;
+
+    async function loadDay(date) {
+      const ddEl = document.getElementById("period-daily-drilldown");
+      if (!ddEl) return;
+      const btn = container.querySelector(`.daily-date-btn[data-date="${date}"]`);
+      if (!btn || btn.dataset.loaded === "true") return;
+      if (!hasBreakdowns) {
+        const r = byDate[date];
+        const kpiCards = catCfg.kpiCols.map((col, i) =>
+          `<div class="period-kpi-card">
+            <div class="period-kpi-label">${catCfg.kpiLabels[i]}</div>
+            <div class="period-kpi-value">${fmt(n(r[col]))}</div>
+          </div>`).join("");
+        ddEl.innerHTML = `<div class="period-kpi-row" style="padding:12px 0">${kpiCards}</div>`;
+        btn.dataset.loaded = "true";
+        return;
+      }
+      btn.dataset.loaded = "loading";
+      ddEl.innerHTML = `<p class="monthly-loading">載入中…</p>`;
+      try {
+        const breakdowns = await fetchDailyBreakdown(cat, date, rt);
+        ddEl.innerHTML = "";
+        renderPeriodBreakdown(ddEl, cat, breakdowns);
+        if (!ddEl.innerHTML.trim()) ddEl.innerHTML = `<p class="monthly-empty">無明細資料</p>`;
+        btn.dataset.loaded = "true";
+      } catch (e) {
+        ddEl.innerHTML = `<p class="monthly-error">載入失敗：${e.message}</p>`;
+        btn.dataset.loaded = "false";
+      }
+    }
 
     container.querySelectorAll(".daily-date-btn").forEach(btn => {
       btn.addEventListener("click", async () => {
         const isActive = btn.classList.contains("is-active");
         container.querySelectorAll(".daily-date-btn").forEach(b => b.classList.remove("is-active"));
         const ddEl = document.getElementById("period-daily-drilldown");
-        const bdEl = document.getElementById("period-breakdown-container");
         if (isActive) {
+          currentDay = null;
+          updateUrl();
           if (ddEl) ddEl.innerHTML = "";
-          if (bdEl) bdEl.style.display = "";
           return;
         }
         btn.classList.add("is-active");
-        if (bdEl) bdEl.style.display = "none";
-        if (!ddEl) return;
-        if (btn.dataset.loaded === "true") {
-          ddEl.style.display = "";
-          return;
-        }
-        const hasBreakdowns = catCfg.breakdowns.length > 0;
-        const r = byDate[btn.dataset.date];
-        if (!hasBreakdowns) {
-          const kpiCards = catCfg.kpiCols.map((col, i) =>
-            `<div class="period-kpi-card">
-              <div class="period-kpi-label">${catCfg.kpiLabels[i]}</div>
-              <div class="period-kpi-value">${fmt(n(r[col]))}</div>
-            </div>`).join("");
-          ddEl.innerHTML = `<div class="period-kpi-row" style="padding:12px 0">${kpiCards}</div>`;
-          btn.dataset.loaded = "true";
-          return;
-        }
-        btn.dataset.loaded = "loading";
-        ddEl.innerHTML = `<p class="monthly-loading">載入中…</p>`;
-        try {
-          const breakdowns = await fetchDailyBreakdown(cat, btn.dataset.date, runtime);
-          ddEl.innerHTML = "";
-          renderPeriodBreakdown(ddEl, cat, breakdowns);
-          if (!ddEl.innerHTML.trim()) ddEl.innerHTML = `<p class="monthly-empty">無明細資料</p>`;
-          btn.dataset.loaded = "true";
-        } catch (e) {
-          ddEl.innerHTML = `<p class="monthly-error">載入失敗：${e.message}</p>`;
-          btn.dataset.loaded = "false";
-        }
+        currentDay = btn.dataset.date;
+        updateUrl();
+        await loadDay(currentDay);
       });
     });
+
+    if (currentDay) {
+      updateUrl();
+      loadDay(currentDay);
+    }
   }
 
   async function loadAndRender(cat, ptype, period) {
@@ -1306,11 +1311,11 @@ function monthlyReportRenderer(runtime) {
     d.innerHTML = `<p class="monthly-loading">載入 ${periodFormatLabel(ptype, period)} · ${catLabel} 中…</p>`;
     try {
       const data = await fetchPeriodReport(cat, ptype, period, runtime);
-      renderPeriodReport(d, cat, ptype, period, data, runtime);
+      lastData = data;
       if (ptype === "monthly") {
-        const daySel = selectorEl.querySelector(".daily-day-selector");
-        const catCfg = PERIOD_REPORT_CATEGORIES.find(c => c.key === cat) ?? PERIOD_REPORT_CATEGORIES[0];
-        if (daySel) buildDaySelectorButtons(data.summary, catCfg, cat, daySel);
+        renderForSubView(data);
+      } else {
+        renderPeriodReport(d, cat, ptype, period, data, runtime);
       }
     } catch (err) {
       d.innerHTML = `<p class="monthly-error">載入失敗：${err.message}</p>`;
@@ -1332,18 +1337,19 @@ function monthlyReportRenderer(runtime) {
     const tabs = items.map(p =>
       `<button class="month-tab${p === currentPeriod ? " is-active" : ""}" data-period="${p}" type="button">${labelFn[ptype](p)}</button>`
     ).join("");
-    selectorEl.innerHTML = `<nav class="monthly-nav-months">${tabs}</nav><div class="daily-day-selector"></div>`;
+    selectorEl.innerHTML = `<nav class="monthly-nav-months">${tabs}</nav>${ptype === "monthly" ? '<div class="sub-view-tabs-container"></div>' : ""}`;
+    if (ptype === "monthly") buildSubViewTabs(selectorEl.querySelector(".sub-view-tabs-container"));
 
     selectorEl.querySelectorAll("[data-period]").forEach(btn => {
       btn.addEventListener("click", async () => {
         selectorEl.querySelectorAll("[data-period]").forEach(b => b.classList.remove("is-active"));
         btn.classList.add("is-active");
         currentPeriod = btn.dataset.period;
-        // 切換月份時清空日期選擇器與日明細
-        const daySel = selectorEl.querySelector(".daily-day-selector");
-        if (daySel) daySel.innerHTML = "";
-        const ddEl = document.getElementById("period-daily-drilldown");
-        if (ddEl) ddEl.innerHTML = "";
+        currentSubView = "monthly";
+        currentDay = null;
+        lastData = null;
+        const stc = selectorEl.querySelector(".sub-view-tabs-container");
+        if (stc) buildSubViewTabs(stc);
         updateUrl();
         await loadAndRender(currentCategory, currentPeriodType, currentPeriod);
       });
@@ -1365,10 +1371,11 @@ function monthlyReportRenderer(runtime) {
       section.querySelectorAll(".report-category-tab").forEach(t => t.classList.remove("is-active"));
       tab.classList.add("is-active");
       currentCategory = tab.dataset.cat;
-      const daySel = selectorEl.querySelector(".daily-day-selector");
-      if (daySel) daySel.innerHTML = "";
-      const ddEl = document.getElementById("period-daily-drilldown");
-      if (ddEl) ddEl.innerHTML = "";
+      currentSubView = "monthly";
+      currentDay = null;
+      lastData = null;
+      const stc = selectorEl.querySelector(".sub-view-tabs-container");
+      if (stc) buildSubViewTabs(stc);
       updateUrl();
       if (currentPeriod) loadAndRender(currentCategory, currentPeriodType, currentPeriod);
     });
