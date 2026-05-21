@@ -410,7 +410,7 @@ bash deploy.sh 7 v1-3
 │   └── validation/
 │       └── validate_dashboard_data.py # Dashboard 查詢結果與 T2 parquet 一致性驗證
 ├── output/                  # T3 輸出（報表靜態頁面 + T2 Parquet）
-├── dataset/                 # T1/T2 資料（本地快取，不進版控）
+├── pipeline/                # T0/T1/T2 資料（本地快取，不進版控）
 └── .archive/                # 已完成的設計計畫文件
 ```
 
@@ -430,5 +430,5 @@ uv run python tools/click_heatmap_discover.py --page /job/search
 
 - 資料來源：Elasticsearch index `operation-logs`，透過內部 Grafana proxy 存取
 - 時區：所有時間統一轉為台灣時間（UTC+8）
-- `dataset/` 目錄不進版控（`.gitignore` 排除），需在本機重新抓取
-- T1 原始事件不部署至 GitHub Pages，瀏覽器端只讀取 T2 聚合 Parquet
+- `pipeline/` 目錄不進版控（`.gitignore` 排除），需在本機重新抓取
+- T0/T1 原始事件不部署至 GitHub Pages，瀏覽器端只讀取 T2 聚合 Parquet

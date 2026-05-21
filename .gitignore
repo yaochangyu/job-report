@@ -29,7 +29,7 @@ Thumbs.db
 
 # Output (generated reports)
 output/
-dataset/
+pipeline/
 store.db
 
 # Secrets / credentials
