@@ -40,7 +40,8 @@ output/<報表名>/index.html                        ← T3 前端殼（空 HTML
 | 9 | Page Click Heatmap | 截圖疊加點擊次數，呈現各頁面按鈕點擊熱點 |
 | 10 | Homepage Blocks | 搜尋、身分類別、探索工作、探索企業各區塊每日點擊數 |
 | 11 | Apply Job Category | 應徵者最常應徵的職類與產業 TOP 30 排行及每日趨勢（JOIN Matching ES job metadata） |
-| 12 | Period Report | 依月份、季度、年度瀏覽各類別聚合趨勢與明細報表，月報可切換日報明細 |
+| 12 | Apply Demographics | 應徵者性別分佈、年齡層分佈與每日趨勢（JOIN core6 Solr 履歷資料） |
+| 13 | Period Report | 依月份、季度、年度瀏覽各類別聚合趨勢與明細報表，月報可切換日報明細 |
 
 ## 資料管線詳細說明
 
@@ -124,9 +125,17 @@ dataset/report/
     company_industry_top.parquet  # name（產業）× count，TOP 30
     job_position_daily.parquet    # date × name × count（TOP 10 職類每日趨勢）
     company_industry_daily.parquet # date × name × count（TOP 10 產業每日趨勢）
+  apply-demographics/date=YYYY-MM-DD/
+    daily_summary.parquet         # date, total_applies, applies_with_metadata, coverage_rate
+    gender.parquet                # gender（男/女/未知）× count
+    age_groups.parquet            # age_group（<25/25-29/.../50+/未知）× count
+    gender_daily.parquet          # date × gender × count
+    age_groups_daily.parquet      # date × age_group × count
 ```
 
 > **apply-job-category 資料來源**：apply 事件的 `job_id` 取自 `metadata.jobId`，再批次查詢內部 Matching ES（`search-jobs-v1-*`）取得 `jobPositionNames`（職類）與 `companyIndustryNames`（產業）。只有現存職缺可以 JOIN，已下架職缺不計入（覆蓋率約 98%）。
+
+> **apply-demographics 資料來源**：apply 事件的 `user_id` 以批次查詢 core6 Solr（`http://solr.web.internal:8985/solr/core6/select`，`q=talentNo_l:(id1 OR id2 ...)`）取得 `sex_i`（1=男、2=女）與 `birth_dt`。年齡以**事件日期**為基準計算，分為 `<25 / 25-29 / 30-34 / 35-39 / 40-44 / 45-49 / 50+` 七個年齡層。尚未建立履歷的使用者無法 JOIN，歸為「未知」（覆蓋率約 71%）。
 
 ### T3 — 報表頁（前端殼 + DuckDB-WASM）
 
@@ -276,6 +285,7 @@ bash deploy.sh 7 v1-3
 │   ├── data_pipeline.py     # T1/T2/T3 路徑與契約定義
 │   ├── es_client.py         # Grafana _msearch 封裝
 │   ├── job_metadata.py      # 批次查詢 search-jobs-v1-* 取職類/產業（Matching ES）
+│   ├── resume_metadata.py   # 批次查詢 core6 Solr 取應徵者 sex_i/birth_dt
 │   ├── raw_events.py        # T1 欄位契約與正規化
 │   ├── t1_reader.py         # T1 Parquet 讀取工具
 │   ├── frontend_shell.py    # 前端殼 HTML 模板
