@@ -27,7 +27,7 @@ from tools.extract_raw_events import extract_raw_events
 
 OUTPUT_DIR = Path(__file__).parent / "output"
 ROOT_DIR = Path(__file__).parent
-DATASET_DIR = ROOT_DIR / "dataset"
+DATASET_DIR = ROOT_DIR / "pipeline"
 
 REPORTS = [
     {
@@ -322,9 +322,9 @@ def _parse_args() -> argparse.Namespace:
         default=",".join(_ALL_STEPS),
         help=(
             "指定要執行的階段，逗號分隔（預設：t0,t1,report,html）\n"
-            "  t0     — 從 Elasticsearch 抽取純原始事件（→ dataset/raw/）\n"
-            "  t1     — 補強 Solr/Matching ES metadata（→ dataset/t1/）\n"
-            "  report — 建立 T2 day-keyed parquet（→ dataset/report/）\n"
+            "  t0     — 從 Elasticsearch 抽取純原始事件（→ pipeline/t0-raw/）\n"
+            "  t1     — 補強 Solr/Matching ES metadata（→ pipeline/t1-enrich/）\n"
+            "  report — 建立 T2 day-keyed parquet（→ pipeline/t2-report/）\n"
             "  html   — 產生 manifest 與 HTML shell（→ output/）\n"
             "範例：--steps report,html"
         ),

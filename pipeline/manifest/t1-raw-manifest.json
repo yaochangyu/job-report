@@ -1,0 +1,317 @@
+{
+  "schema_version": 1,
+  "tier": "t1-raw",
+  "description": "從 Elasticsearch 匯出的標準化原始事件 parquet。",
+  "source_index": "operation-logs",
+  "source_fields": [
+    "@timestamp",
+    "system",
+    "eventType",
+    "action",
+    "sessionId",
+    "anonymousId",
+    "userId",
+    "clientId",
+    "locale",
+    "messageId",
+    "featureId",
+    "featureName",
+    "featureType",
+    "pageUrl",
+    "previousPageUrl",
+    "deviceType",
+    "os",
+    "browser",
+    "metadata"
+  ],
+  "partition_rule": "date=YYYY-MM-DD",
+  "compression": "zstd",
+  "row_group_size": 100000,
+  "available_dates": [
+    "2026-04-05",
+    "2026-04-06",
+    "2026-04-07",
+    "2026-04-08",
+    "2026-04-09",
+    "2026-04-10",
+    "2026-04-11",
+    "2026-04-12",
+    "2026-04-13",
+    "2026-04-14",
+    "2026-04-15",
+    "2026-04-16",
+    "2026-04-17",
+    "2026-04-18",
+    "2026-04-19",
+    "2026-04-20",
+    "2026-04-21",
+    "2026-04-22",
+    "2026-04-23",
+    "2026-04-24",
+    "2026-04-25",
+    "2026-04-26",
+    "2026-04-27",
+    "2026-04-28",
+    "2026-04-29",
+    "2026-04-30",
+    "2026-05-01",
+    "2026-05-02",
+    "2026-05-03",
+    "2026-05-04",
+    "2026-05-05",
+    "2026-05-06",
+    "2026-05-07",
+    "2026-05-08",
+    "2026-05-09",
+    "2026-05-10",
+    "2026-05-11",
+    "2026-05-12",
+    "2026-05-13",
+    "2026-05-14",
+    "2026-05-15",
+    "2026-05-16",
+    "2026-05-17",
+    "2026-05-18",
+    "2026-05-19",
+    "2026-05-20",
+    "2026-05-21"
+  ],
+  "dates": {
+    "2026-04-05": {
+      "path": "raw/date=2026-04-05/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-06": {
+      "path": "raw/date=2026-04-06/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-07": {
+      "path": "raw/date=2026-04-07/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-08": {
+      "path": "raw/date=2026-04-08/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-09": {
+      "path": "raw/date=2026-04-09/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-10": {
+      "path": "raw/date=2026-04-10/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-11": {
+      "path": "raw/date=2026-04-11/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-12": {
+      "path": "raw/date=2026-04-12/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-13": {
+      "path": "raw/date=2026-04-13/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-05-01": {
+      "path": "raw/date=2026-05-01/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-05-02": {
+      "path": "raw/date=2026-05-02/events.parquet",
+      "rows": 478972,
+      "status": "generated"
+    },
+    "2026-05-03": {
+      "path": "raw/date=2026-05-03/events.parquet",
+      "rows": 553718,
+      "status": "generated"
+    },
+    "2026-05-04": {
+      "path": "raw/date=2026-05-04/events.parquet",
+      "rows": 807241,
+      "status": "generated"
+    },
+    "2026-05-05": {
+      "path": "raw/date=2026-05-05/events.parquet",
+      "rows": 764184,
+      "status": "generated"
+    },
+    "2026-05-06": {
+      "path": "raw/date=2026-05-06/events.parquet",
+      "rows": 759709,
+      "status": "generated"
+    },
+    "2026-05-07": {
+      "path": "raw/date=2026-05-07/events.parquet",
+      "rows": 736511,
+      "status": "generated"
+    },
+    "2026-05-08": {
+      "path": "raw/date=2026-05-08/events.parquet",
+      "rows": 648994,
+      "status": "generated"
+    },
+    "2026-05-09": {
+      "path": "raw/date=2026-05-09/events.parquet",
+      "rows": 434767,
+      "status": "generated"
+    },
+    "2026-05-10": {
+      "path": "raw/date=2026-05-10/events.parquet",
+      "rows": 466153,
+      "status": "generated"
+    },
+    "2026-05-11": {
+      "path": "raw/date=2026-05-11/events.parquet",
+      "rows": 802516,
+      "status": "generated"
+    },
+    "2026-05-12": {
+      "path": "raw/date=2026-05-12/events.parquet",
+      "rows": 763098,
+      "status": "generated"
+    },
+    "2026-05-13": {
+      "path": "raw/date=2026-05-13/events.parquet",
+      "rows": 719718,
+      "status": "generated"
+    },
+    "2026-05-14": {
+      "path": "raw/date=2026-05-14/events.parquet",
+      "rows": 717527,
+      "status": "generated"
+    },
+    "2026-05-15": {
+      "path": "raw/date=2026-05-15/events.parquet",
+      "rows": 647606,
+      "status": "generated"
+    },
+    "2026-05-16": {
+      "path": "raw/date=2026-05-16/events.parquet",
+      "rows": 439248,
+      "status": "generated"
+    },
+    "2026-05-17": {
+      "path": "raw/date=2026-05-17/events.parquet",
+      "rows": 461578,
+      "status": "generated"
+    },
+    "2026-04-14": {
+      "path": "raw/date=2026-04-14/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-15": {
+      "path": "raw/date=2026-04-15/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-16": {
+      "path": "raw/date=2026-04-16/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-17": {
+      "path": "raw/date=2026-04-17/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-18": {
+      "path": "raw/date=2026-04-18/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-19": {
+      "path": "raw/date=2026-04-19/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-20": {
+      "path": "raw/date=2026-04-20/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-21": {
+      "path": "raw/date=2026-04-21/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-22": {
+      "path": "raw/date=2026-04-22/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-23": {
+      "path": "raw/date=2026-04-23/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-24": {
+      "path": "raw/date=2026-04-24/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-25": {
+      "path": "raw/date=2026-04-25/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-26": {
+      "path": "raw/date=2026-04-26/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-27": {
+      "path": "raw/date=2026-04-27/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-28": {
+      "path": "raw/date=2026-04-28/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-29": {
+      "path": "raw/date=2026-04-29/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-04-30": {
+      "path": "raw/date=2026-04-30/events.parquet",
+      "rows": null,
+      "status": "skipped"
+    },
+    "2026-05-18": {
+      "path": "raw/date=2026-05-18/events.parquet",
+      "rows": 790118,
+      "status": "generated"
+    },
+    "2026-05-19": {
+      "path": "raw/date=2026-05-19/events.parquet",
+      "rows": 741113,
+      "status": "generated"
+    },
+    "2026-05-20": {
+      "path": "raw/date=2026-05-20/events.parquet",
+      "rows": 709456,
+      "status": "generated"
+    },
+    "2026-05-21": {
+      "path": "raw/date=2026-05-21/events.parquet",
+      "rows": 386043,
+      "status": "generated"
+    }
+  },
+  "updated_at": "2026-05-21 15:16:46 +08:00"
+}

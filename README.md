@@ -12,13 +12,13 @@
 Elasticsearch (operation-logs)
         │
         ▼  extract_raw_events.py
-dataset/t0-raw/date=YYYY-MM-DD/events.parquet       ← T0 純原始事件（僅本機，不可變）
+pipeline/t0-raw/date=YYYY-MM-DD/events.parquet       ← T0 純原始事件（僅本機，不可變）
         │
         ▼  enrich_t1_events.py（批次查 Solr + Matching ES）
-dataset/t1-enrich/date=YYYY-MM-DD/events.parquet        ← T1 補強事件（僅本機）
+pipeline/t1-enrich/date=YYYY-MM-DD/events.parquet        ← T1 補強事件（僅本機）
         │
         ▼  builders/build_*_t2.py  （day-keyed，每天一個分區）
-dataset/t2-report/<報表名>/date=YYYY-MM-DD/
+pipeline/t2-report/<報表名>/date=YYYY-MM-DD/
     daily_summary.parquet                        ← 當日 KPI 摘要（一列）
     <detail>.parquet                             ← 各 view 必要明細（分佈/排行等）
         │
@@ -54,11 +54,11 @@ output/<報表名>/index.html                        ← T3 前端殼（空 HTML
 
 **存放位置：**
 ```
-dataset/t0-raw/
+pipeline/t0-raw/
   date=2025-01-01/events.parquet
   date=2025-01-02/events.parquet
   ...
-dataset/manifest/t0-raw-manifest.json
+pipeline/manifest/t0-raw-manifest.json
 ```
 
 **欄位：**
@@ -76,15 +76,15 @@ dataset/manifest/t0-raw-manifest.json
 
 ### T1 — 補強事件
 
-讀取 T0 Parquet，對 `action=apply` 事件批次查詢外部服務，補入人口屬性與職缺 metadata，寫入 `dataset/t1-enrich/`。**僅存於本機**，不部署至 GitHub Pages。T2 builder 統一從 T1 讀取資料。
+讀取 T0 Parquet，對 `action=apply` 事件批次查詢外部服務，補入人口屬性與職缺 metadata，寫入 `pipeline/t1-enrich/`。**僅存於本機**，不部署至 GitHub Pages。T2 builder 統一從 T1 讀取資料。
 
 **存放位置：**
 ```
-dataset/t1-enrich/
+pipeline/t1-enrich/
   date=2025-01-01/events.parquet
   date=2025-01-02/events.parquet
   ...
-dataset/manifest/t1-enrich-manifest.json
+pipeline/manifest/t1-enrich-manifest.json
 ```
 
 **T1 在 T0 基礎上新增的欄位：**
@@ -107,7 +107,7 @@ dataset/manifest/t1-enrich-manifest.json
 
 **存放位置（每個日期分區內的檔案）：**
 ```
-dataset/t2-report/
+pipeline/t2-report/
   traffic-overview/date=YYYY-MM-DD/
     daily_summary.parquet  # date, views, clicks, applies, sessions
     device_type.parquet    # name, count
@@ -197,7 +197,7 @@ output/
   period-report/index.html
 ```
 
-> **注意**：T0/T1 原始事件（`dataset/t0-raw/`、`dataset/t1-enrich/`）**不進入** `output/`，不部署至 GitHub Pages。
+> **注意**：T0/T1 原始事件（`pipeline/t0-raw/`、`pipeline/t1-enrich/`）**不進入** `output/`，不部署至 GitHub Pages。
 
 ## 外部資料來源查詢方式
 
@@ -306,9 +306,9 @@ uv run python run_all.py --from 2025-01-01 --to 2025-01-31
 
 | 階段     | 對應目錄              | 動作                                          |
 |----------|-----------------------|-----------------------------------------------|
-| `t0`     | `dataset/t0-raw/`        | 從 Elasticsearch 抽取純原始事件               |
-| `t1`     | `dataset/t1-enrich/`         | 補強 Solr/Matching ES metadata（apply 事件）  |
-| `report` | `dataset/t2-report/`     | 建立 T2 day-keyed parquet                     |
+| `t0`     | `pipeline/t0-raw/`        | 從 Elasticsearch 抽取純原始事件               |
+| `t1`     | `pipeline/t1-enrich/`         | 補強 Solr/Matching ES metadata（apply 事件）  |
+| `report` | `pipeline/t2-report/`     | 建立 T2 day-keyed parquet                     |
 | `html`   | `output/`             | 產生 manifest 與 HTML shell                   |
 
 ### 指定執行階段

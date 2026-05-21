@@ -2,7 +2,7 @@
 """
 extract_raw_events.py
 ────────────────────
-從 Elasticsearch 抽取純原始事件，寫入 T0（dataset/raw/）parquet。
+從 Elasticsearch 抽取純原始事件，寫入 T0（pipeline/t0-raw/）parquet。
 """
 
 from __future__ import annotations
