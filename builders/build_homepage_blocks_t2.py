@@ -30,6 +30,7 @@ from tools.query_homepage_blocks import ALL_FEATURE_IDS
 REPORT_NAME = "homepage-blocks"
 DAILY_SUMMARY_FILE = "daily_summary.parquet"
 FEATURE_COUNTS_FILE = "feature_counts.parquet"
+HEATMAP_COUNTS_FILE = "heatmap_counts.parquet"
 
 
 def parse_args() -> argparse.Namespace:
@@ -44,7 +45,7 @@ def parse_args() -> argparse.Namespace:
 def build_homepage_blocks_t2(date_from: str, date_to: str) -> list[Path]:
     ensure_pipeline_directories()
 
-    columns = ["date", "system", "event_type", "feature_id", "feature_name"]
+    columns = ["date", "system", "event_type", "page_path", "feature_id", "feature_name"]
     df = load_t1_raw_dataframe(date_from, date_to, columns=columns)
     df = df[
         df["system"].eq("jobbank-web")
@@ -67,6 +68,15 @@ def build_homepage_blocks_t2(date_from: str, date_to: str) -> list[Path]:
         )
         feature_counts.to_parquet(output_dir / FEATURE_COUNTS_FILE, index=False)
 
+        heatmap_counts = (
+            day_df[day_df["event_type"].eq("click")]
+            .groupby(["page_path", "feature_id"], as_index=False)
+            .agg(count=("feature_id", "size"), feature_name=("feature_name", "first"))
+            .assign(date=target_date)
+            .sort_values(["page_path", "count", "feature_id"], ascending=[True, False, True])
+        )
+        heatmap_counts.to_parquet(output_dir / HEATMAP_COUNTS_FILE, index=False)
+
         total_clicks = int(feature_counts[feature_counts["event_type"].eq("click")]["count"].sum())
         total_views = int(feature_counts[feature_counts["event_type"].eq("view")]["count"].sum())
         click_rows = feature_counts[feature_counts["event_type"].eq("click")]
@@ -85,8 +95,9 @@ def build_homepage_blocks_t2(date_from: str, date_to: str) -> list[Path]:
         dates_written[target_date] = {
             "root": str(output_dir.relative_to(output_dir.parents[2])),
             "files": {
-                "daily_summary": rel(DAILY_SUMMARY_FILE),
+                "daily_summary":  rel(DAILY_SUMMARY_FILE),
                 "feature_counts": rel(FEATURE_COUNTS_FILE),
+                "heatmap_counts": rel(HEATMAP_COUNTS_FILE),
             },
             "rows": len(day_df),
         }

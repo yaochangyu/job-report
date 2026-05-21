@@ -26,7 +26,8 @@ job-report/
 │   ├── builder-unit-tests.plan.md           # ✅ 已完成：10 個 T2 builder 單元測試實作計畫
 │   ├── apply-demographics.plan.md           # ✅ 已完成：應徵者性別／年齡分析實作計畫
 │   ├── page-navigation-lazy-load.plan.md   # ✅ 已完成：page-navigation lazy load / conditional fetch 實作計畫
-│   └── page-navigation-shrink.plan.md      # ✅ 已完成：page-navigation parquet 縮減評估（決定不實作）
+│   ├── page-navigation-shrink.plan.md      # ✅ 已完成：page-navigation parquet 縮減評估（決定不實作）
+│   └── homepage-blocks-heatmap.plan.md    # ✅ 已完成：homepage-blocks 熱點疊圖實作計畫
 ├── builders/                          # 從 T1 產出 T2 parquet 的建置腳本
 │   ├── build_apply_conversion_t2.py
 │   ├── build_apply_job_category_t2.py # 應徵職類／產業 TOP N 分析
@@ -58,6 +59,7 @@ job-report/
 │   ├── app.js                         # 前端殼啟動邏輯
 │   ├── app.css                        # 前端殼樣式
 │   ├── dashboard-renderers.js         # 各 dashboard 前端 renderer
+│   ├── homepage_screenshot.png        # 首頁截圖（homepage-blocks 熱點疊圖用）
 │   ├── query-definitions.js           # DuckDB 前端查詢定義
 │   └── site-manifest.json             # 前端站點資產與資料集 manifest
 ├── output/

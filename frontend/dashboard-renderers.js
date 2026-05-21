@@ -863,6 +863,112 @@ function applyDemographicsRenderer(data) {
 // ════════════════════════════════════════════════════════════════
 // 9. 首頁區塊點擊
 // ════════════════════════════════════════════════════════════════
+
+// 首頁截圖座標（對應 click_heatmap_config.json 首頁元素中心點，viewport 1440×1100）
+const HM_ELEMENTS = [
+  { feature_id: "search-general-submit",   cx: 408,  cy: 215 },
+  { feature_id: "search-ai",               cx: 521,  cy: 215 },
+  { feature_id: "T-job-category",          cx: 457,  cy: 263 },
+  { feature_id: "T-job-location",          cx: 629,  cy: 263 },
+  { feature_id: "identify-personal",       cx: 168,  cy: 407 },
+  { feature_id: "identify-worker",         cx: 389,  cy: 407 },
+  { feature_id: "identify-student",        cx: 609,  cy: 407 },
+  { feature_id: "identify-fresh",          cx: 830,  cy: 407 },
+  { feature_id: "identify-senior",         cx: 1051, cy: 407 },
+  { feature_id: "identify-returning",      cx: 1271, cy: 407 },
+  { feature_id: "identify-personal-tab-1", cx: 138,  cy: 1004 },
+  { feature_id: "identify-personal-tab-2", cx: 256,  cy: 1004 },
+  { feature_id: "identify-personal-tab-3", cx: 144,  cy: 1071 },
+];
+const HM_VW = 1440;
+const HM_VH = 1100;
+const HM_LOCATED = new Set(HM_ELEMENTS.map(e => e.feature_id));
+const HM_IMG = "../../homepage_screenshot.png";
+
+function renderHomepageHeatmapSection(rows) {
+  const sectionId = "hm-section";
+  let section = document.getElementById(sectionId);
+  if (!section) {
+    section = document.createElement("article");
+    section.id = sectionId;
+    section.className = "panel table-panel hm-section";
+    document.getElementById("table1-panel")?.insertAdjacentElement("afterend", section);
+  }
+
+  if (!rows || rows.length === 0) {
+    section.innerHTML = `<header class="panel__header"><h2>頁面疊圖</h2></header><div class="hm-empty">此日期範圍無熱點資料</div>`;
+    return;
+  }
+
+  // 整理 date → Map<feature_id, {feature_name, count}>
+  const dateMap = new Map();
+  for (const r of rows) {
+    if (!dateMap.has(r.date)) dateMap.set(r.date, new Map());
+    const dm = dateMap.get(r.date);
+    const prev = dm.get(r.feature_id);
+    const c = n(r.count);
+    if (prev) prev.count += c;
+    else dm.set(r.feature_id, { feature_name: r.feature_name, count: c });
+  }
+  const dates = [...dateMap.keys()].sort();
+  let sel = dates[dates.length - 1];
+
+  function draw() {
+    const dm = dateMap.get(sel) ?? new Map();
+    const counts = [...dm.values()].map(v => v.count);
+    const maxC = counts.length ? Math.max(...counts) : 1;
+
+    const badges = HM_ELEMENTS.map(el => {
+      const d = dm.get(el.feature_id);
+      if (!d) return "";
+      const lx = (el.cx / HM_VW * 100).toFixed(3);
+      const ly = (el.cy / HM_VH * 100).toFixed(3);
+      const alpha = (0.5 + (d.count / maxC) * 0.5).toFixed(2);
+      const bg = `rgba(220,38,38,${alpha})`;
+      const label = `${d.feature_name || el.feature_id}: ${fmt(d.count)}`;
+      return `<div class="hm-badge" style="left:${lx}%;top:${ly}%;background:${bg};" title="${label}">${fmt(d.count)}</div>`;
+    }).join("");
+
+    const unlocatable = [...dm.entries()]
+      .filter(([fid]) => !HM_LOCATED.has(fid))
+      .sort(([, a], [, b]) => b.count - a.count);
+    const unlHtml = unlocatable.length === 0 ? "" : `
+      <details class="hm-unlocatable">
+        <summary>另有 ${unlocatable.length} 個功能無截圖座標</summary>
+        <table><thead><tr><th>#</th><th>featureId</th><th>featureName</th><th>Click</th></tr></thead>
+        <tbody>${unlocatable.map(([fid, d], i) =>
+          `<tr><td>${i+1}</td><td>${fid}</td><td>${d.feature_name||"—"}</td><td>${fmt(d.count)}</td></tr>`
+        ).join("")}</tbody></table>
+      </details>`;
+
+    const dateNav = dates.length < 2 ? "" : `
+      <div class="hm-date-nav">
+        <span>切換日期：</span>
+        ${dates.map(d => `<button class="hm-date-btn${d===sel?" is-active":""}" data-hmd="${d}">${d}</button>`).join("")}
+      </div>`;
+
+    section.innerHTML = `
+      <header class="panel__header">
+        <h2>頁面疊圖（首頁點擊分佈）</h2>
+        <p>${HM_LOCATED.size} 個功能已定位・${sel}</p>
+      </header>
+      ${dateNav}
+      <div style="padding:0 16px 12px">
+        <div class="hm-wrap">
+          <img src="${HM_IMG}" alt="首頁截圖" loading="lazy" />
+          <div class="hm-overlay">${badges}</div>
+        </div>
+        ${unlHtml}
+      </div>`;
+
+    section.querySelectorAll(".hm-date-btn").forEach(btn =>
+      btn.addEventListener("click", () => { sel = btn.dataset.hmd; draw(); })
+    );
+  }
+
+  draw();
+}
+
 function homepageBlocksRenderer(data) {
   const kpi           = data.kpi?.[0] ?? {};
   const totalClicks   = n(kpi.total_clicks);
@@ -924,6 +1030,9 @@ function homepageBlocksRenderer(data) {
       <td>${r.block ?? "—"}</td>
     </tr>`;
   });
+
+  // 疊圖區塊
+  renderHomepageHeatmapSection(data.heatmap_clicks ?? []);
 }
 
 // ── 重置 ────────────────────────────────────────────────────────
@@ -1655,4 +1764,5 @@ export function resetDashboard(viewMode = null) {
   resetKpis();
   resetCharts();
   resetTables();
+  document.getElementById("hm-section")?.remove();
 }

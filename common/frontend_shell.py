@@ -12,6 +12,7 @@ FRONTEND_ASSETS = (
     "dashboard-renderers.js",
     "query-definitions.js",
     "site-manifest.json",
+    "homepage_screenshot.png",
 )
 
 
