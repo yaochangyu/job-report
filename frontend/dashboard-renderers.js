@@ -883,7 +883,7 @@ const HM_ELEMENTS = [
 const HM_VW = 1440;
 const HM_VH = 1100;
 const HM_LOCATED = new Set(HM_ELEMENTS.map(e => e.feature_id));
-const HM_IMG = "../../homepage_screenshot.png";
+const HM_IMG = "./homepage_screenshot.png";
 
 function renderHomepageHeatmapSection(rows) {
   const sectionId = "hm-section";
