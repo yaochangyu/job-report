@@ -126,19 +126,18 @@ def expected_heatmap(dates: list[str]) -> dict[str, Any]:
 
 def expected_navigation(dates: list[str]) -> dict[str, Any]:
     summary = load_days("page-navigation", dates, "daily_summary.parquet")
-    sources = load_days("page-navigation", dates, "page_sources.parquet")
-    targets = load_days("page-navigation", dates, "page_destinations.parquet")
-    page_count = len(set(sources["page"]).union(set(targets["page"])))
+    # 驗證固定以 pagePath="" 執行（摘要模式），page_sources/destinations 不載入
+    # page_count 回退為 daily_summary 的 SUM(tracked_pages)
     return {
         "kpi": {
             "nav_click":   int(summary["nav_click"].sum()),
+            "nav_view":    int(summary["nav_view"].sum()),
             "nav_total":   int(summary["nav_click"].sum() + summary["nav_view"].sum()),
             "entry_click": int(summary["entry_click"].sum()),
+            "entry_view":  int(summary["entry_view"].sum()),
             "entry_total": int(summary["entry_click"].sum() + summary["entry_view"].sum()),
-            "tracked_pages": int(page_count),
+            "page_count":  int(summary["tracked_pages"].sum()),
         },
-        "page_sources_len": NAVIGATION_PAGE_LIMIT,
-        "page_targets_len": NAVIGATION_PAGE_LIMIT,
         "transition_ranking_len": NAVIGATION_TRANSITION_LIMIT,
     }
 
@@ -260,10 +259,7 @@ def compare_view(view: str, expected: dict[str, Any], actual: dict[str, Any]) ->
         comparison["expected_ranking_len"] = expected["ranking_len"]
         comparison["actual_ranking_len"] = len(actual["ranking"])
     if view == "navigation":
-        comparison["expected_page_sources_len"] = expected["page_sources_len"]
-        comparison["actual_page_sources_len"] = len(actual["page_sources"])
-        comparison["expected_page_targets_len"] = expected["page_targets_len"]
-        comparison["actual_page_targets_len"] = len(actual["page_targets"])
+        # pagePath="" 時不載入 page_sources/targets，只驗證 transition_ranking
         comparison["expected_transition_ranking_len"] = expected["transition_ranking_len"]
         comparison["actual_transition_ranking_len"] = len(actual["transition_ranking"])
     return comparison

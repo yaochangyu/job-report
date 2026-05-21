@@ -336,13 +336,16 @@ function rankingPlan(f) {
 // 7. 頁面導航 — page-navigation
 // ════════════════════════════════════════════════════════════════
 function navigationPlan(f) {
-  const roles = {
-    daily_summary:     "daily_summary.parquet",
-    nav_pairs:         "nav_pairs.parquet",
-    entry_pages:       "entry_pages.parquet",
+  const baseRoles = {
+    daily_summary: "daily_summary.parquet",
+    nav_pairs:     "nav_pairs.parquet",
+    entry_pages:   "entry_pages.parquet",
+  };
+  const detailRoles = f.pagePath ? {
     page_sources:      "page_sources.parquet",
     page_destinations: "page_destinations.parquet",
-  };
+  } : {};
+  const roles = { ...baseRoles, ...detailRoles };
   const pageWhere = f.pagePath ? `WHERE page = ${quote(f.pagePath)}` : "";
   const pairWhere = f.pagePath ? `WHERE "from" = ${quote(f.pagePath)} OR "to" = ${quote(f.pagePath)}` : "";
   const pageRelationLimit = f.pagePath ? 500 : 300;

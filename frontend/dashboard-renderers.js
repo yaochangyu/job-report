@@ -672,22 +672,30 @@ function navigationRenderer(data) {
   ]);
 
   // 表格 1 — 各頁面 Top 來源
-  const pageSources = (data.page_sources ?? []).slice(0, 100);
   buildTableHead("table1-head", ["目標頁面","來源頁面","次數"]);
-  buildTableBody("table1-body", pageSources, r => `<tr>
-    <td>${r.target ?? "—"}</td>
-    <td>${r.source ?? "—"}</td>
-    <td>${fmt(r.count)}</td>
-  </tr>`);
+  if (data.page_sources === undefined) {
+    const el1 = document.getElementById("table1-body");
+    if (el1) el1.innerHTML = '<tr><td colspan="99" class="empty-cell">請指定頁面路徑後再載入詳細來源資料</td></tr>';
+  } else {
+    buildTableBody("table1-body", data.page_sources.slice(0, 100), r => `<tr>
+      <td>${r.target ?? "—"}</td>
+      <td>${r.source ?? "—"}</td>
+      <td>${fmt(r.count)}</td>
+    </tr>`);
+  }
 
   // 表格 2 — 各頁面 Top 目標
-  const pageTargets = (data.page_targets ?? []).slice(0, 100);
   buildTableHead("table2-head", ["來源頁面","目標頁面","次數"]);
-  buildTableBody("table2-body", pageTargets, r => `<tr>
-    <td>${r.source ?? "—"}</td>
-    <td>${r.target ?? "—"}</td>
-    <td>${fmt(r.count)}</td>
-  </tr>`);
+  if (data.page_targets === undefined) {
+    const el2 = document.getElementById("table2-body");
+    if (el2) el2.innerHTML = '<tr><td colspan="99" class="empty-cell">請指定頁面路徑後再載入詳細目標資料</td></tr>';
+  } else {
+    buildTableBody("table2-body", data.page_targets.slice(0, 100), r => `<tr>
+      <td>${r.source ?? "—"}</td>
+      <td>${r.target ?? "—"}</td>
+      <td>${fmt(r.count)}</td>
+    </tr>`);
+  }
 
   // 表格 3 — 完整轉換路徑排行
   buildTableHead("table3-head", ["#","來源頁","目標頁","次數"]);

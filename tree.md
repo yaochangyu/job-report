@@ -24,7 +24,8 @@ job-report/
 │   ├── sidebar-touchpad-scroll.plan.md      # ✅ 已完成：分析角度導覽觸控板捲動修正計畫
 │   ├── sidebar-scroll-container.plan.md     # ✅ 已完成：分析角度導覽固定框捲動修正計畫
 │   ├── builder-unit-tests.plan.md           # ✅ 已完成：10 個 T2 builder 單元測試實作計畫
-│   └── apply-demographics.plan.md           # ✅ 已完成：應徵者性別／年齡分析實作計畫
+│   ├── apply-demographics.plan.md           # ✅ 已完成：應徵者性別／年齡分析實作計畫
+│   └── page-navigation-lazy-load.plan.md   # ✅ 已完成：page-navigation lazy load / conditional fetch 實作計畫
 ├── builders/                          # 從 T1 產出 T2 parquet 的建置腳本
 │   ├── build_apply_conversion_t2.py
 │   ├── build_apply_job_category_t2.py # 應徵職類／產業 TOP N 分析

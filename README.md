@@ -138,8 +138,8 @@ pipeline/t2-report/
     features.parquet / categories.parquet
   page-navigation/date=YYYY-MM-DD/
     daily_summary.parquet  # date, nav_total, entry_total, tracked_pages
-    nav_pairs.parquet / entry_pages.parquet
-    page_sources.parquet / page_destinations.parquet
+    nav_pairs.parquet / entry_pages.parquet          # 摘要模式預設載入
+    page_sources.parquet / page_destinations.parquet  # 僅 pagePath 有值時才載入（~1.3 MB/日）
   click-heatmap/date=YYYY-MM-DD/
     daily_summary.parquet  # date, total_clicks, feature_count, top_feature_id, top_count
     click_counts.parquet   # page_path × feature_id × count
