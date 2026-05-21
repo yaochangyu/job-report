@@ -1258,8 +1258,14 @@ function monthlyReportRenderer(runtime) {
         const isActive = btn.classList.contains("is-active");
         container.querySelectorAll(".daily-date-btn").forEach(b => b.classList.remove("is-active"));
         const ddEl = document.getElementById("period-daily-drilldown");
-        if (isActive) { if (ddEl) ddEl.innerHTML = ""; return; }
+        const bdEl = document.getElementById("period-breakdown-container");
+        if (isActive) {
+          if (ddEl) ddEl.innerHTML = "";
+          if (bdEl) bdEl.style.display = "";
+          return;
+        }
         btn.classList.add("is-active");
+        if (bdEl) bdEl.style.display = "none";
         if (!ddEl) return;
         if (btn.dataset.loaded === "true") {
           ddEl.style.display = "";
