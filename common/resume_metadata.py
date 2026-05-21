@@ -17,18 +17,6 @@ SOLR_CORE = "core6"
 BATCH_SIZE = 200
 
 
-def _solr_query(params: dict[str, Any]) -> dict[str, Any]:
-    url = f"{SOLR_BASE_URL}/{SOLR_CORE}/wise/query?" + urllib.parse.urlencode(
-        {**params, "format": "json", "d": "1"}, doseq=True
-    )
-    req = urllib.request.Request(url)
-    ctx = ssl.create_default_context()
-    ctx.check_hostname = False
-    ctx.verify_mode = ssl.CERT_NONE
-    with urllib.request.urlopen(req, context=ctx, timeout=30) as resp:
-        return json.loads(resp.read())
-
-
 def fetch_resume_metadata(user_ids: list[int | str]) -> dict[str, dict[str, Any]]:
     """批次查詢應徵者 sex_i / birth_dt，回傳 {user_id_str: {"sex_i": int|None, "birth_dt": str|None}}。
 
@@ -42,22 +30,27 @@ def fetch_resume_metadata(user_ids: list[int | str]) -> dict[str, dict[str, Any]
 
     for i in range(0, len(str_ids), BATCH_SIZE):
         batch = str_ids[i : i + BATCH_SIZE]
-        fq = "talentNo_l:(" + " OR ".join(batch) + ")"
-        params = {
-            "q": "*:*",
-            "fq": fq,
-            "fl": "talentNo_l,sex_i,birth_dt",
-            "rows": len(batch),
-        }
+        q = "talentNo_l:(" + " OR ".join(batch) + ")"
+        url = (
+            f"{SOLR_BASE_URL}/{SOLR_CORE}/select?"
+            + urllib.parse.urlencode({
+                "q": q,
+                "fl": "talentNo_l,sex_i,birth_dt",
+                "rows": len(batch),
+                "wt": "json",
+            })
+        )
         try:
-            data = _solr_query(params)
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            with urllib.request.urlopen(urllib.request.Request(url), context=ctx, timeout=30) as resp:
+                data = json.loads(resp.read())
         except Exception as e:
             print(f"[WARN] Solr 查詢失敗（batch {i}）：{e}")
             continue
 
-        pages = data.get("page", [])
-        docs = pages[0].get("docs", []) if pages else []
-        for doc in docs:
+        for doc in data.get("response", {}).get("docs", []):
             uid = str(doc.get("talentNo_l", ""))
             if uid:
                 results[uid] = {
