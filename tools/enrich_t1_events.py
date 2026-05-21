@@ -34,6 +34,7 @@ from common.raw_events import (
     T1_ENRICH_EVENT_SCHEMA,
     T1_ENRICH_SCHEMA_VERSION,
 )
+from common.raw_events import normalize_url_path
 from common.resume_metadata import fetch_resume_metadata
 from common.t1_reader import iter_dates, resolve_date_window
 
@@ -70,8 +71,13 @@ def _enrich_one_date(target_date: str) -> dict[str, Any] | None:
         job_meta = fetch_job_metadata(all_job_ids)
         print(f"  命中 {len(job_meta):,} 個")
 
-    # 補強欄位（全部先設 None，再對 apply 事件填值）
     df = df.copy()
+
+    # URL 正規化（所有事件）
+    df["page_path"] = df["page_url"].map(normalize_url_path)
+    df["previous_page_path"] = df["previous_page_url"].map(normalize_url_path)
+
+    # 補強欄位（全部先設 None，再對 apply 事件填值）
     df["sex_i"] = None
     df["birth_dt"] = None
     df["job_positions"] = None

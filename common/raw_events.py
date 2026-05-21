@@ -38,8 +38,6 @@ class RawEventRecord:
     feature_type: str | None
     page_url: str | None
     previous_page_url: str | None
-    page_path: str | None
-    previous_page_path: str | None
     device_type: str | None
     os: str | None
     browser: str | None
@@ -71,8 +69,6 @@ RAW_EVENT_SCHEMA = pa.schema([
     ("feature_type", pa.string()),
     ("page_url", pa.string()),
     ("previous_page_url", pa.string()),
-    ("page_path", pa.string()),
-    ("previous_page_path", pa.string()),
     ("device_type", pa.string()),
     ("os", pa.string()),
     ("browser", pa.string()),
@@ -103,6 +99,7 @@ T1_ENRICH_EVENT_SCHEMA = pa.schema([
     ("feature_type", pa.string()),
     ("page_url", pa.string()),
     ("previous_page_url", pa.string()),
+    # T1: URL 正規化（T0 只存原始 URL）
     ("page_path", pa.string()),
     ("previous_page_path", pa.string()),
     ("device_type", pa.string()),
@@ -114,7 +111,7 @@ T1_ENRICH_EVENT_SCHEMA = pa.schema([
     ("industry_tab", pa.string()),
     ("job_id", pa.string()),
     ("company_id", pa.string()),
-    # T1 enrichment fields (apply events only)
+    # T1: apply 事件補強（Solr + Matching ES）
     ("sex_i", pa.int16()),
     ("birth_dt", pa.string()),
     ("job_positions", pa.list_(pa.string())),
@@ -169,8 +166,6 @@ def normalize_raw_event(source: dict[str, Any]) -> dict[str, Any]:
         "feature_type": source.get("featureType"),
         "page_url": page_url,
         "previous_page_url": previous_page_url,
-        "page_path": normalize_url_path(page_url),
-        "previous_page_path": normalize_url_path(previous_page_url),
         "device_type": source.get("deviceType"),
         "os": source.get("os"),
         "browser": source.get("browser"),
