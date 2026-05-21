@@ -215,6 +215,13 @@ const VIEW_PANEL_TEXT = {
     table1: ["性別統計", ""],
     table2: ["年齡層統計", ""],
   },
+  "apply-demographics-category": {
+    chart1: ["性別 × TOP 職類", "各性別在熱門職類的應徵分佈"],
+    chart2: ["年齡層 × TOP 職類", "各年齡層在熱門職類的應徵分佈"],
+    chart3: ["性別 × TOP 產業", "各性別在熱門產業的應徵分佈"],
+    table1: ["性別 × 職類交叉表", ""],
+    table2: ["年齡層 × 職類交叉表", ""],
+  },
 };
 
 // ── panel title 更新 ─────────────────────────────────────────────
@@ -245,7 +252,7 @@ function showPanels(viewMode) {
   }
 
   // chart panels
-  const charts3 = ["overview","search","apply","apply-journey","feature","device","homepage-blocks","apply-job-category","apply-demographics"];
+  const charts3 = ["overview","search","apply","apply-journey","feature","device","homepage-blocks","apply-job-category","apply-demographics","apply-demographics-category"];
   const charts2 = ["ranking","navigation","heatmap"];
   document.getElementById("chart3-panel")?.classList.toggle("hidden", charts2.includes(viewMode));
 
@@ -254,6 +261,7 @@ function showPanels(viewMode) {
     overview: 2, search: 1, apply: 3, "apply-journey": 1, feature: 2,
     device: 4, ranking: 1, navigation: 3, heatmap: 1,
     "homepage-blocks": 1, "apply-job-category": 2, "apply-demographics": 2,
+    "apply-demographics-category": 2,
   };
   const count = tableCount[viewMode] ?? 1;
   for (let i = 1; i <= 4; i++) {
@@ -1528,6 +1536,58 @@ function periodReportRenderer(runtime) {
   if (currentPeriod) loadAndRender(currentCategory, currentPeriodType, currentPeriod);
 }
 
+// ════════════════════════════════════════════════════════════════
+// 13. 性別／年齡層 × 職類／產業交叉分析
+// ════════════════════════════════════════════════════════════════
+
+function _pivotCrossBar(id, rows, dimCol, topN = 10) {
+  const catTotals = {};
+  rows.forEach(r => { catTotals[r.category] = (catTotals[r.category] ?? 0) + n(r.count); });
+  const cats = Object.entries(catTotals).sort((a, b) => b[1] - a[1]).slice(0, topN).map(([c]) => c);
+  const dims = [...new Set(rows.map(r => r[dimCol]))];
+  const countMap = {};
+  rows.forEach(r => { countMap[`${r[dimCol]}__${r.category}`] = n(r.count); });
+  barChart(id, cats, dims.map((dim, i) => ({
+    label: dim,
+    data: cats.map(cat => countMap[`${dim}__${cat}`] ?? 0),
+    backgroundColor: C.palette[i % C.palette.length],
+  })), { plugins: { legend: { position: "bottom" } } });
+}
+
+function applyDemographicsCategoryRenderer(data) {
+  const kpi        = data.kpi?.[0] ?? {};
+  const total      = n(kpi.total_applies);
+  const coverDemo  = n(kpi.coverage_demo);
+  const coverJob   = n(kpi.coverage_job);
+
+  setKpiCard("1", "總應徵數",   fmt(total),     "action=apply 事件數");
+  setKpiCard("2", "有履歷資料", fmt(coverDemo),  `覆蓋率 ${total ? pct(coverDemo / total * 100) : "—"}`);
+  setKpiCard("3", "有職缺資料", fmt(coverJob),   `覆蓋率 ${total ? pct(coverJob  / total * 100) : "—"}`);
+  setKpiCard("4", "—", "—", "");
+  setKpiCard("5", "—", "—", "");
+  setKpiCard("6", "—", "—", "");
+  setKpiCard("7", "—", "—", "");
+  setKpiCard("8", "—", "—", "");
+
+  const gjp = data.gender_job_position        ?? [];
+  const ajp = data.age_group_job_position     ?? [];
+  const gci = data.gender_company_industry    ?? [];
+
+  _pivotCrossBar("chart1", gjp, "gender",    10);
+  _pivotCrossBar("chart2", ajp, "age_group", 10);
+  _pivotCrossBar("chart3", gci, "gender",    10);
+
+  // 表格 1 — 性別 × 職類
+  buildTableHead("table1-head", ["#", "性別", "職類", "應徵次數", "", "佔比"]);
+  const gjpTotal = gjp.reduce((s, r) => s + n(r.count), 0);
+  buildTableBody("table1-body", gjp, (r, i) => rankRow(i, r.gender, n(r.count), gjpTotal, r.category));
+
+  // 表格 2 — 年齡層 × 職類
+  buildTableHead("table2-head", ["#", "年齡層", "職類", "應徵次數", "", "佔比"]);
+  const ajpTotal = ajp.reduce((s, r) => s + n(r.count), 0);
+  buildTableBody("table2-body", ajp, (r, i) => rankRow(i, r.age_group, n(r.count), ajpTotal, r.category));
+}
+
 // ── 路由 ────────────────────────────────────────────────────────
 const renderers = {
   overview:   overviewRenderer,
@@ -1542,6 +1602,7 @@ const renderers = {
   "homepage-blocks":     homepageBlocksRenderer,
   "apply-job-category":  applyJobCategoryRenderer,
   "apply-demographics":  applyDemographicsRenderer,
+  "apply-demographics-category": applyDemographicsCategoryRenderer,
 };
 
 export function renderDashboard(viewMode, outputs, runtime = null) {

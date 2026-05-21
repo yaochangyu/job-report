@@ -657,6 +657,60 @@ function applyDemographicsPlan(f) {
   };
 }
 
+// ════════════════════════════════════════════════════════════════
+// 13. 性別／年齡層 × 職類／產業交叉分析 — apply-demographics-category
+// ════════════════════════════════════════════════════════════════
+function applyDemographicsCategoryPlan(f) {
+  const roles = {
+    daily_summary:              "daily_summary.parquet",
+    gender_job_position:        "gender_job_position.parquet",
+    gender_company_industry:    "gender_company_industry.parquet",
+    age_group_job_position:     "age_group_job_position.parquet",
+    age_group_company_industry: "age_group_company_industry.parquet",
+  };
+  return {
+    summary: `性別／年齡層 × 職類／產業交叉分析（T2）：${f.dateFrom} ~ ${f.dateTo}`,
+    registerFiles: f.fetchDates.flatMap(d => dayFiles("apply-demographics-category", d, roles, f.datasetRoot)),
+    buildQueries(loaded) {
+      const ds  = fileList(loaded.daily_summary              || []);
+      const gjp = fileList(loaded.gender_job_position        || []);
+      const gci = fileList(loaded.gender_company_industry    || []);
+      const ajp = fileList(loaded.age_group_job_position     || []);
+      const aci = fileList(loaded.age_group_company_industry || []);
+      if (!ds) return {};
+      return {
+        kpi: `
+          SELECT
+            SUM(total_applies) AS total_applies,
+            SUM(coverage_demo) AS coverage_demo,
+            SUM(coverage_job)  AS coverage_job
+          FROM read_parquet([${ds}])
+        `,
+        gender_job_position: gjp ? `
+          SELECT gender, category, SUM(count) AS count
+          FROM read_parquet([${gjp}])
+          GROUP BY gender, category ORDER BY count DESC
+        ` : null,
+        gender_company_industry: gci ? `
+          SELECT gender, category, SUM(count) AS count
+          FROM read_parquet([${gci}])
+          GROUP BY gender, category ORDER BY count DESC
+        ` : null,
+        age_group_job_position: ajp ? `
+          SELECT age_group, category, SUM(count) AS count
+          FROM read_parquet([${ajp}])
+          GROUP BY age_group, category ORDER BY count DESC
+        ` : null,
+        age_group_company_industry: aci ? `
+          SELECT age_group, category, SUM(count) AS count
+          FROM read_parquet([${aci}])
+          GROUP BY age_group, category ORDER BY count DESC
+        ` : null,
+      };
+    },
+  };
+}
+
 // ── 路由 ────────────────────────────────────────────────────────
 const planBuilders = {
   overview:   overviewPlan,
@@ -671,6 +725,7 @@ const planBuilders = {
   "homepage-blocks":     homepageBlocksPlan,
   "apply-job-category":  applyJobCategoryPlan,
   "apply-demographics":  applyDemographicsPlan,
+  "apply-demographics-category": applyDemographicsCategoryPlan,
   "period-report":       () => ({ registerFiles: [], buildQueries: () => [] }),
   "monthly-report":      () => ({ registerFiles: [], buildQueries: () => [] }),
 };
