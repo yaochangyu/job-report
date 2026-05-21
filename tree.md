@@ -19,12 +19,14 @@ job-report/
 │   ├── backfill-apply-journey.plan.md       # ✅ 已完成：apply-journey 45 天歷史資料補跑計畫
 │   ├── monthly-report-day-nav.plan.md       # ✅ 已完成：月報表日期導覽與側邊類別欄實作計畫
 │   ├── period-summary-report.plan.md        # ✅ 已完成：月報/季報/年報聚合 + period-type tabs 實作計畫
+│   ├── period-report-rename.plan.md         # ✅ 已完成：月報表改名為週期報表與 URL 調整計畫
 │   ├── sidebar-dynamic-height.plan.md       # ✅ 已完成：分析角度導覽動態高度修正計畫
 │   ├── sidebar-touchpad-scroll.plan.md      # ✅ 已完成：分析角度導覽觸控板捲動修正計畫
 │   ├── sidebar-scroll-container.plan.md     # ✅ 已完成：分析角度導覽固定框捲動修正計畫
 │   └── builder-unit-tests.plan.md           # ✅ 已完成：10 個 T2 builder 單元測試實作計畫
 ├── builders/                          # 從 T1 產出 T2 parquet 的建置腳本
 │   ├── build_apply_conversion_t2.py
+│   ├── build_apply_job_category_t2.py # 應徵職類／產業 TOP N 分析
 │   ├── build_apply_journey_t2.py      # 應徵路徑分析
 │   ├── build_click_heatmap_t2.py
 │   ├── build_device_platform_t2.py
@@ -40,6 +42,7 @@ job-report/
 │   ├── data_pipeline.py               # T1/T2/T3 資料管線契約與路徑定義
 │   ├── es_client.py                   # Grafana _msearch 共用封裝
 │   ├── frontend_shell.py             # GitHub Pages v1-2 共用前端殼 HTML 模板
+│   ├── job_metadata.py                # 從 search-jobs-v1-* 批次查詢職類/產業 metadata
 │   ├── raw_events.py                  # T1 raw 事件欄位契約與正規化工具
 │   ├── t1_reader.py                   # 讀取 T1 raw parquet 的共用工具
 │   ├── html_template.py               # HTML header/footer/style 共用模板
@@ -53,14 +56,20 @@ job-report/
 │   └── site-manifest.json             # 前端站點資產與資料集 manifest
 ├── output/
 │   ├── index.html                     # 導覽頁面（由 run_all.py 產生）
-│   ├── traffic-overview/index.html    # Dashboard 1 報告產出
-│   ├── search-behavior/index.html     # Dashboard 2 報告產出
-│   ├── apply-conversion/index.html    # Dashboard 3 報告產出
-│   ├── feature-engagement/index.html  # Dashboard 4 報告產出
-│   ├── device-platform/index.html     # Dashboard 5 報告產出
-│   ├── page-ranking/index.html        # Dashboard 6 報告產出
-│   ├── page-navigation/index.html     # Dashboard 7 報告產出
-│   └── click-heatmap/index.html       # Dashboard 8 報告產出
+│   └── report/
+│       ├── traffic-overview/index.html    # Dashboard 1 報告產出
+│       ├── search-behavior/index.html     # Dashboard 2 報告產出
+│       ├── apply-conversion/index.html    # Dashboard 3 報告產出
+│       ├── apply-journey/index.html       # Dashboard 4 報告產出
+│       ├── feature-engagement/index.html  # Dashboard 5 報告產出
+│       ├── device-platform/index.html     # Dashboard 6 報告產出
+│       ├── page-ranking/index.html        # Dashboard 7 報告產出
+│       ├── page-navigation/index.html     # Dashboard 8 報告產出
+│       ├── click-heatmap/index.html       # Dashboard 9 報告產出
+│       ├── homepage-blocks/index.html     # Dashboard 10 報告產出
+│       ├── apply-job-category/index.html  # Dashboard 11 應徵職類／產業報告產出
+│       ├── period-report/index.html       # Dashboard 12 週期報表頁面
+│       └── monthly-report/index.html      # 舊網址相容轉址頁
 ├── tests/
 │   ├── unit/                           # T2 builder 單元測試
 │   │   ├── conftest.py                 # 共用 fixtures（路徑 monkeypatch、T1 寫入工具）

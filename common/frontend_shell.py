@@ -136,11 +136,11 @@ def build_shell_html(asset_prefix: str = ".", initial_view: str = "overview") ->
            <small>Homepage Blocks</small>
          </span>
        </button>
-       <button class="sidebar__nav-item" type="button" data-view-mode="monthly-report">
+       <button class="sidebar__nav-item" type="button" data-view-mode="period-report">
          <span class="sidebar__icon">📅</span>
          <span>
-           <strong>月報表</strong>
-           <small>Monthly Report</small>
+           <strong>週期報表</strong>
+           <small>Period Report</small>
          </span>
        </button>
      </nav>

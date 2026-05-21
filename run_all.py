@@ -129,14 +129,32 @@ REPORTS = [
         "view_mode": "homepage-blocks",
     },
     {
+        "script": "builders/build_apply_job_category_t2.py",
+        "title": "應徵職類／產業",
+        "subtitle": "Apply Job Category",
+        "desc": "應徵者最常應徵的職類與產業 TOP 30 排行及每日趨勢",
+        "path": "report/apply-job-category/index.html",
+        "icon": "🏷️",
+        "color": "#7c3aed",
+        "view_mode": "apply-job-category",
+    },
+    {
         "script": "builders/build_homepage_blocks_t2.py",
-        "title": "月報表",
-        "subtitle": "Monthly Report",
-        "desc": "依月份瀏覽首頁區塊點擊日報表",
-        "path": "report/monthly-report/index.html",
+        "title": "週期報表",
+        "subtitle": "Period Report",
+        "desc": "依月份、季度、年度瀏覽各類別聚合趨勢與明細報表",
+        "path": "report/period-report/index.html",
         "icon": "📅",
         "color": "#0ea5e9",
-        "view_mode": "monthly-report",
+        "view_mode": "period-report",
+    },
+]
+
+LEGACY_SHELL_REDIRECTS = [
+    {
+        "legacy_path": "report/monthly-report/index.html",
+        "target_path": "report/period-report/index.html",
+        "view_mode": "period-report",
     },
 ]
 
@@ -235,6 +253,33 @@ def build_shell_pages(output_dir: Path, reports: list[dict]) -> None:
         asset_prefix = Path(os.path.relpath(output_dir, page_file.parent)).as_posix()
         page_file.write_text(
             build_shell_html(asset_prefix, report["view_mode"]),
+            encoding="utf-8",
+        )
+
+    for redirect in LEGACY_SHELL_REDIRECTS:
+        legacy_file = output_dir / redirect["legacy_path"]
+        legacy_file.parent.mkdir(parents=True, exist_ok=True)
+        target_rel = Path(os.path.relpath(output_dir / redirect["target_path"], legacy_file.parent)).as_posix()
+        legacy_file.write_text(
+            f"""<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redirecting…</title>
+  <script>
+    const target = new URL("{target_rel}", window.location.href);
+    target.search = window.location.search;
+    target.hash = window.location.hash;
+    if (target.searchParams.get("view") === "monthly-report" || !target.searchParams.get("view")) {{
+      target.searchParams.set("view", "{redirect["view_mode"]}");
+    }}
+    window.location.replace(target.toString());
+  </script>
+</head>
+<body></body>
+</html>
+""",
             encoding="utf-8",
         )
 

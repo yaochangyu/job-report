@@ -39,7 +39,7 @@ output/<報表名>/index.html                        ← T3 前端殼（空 HTML
 | 8 | Page Navigation Flow | 頁面轉換路徑排行、各頁面來源/目標 |
 | 9 | Page Click Heatmap | 截圖疊加點擊次數，呈現各頁面按鈕點擊熱點 |
 | 10 | Homepage Blocks | 搜尋、身分類別、探索工作、探索企業各區塊每日點擊數 |
-| 11 | Monthly Report | 依月份瀏覽首頁區塊點擊日報表，點擊月份展開各日明細（使用 homepage-blocks 資料） |
+| 11 | Period Report | 依月份、季度、年度瀏覽各類別聚合趨勢與明細報表，月報可切換日報明細 |
 
 ## 資料管線詳細說明
 
@@ -147,7 +147,7 @@ output/
   page-navigation/index.html
   click-heatmap/index.html
   homepage-blocks/index.html
-  monthly-report/index.html
+  period-report/index.html
 ```
 
 > **注意**：T1 原始事件（`dataset/events/`）**不進入** `output/`，不部署至 GitHub Pages。

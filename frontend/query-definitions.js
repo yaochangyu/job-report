@@ -549,6 +549,60 @@ function homepageBlocksPlan(f) {
   };
 }
 
+// ════════════════════════════════════════════════════════════════
+// 11. 應徵職類／產業分析 — apply-job-category
+// ════════════════════════════════════════════════════════════════
+function applyJobCategoryPlan(f) {
+  const roles = {
+    daily_summary:          "daily_summary.parquet",
+    job_position_top:       "job_position_top.parquet",
+    company_industry_top:   "company_industry_top.parquet",
+    job_position_daily:     "job_position_daily.parquet",
+    company_industry_daily: "company_industry_daily.parquet",
+  };
+  return {
+    summary: `應徵職類／產業分析（T2）：${f.dateFrom} ~ ${f.dateTo}`,
+    registerFiles: f.fetchDates.flatMap(d => dayFiles("apply-job-category", d, roles, f.datasetRoot)),
+    buildQueries(loaded) {
+      const ds  = fileList(loaded.daily_summary          || []);
+      const jp  = fileList(loaded.job_position_top       || []);
+      const ci  = fileList(loaded.company_industry_top   || []);
+      const jpd = fileList(loaded.job_position_daily     || []);
+      const cid = fileList(loaded.company_industry_daily || []);
+      if (!ds) return {};
+      return {
+        kpi: `
+          SELECT
+            SUM(total_applies)           AS total_applies,
+            SUM(applies_with_metadata)   AS applies_with_metadata,
+            ROUND(AVG(coverage_rate), 4) AS avg_coverage_rate
+          FROM read_parquet([${ds}])
+        `,
+        job_position_top: jp ? `
+          SELECT name, SUM(count) AS count
+          FROM read_parquet([${jp}])
+          GROUP BY name ORDER BY count DESC LIMIT 30
+        ` : null,
+        company_industry_top: ci ? `
+          SELECT name, SUM(count) AS count
+          FROM read_parquet([${ci}])
+          GROUP BY name ORDER BY count DESC LIMIT 30
+        ` : null,
+        job_position_daily: jpd ? `
+          SELECT date, name, SUM(count) AS count
+          FROM read_parquet([${jpd}])
+          GROUP BY date, name ORDER BY date, count DESC
+        ` : null,
+        company_industry_daily: cid ? `
+          SELECT date, name, SUM(count) AS count
+          FROM read_parquet([${cid}])
+          GROUP BY date, name ORDER BY date, count DESC
+        ` : null,
+      };
+    },
+  };
+}
+
 // ── 路由 ────────────────────────────────────────────────────────
 const planBuilders = {
   overview:   overviewPlan,
@@ -560,8 +614,10 @@ const planBuilders = {
   ranking:    rankingPlan,
   navigation:       navigationPlan,
   heatmap:          heatmapPlan,
-  "homepage-blocks": homepageBlocksPlan,
-  "monthly-report":  () => ({ registerFiles: [], buildQueries: () => [] }),
+  "homepage-blocks":     homepageBlocksPlan,
+  "apply-job-category":  applyJobCategoryPlan,
+  "period-report":       () => ({ registerFiles: [], buildQueries: () => [] }),
+  "monthly-report":      () => ({ registerFiles: [], buildQueries: () => [] }),
 };
 
 export function buildQueryPlan(filters) {
