@@ -708,6 +708,16 @@ html[data-theme="dark"] .pct { color: var(--accent); }
 }
 
 /* ── Daily drill-down ── */
+.daily-day-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 10px 0 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+.daily-day-selector:empty { display: none; }
+
 .daily-date-tabs {
   display: flex;
   flex-wrap: wrap;

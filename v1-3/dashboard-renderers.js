@@ -1188,11 +1188,6 @@ function renderPeriodReport(container, category, periodType, period, data, runti
 
   const bdContainer = document.getElementById("period-breakdown-container");
   if (bdContainer) renderPeriodBreakdown(bdContainer, category, breakdowns);
-
-  if (periodType === "monthly" && runtime) {
-    const ddContainer = document.getElementById("period-daily-drilldown");
-    if (ddContainer) renderDailyDrilldown(ddContainer, catCfg, summary, category, runtime);
-  }
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -1249,6 +1244,55 @@ function monthlyReportRenderer(runtime) {
     history.replaceState(null, "", `?${p.toString()}`);
   }
 
+  function buildDaySelectorButtons(summary, catCfg, cat, container) {
+    const byDate = Object.fromEntries(summary.map(r => [String(r.period), r]));
+    const asc    = [...summary].sort((a, b) => String(a.period).localeCompare(String(b.period)));
+    const btnHtml = asc.map(r => {
+      const [,, d] = String(r.period).split("-");
+      return `<button class="daily-date-btn" data-date="${r.period}" data-loaded="false" type="button">${Number(d)}日</button>`;
+    }).join("");
+    container.innerHTML = btnHtml;
+
+    container.querySelectorAll(".daily-date-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const isActive = btn.classList.contains("is-active");
+        container.querySelectorAll(".daily-date-btn").forEach(b => b.classList.remove("is-active"));
+        const ddEl = document.getElementById("period-daily-drilldown");
+        if (isActive) { if (ddEl) ddEl.innerHTML = ""; return; }
+        btn.classList.add("is-active");
+        if (!ddEl) return;
+        if (btn.dataset.loaded === "true") {
+          ddEl.style.display = "";
+          return;
+        }
+        const hasBreakdowns = catCfg.breakdowns.length > 0;
+        const r = byDate[btn.dataset.date];
+        if (!hasBreakdowns) {
+          const kpiCards = catCfg.kpiCols.map((col, i) =>
+            `<div class="period-kpi-card">
+              <div class="period-kpi-label">${catCfg.kpiLabels[i]}</div>
+              <div class="period-kpi-value">${fmt(n(r[col]))}</div>
+            </div>`).join("");
+          ddEl.innerHTML = `<div class="period-kpi-row" style="padding:12px 0">${kpiCards}</div>`;
+          btn.dataset.loaded = "true";
+          return;
+        }
+        btn.dataset.loaded = "loading";
+        ddEl.innerHTML = `<p class="monthly-loading">載入中…</p>`;
+        try {
+          const breakdowns = await fetchDailyBreakdown(cat, btn.dataset.date, runtime);
+          ddEl.innerHTML = "";
+          renderPeriodBreakdown(ddEl, cat, breakdowns);
+          if (!ddEl.innerHTML.trim()) ddEl.innerHTML = `<p class="monthly-empty">無明細資料</p>`;
+          btn.dataset.loaded = "true";
+        } catch (e) {
+          ddEl.innerHTML = `<p class="monthly-error">載入失敗：${e.message}</p>`;
+          btn.dataset.loaded = "false";
+        }
+      });
+    });
+  }
+
   async function loadAndRender(cat, ptype, period) {
     const d = detailEl();
     if (!d) return;
@@ -1257,6 +1301,11 @@ function monthlyReportRenderer(runtime) {
     try {
       const data = await fetchPeriodReport(cat, ptype, period, runtime);
       renderPeriodReport(d, cat, ptype, period, data, runtime);
+      if (ptype === "monthly") {
+        const daySel = selectorEl.querySelector(".daily-day-selector");
+        const catCfg = PERIOD_REPORT_CATEGORIES.find(c => c.key === cat) ?? PERIOD_REPORT_CATEGORIES[0];
+        if (daySel) buildDaySelectorButtons(data.summary, catCfg, cat, daySel);
+      }
     } catch (err) {
       d.innerHTML = `<p class="monthly-error">載入失敗：${err.message}</p>`;
     }
@@ -1277,13 +1326,18 @@ function monthlyReportRenderer(runtime) {
     const tabs = items.map(p =>
       `<button class="month-tab${p === currentPeriod ? " is-active" : ""}" data-period="${p}" type="button">${labelFn[ptype](p)}</button>`
     ).join("");
-    selectorEl.innerHTML = `<nav class="monthly-nav-months">${tabs}</nav>`;
+    selectorEl.innerHTML = `<nav class="monthly-nav-months">${tabs}</nav><div class="daily-day-selector"></div>`;
 
     selectorEl.querySelectorAll("[data-period]").forEach(btn => {
       btn.addEventListener("click", async () => {
         selectorEl.querySelectorAll("[data-period]").forEach(b => b.classList.remove("is-active"));
         btn.classList.add("is-active");
         currentPeriod = btn.dataset.period;
+        // 切換月份時清空日期選擇器與日明細
+        const daySel = selectorEl.querySelector(".daily-day-selector");
+        if (daySel) daySel.innerHTML = "";
+        const ddEl = document.getElementById("period-daily-drilldown");
+        if (ddEl) ddEl.innerHTML = "";
         updateUrl();
         await loadAndRender(currentCategory, currentPeriodType, currentPeriod);
       });
@@ -1305,6 +1359,10 @@ function monthlyReportRenderer(runtime) {
       section.querySelectorAll(".report-category-tab").forEach(t => t.classList.remove("is-active"));
       tab.classList.add("is-active");
       currentCategory = tab.dataset.cat;
+      const daySel = selectorEl.querySelector(".daily-day-selector");
+      if (daySel) daySel.innerHTML = "";
+      const ddEl = document.getElementById("period-daily-drilldown");
+      if (ddEl) ddEl.innerHTML = "";
       updateUrl();
       if (currentPeriod) loadAndRender(currentCategory, currentPeriodType, currentPeriod);
     });
@@ -1322,6 +1380,7 @@ function monthlyReportRenderer(runtime) {
       if (currentPeriod) await loadAndRender(currentCategory, currentPeriodType, currentPeriod);
     });
   });
+
 
   // Initial render
   buildPeriodSelector(currentPeriodType);
