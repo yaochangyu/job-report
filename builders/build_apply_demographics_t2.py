@@ -2,7 +2,7 @@
 """
 build_apply_demographics_t2.py
 ───────────────────────────────
-從 T1 apply 事件 user_id JOIN core6 Solr 取得應徵者性別／年齡，
+從 T1 apply 事件讀取 sex_i/birth_dt（已在 T1 enrichment 階段補強），
 產出 apply-demographics 的 T2 day-keyed parquet。
 
 性別映射：sex_i = 1 → 男, 2 → 女, 其他/None → 未知
@@ -24,7 +24,6 @@ from common.data_pipeline import (
     t2_report_date_dir,
     update_t2_manifest_dates,
 )
-from common.resume_metadata import fetch_resume_metadata
 from common.t1_reader import load_t1_raw_dataframe, resolve_date_window
 
 REPORT_NAME = "apply-demographics"
@@ -66,7 +65,7 @@ def _age_group(age: int | None) -> str:
 def build_apply_demographics_t2(date_from: str, date_to: str) -> list[Path]:
     ensure_pipeline_directories()
 
-    columns = ["date", "system", "action", "user_id"]
+    columns = ["date", "system", "action", "user_id", "sex_i", "birth_dt"]
     df = load_t1_raw_dataframe(date_from, date_to, columns=columns)
     df = df[df["system"].eq("jobbank-web") & df["action"].eq("apply")].copy()
 
@@ -74,17 +73,13 @@ def build_apply_demographics_t2(date_from: str, date_to: str) -> list[Path]:
         print("[WARN] 無 apply 事件資料")
         return []
 
-    all_user_ids = df["user_id"].dropna().unique().tolist()
-    print(f"  查詢 {len(all_user_ids):,} 個唯一 user_id ...")
-    meta = fetch_resume_metadata(all_user_ids)
-    hit_count = len(meta)
-    total_ids = len(all_user_ids)
-    coverage = f"{hit_count/total_ids:.1%}" if total_ids else "—"
-    print(f"  命中 {hit_count:,} 個（{coverage} 覆蓋率）")
+    # sex_i/birth_dt 已由 T1 enrichment 補強，直接使用
+    with_meta = int(df["user_id"].notna().sum())
+    hit_count = int(df["sex_i"].notna().sum())
+    coverage = f"{hit_count/with_meta:.1%}" if with_meta else "—"
+    print(f"  sex_i 覆蓋率：{hit_count:,}/{with_meta:,}（{coverage}）")
 
-    df["sex_i"]    = df["user_id"].map(lambda u: meta.get(str(u), {}).get("sex_i"))
-    df["birth_dt"] = df["user_id"].map(lambda u: meta.get(str(u), {}).get("birth_dt"))
-    df["gender"]   = df["sex_i"].map(lambda s: SEX_MAP.get(s, "未知"))
+    df["gender"] = df["sex_i"].map(lambda s: SEX_MAP.get(s, "未知"))
 
     dates_written: dict[str, dict] = {}
     output_dirs: list[Path] = []
@@ -99,7 +94,7 @@ def build_apply_demographics_t2(date_from: str, date_to: str) -> list[Path]:
         day_df["age_group"] = day_df["age"].map(_age_group)
 
         total = len(day_df)
-        with_meta = int(day_df["user_id"].map(lambda u: str(u) in meta).sum())
+        with_meta = int(day_df["sex_i"].notna().sum())
 
         # daily_summary
         pd.DataFrame([{

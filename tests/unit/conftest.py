@@ -12,6 +12,7 @@ T1_COLUMNS = [
     "feature_id", "feature_name", "device_type", "os", "browser",
     "source", "page_path", "previous_page_path", "category_tab", "identity_type",
     "user_id", "job_id",
+    "sex_i", "birth_dt", "job_positions", "company_industries",
 ]
 
 _DEFAULTS: dict = {
@@ -33,6 +34,10 @@ _DEFAULTS: dict = {
     "identity_type": None,
     "user_id": None,
     "job_id": None,
+    "sex_i": None,
+    "birth_dt": None,
+    "job_positions": None,
+    "company_industries": None,
 }
 
 

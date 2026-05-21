@@ -21,6 +21,7 @@ from pathlib import Path
 from common.es_client import generated_now
 from common.frontend_shell import FRONTEND_ASSETS, build_shell_html
 from common.t1_reader import resolve_date_window
+from tools.enrich_t1_events import enrich_t1_events
 from tools.extract_raw_events import extract_raw_events
 
 OUTPUT_DIR = Path(__file__).parent / "output"
@@ -303,7 +304,7 @@ def run_report(script: str, extra_args: list[str]) -> tuple[bool, float]:
     return result.returncode == 0, round(elapsed, 1)
 
 
-_ALL_STEPS = ("raw", "report", "html")
+_ALL_STEPS = ("t0", "t1", "report", "html")
 
 
 def _parse_args() -> argparse.Namespace:
@@ -319,8 +320,9 @@ def _parse_args() -> argparse.Namespace:
         "--steps",
         default=",".join(_ALL_STEPS),
         help=(
-            "指定要執行的階段，逗號分隔（預設：raw,report,html）\n"
-            "  raw    — 從 Elasticsearch 抽取 T1（→ dataset/raw/）\n"
+            "指定要執行的階段，逗號分隔（預設：t0,t1,report,html）\n"
+            "  t0     — 從 Elasticsearch 抽取純原始事件（→ dataset/raw/）\n"
+            "  t1     — 補強 Solr/Matching ES metadata（→ dataset/t1/）\n"
             "  report — 建立 T2 day-keyed parquet（→ dataset/report/）\n"
             "  html   — 產生 manifest 與 HTML shell（→ output/）\n"
             "範例：--steps report,html"
@@ -339,7 +341,7 @@ def main() -> None:
 
     print(f"[INFO] 執行階段：{args.steps}")
 
-    if steps & {"raw", "report"}:
+    if steps & {"t0", "t1", "report"}:
         date_from, date_to = resolve_date_window(args.days, args.time_from, args.time_to)
         extra_args = ["--from", date_from, "--to", date_to]
         print(f"[INFO] 查詢區間：{date_from} ～ {date_to}")
@@ -347,9 +349,13 @@ def main() -> None:
         date_from = date_to = None
         extra_args = []
 
-    if "raw" in steps:
-        print("[INFO] 先同步 T1 raw 資料（優先重用本地快取）...")
+    if "t0" in steps:
+        print("[INFO] 抽取 T0 純原始事件（優先重用本地快取）...")
         extract_raw_events(date_from, date_to, keep_existing=True)
+
+    if "t1" in steps:
+        print("[INFO] 補強 T1 enriched 事件（優先重用本地快取）...")
+        enrich_t1_events(date_from, date_to, keep_existing=True)
 
     results = []
     total_start = time.time()

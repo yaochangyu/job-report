@@ -12,7 +12,10 @@
 Elasticsearch (operation-logs)
         │
         ▼  extract_raw_events.py
-dataset/raw/date=YYYY-MM-DD/events.parquet       ← T1 原始事件（僅本機）
+dataset/raw/date=YYYY-MM-DD/events.parquet       ← T0 純原始事件（僅本機，不可變）
+        │
+        ▼  enrich_t1_events.py（批次查 Solr + Matching ES）
+dataset/t1/date=YYYY-MM-DD/events.parquet        ← T1 補強事件（僅本機）
         │
         ▼  builders/build_*_t2.py  （day-keyed，每天一個分區）
 dataset/report/<報表名>/date=YYYY-MM-DD/
@@ -23,7 +26,7 @@ dataset/report/<報表名>/date=YYYY-MM-DD/
 output/<報表名>/index.html                        ← T3 前端殼（空 HTML）
 ```
 
-所有報表輸出至 `output/`，透過 `deploy.sh` 推送至 GitHub Pages。頁面本身是前端殼（空 HTML），`app.js` 依使用者選取的日期區間，**逐日 fetch T2 Parquet**，由 DuckDB-WASM 在瀏覽器即時跨天聚合渲染，無需後端服務。T1 原始事件體積龐大，**不部署**至 GitHub Pages。
+所有報表輸出至 `output/`，透過 `deploy.sh` 推送至 GitHub Pages。頁面本身是前端殼（空 HTML），`app.js` 依使用者選取的日期區間，**逐日 fetch T2 Parquet**，由 DuckDB-WASM 在瀏覽器即時跨天聚合渲染，無需後端服務。T0/T1 原始事件體積龐大，**不部署**至 GitHub Pages。
 
 ## 報表清單
 
@@ -45,9 +48,9 @@ output/<報表名>/index.html                        ← T3 前端殼（空 HTML
 
 ## 資料管線詳細說明
 
-### T1 — 原始事件
+### T0 — 純原始事件
 
-從 Elasticsearch index `operation-logs`（filter: `system=jobbank-web`）抽取原始事件，以 `search_after` 分批查詢（每批 5000 筆），按日存成 Parquet（zstd 壓縮）。**僅存於本機**，不部署至 GitHub Pages。
+從 Elasticsearch index `operation-logs`（filter: `system=jobbank-web`）抽取原始事件，以 `search_after` 分批查詢（每批 5000 筆），按日存成 Parquet（zstd 壓縮）。**不可變、僅存於本機**，不部署至 GitHub Pages。
 
 **存放位置：**
 ```
@@ -55,7 +58,7 @@ dataset/raw/
   date=2025-01-01/events.parquet
   date=2025-01-02/events.parquet
   ...
-dataset/manifest/t1-raw-manifest.json
+dataset/manifest/t0-raw-manifest.json
 ```
 
 **欄位：**
@@ -66,10 +69,34 @@ dataset/manifest/t1-raw-manifest.json
 | `event_type` / `action` | 事件種類（view / click / apply…） |
 | `session_id` / `anonymous_id` / `user_id` / `client_id` | 身份識別 |
 | `feature_id` / `feature_name` / `feature_type` | 觸發的功能元件 |
-| `page_path` / `previous_page_path` | 正規化後的頁面路徑 |
+| `page_path` / `previous_page_path` | 正規化後的頁面路徑（由 pageUrl 抽取） |
 | `device_type` / `os` / `browser` | 裝置資訊 |
 | `source` / `category_tab` / `identity_type` / `industry_tab` | 來自 ES `metadata` 的額外維度 |
 | `job_id` / `company_id` | 來自 ES `metadata.jobId` / `metadata.companyId`，apply 事件帶有職缺與公司 ID |
+
+### T1 — 補強事件
+
+讀取 T0 Parquet，對 `action=apply` 事件批次查詢外部服務，補入人口屬性與職缺 metadata，寫入 `dataset/t1/`。**僅存於本機**，不部署至 GitHub Pages。T2 builder 統一從 T1 讀取資料。
+
+**存放位置：**
+```
+dataset/t1/
+  date=2025-01-01/events.parquet
+  date=2025-01-02/events.parquet
+  ...
+dataset/manifest/t1-enrich-manifest.json
+```
+
+**T1 在 T0 基礎上新增的欄位（apply 事件）：**
+
+| 欄位 | 來源 | 說明 |
+|------|------|------|
+| `sex_i` | core6 Solr | 1=男, 2=女, null=查無資料 |
+| `birth_dt` | core6 Solr | ISO 8601 UTC 格式（如 `1990-01-15T16:00:00Z`） |
+| `job_positions` | Matching ES | `list[str]`，職類名稱（如 `["行銷業務"]`） |
+| `company_industries` | Matching ES | `list[str]`，產業名稱（如 `["百貨零售"]`） |
+
+非 apply 事件的這四欄皆為 `null`。
 
 ### T2 — 聚合結果（部署至 GitHub Pages）
 
@@ -133,9 +160,9 @@ dataset/report/
     age_groups_daily.parquet      # date × age_group × count
 ```
 
-> **apply-job-category 資料來源**：apply 事件的 `job_id` 取自 `metadata.jobId`，再批次查詢內部 Matching ES（`search-jobs-v1-*`）取得 `jobPositionNames`（職類）與 `companyIndustryNames`（產業）。只有現存職缺可以 JOIN，已下架職缺不計入（覆蓋率約 98%）。
+> **apply-job-category 資料來源**：apply 事件的 `job_positions` / `company_industries` 欄位在 T1 enrichment 階段已補強（Matching ES `search-jobs-v1-*`）。T2 builder 直接讀取，不重複查詢。只有現存職缺可以 JOIN，已下架職缺不計入（覆蓋率約 98%）。
 
-> **apply-demographics 資料來源**：apply 事件的 `user_id` 以批次查詢 core6 Solr（`http://solr.web.internal:8985/solr/core6/select`，`q=talentNo_l:(id1 OR id2 ...)`）取得 `sex_i`（1=男、2=女）與 `birth_dt`。年齡以**事件日期**為基準計算，分為 `<25 / 25-29 / 30-34 / 35-39 / 40-44 / 45-49 / 50+` 七個年齡層。尚未建立履歷的使用者無法 JOIN，歸為「未知」（覆蓋率約 71%）。
+> **apply-demographics 資料來源**：apply 事件的 `sex_i` / `birth_dt` 欄位在 T1 enrichment 階段已補強（core6 Solr）。年齡以**事件日期**為基準計算，分為 `<25 / 25-29 / 30-34 / 35-39 / 40-44 / 45-49 / 50+` 七個年齡層。尚未建立履歷的使用者為 `null`，歸為「未知」（覆蓋率約 71%）。
 
 ### T3 — 報表頁（前端殼 + DuckDB-WASM）
 
@@ -169,11 +196,11 @@ output/
   period-report/index.html
 ```
 
-> **注意**：T1 原始事件（`dataset/events/`）**不進入** `output/`，不部署至 GitHub Pages。
+> **注意**：T0/T1 原始事件（`dataset/raw/`、`dataset/t1/`）**不進入** `output/`，不部署至 GitHub Pages。
 
 ## 外部資料來源查詢方式
 
-### T1 — operation-logs（Elasticsearch）
+### T0 — operation-logs（Elasticsearch）
 
 透過內部 Grafana Datasource Proxy 發送 `_msearch` 請求，以 `search_after` 分頁抽取，每批 5,000 筆：
 
@@ -189,7 +216,7 @@ Content-Type: application/x-ndjson
 
 ---
 
-### apply-job-category — Matching ES（search-jobs-v1-*）
+### T1 enrichment — Matching ES（search-jobs-v1-*）
 
 apply 事件取出 `job_id`，批次送往 Matching ES 查詢職類與產業，同樣透過 Grafana Proxy，每批 500 筆：
 
@@ -201,11 +228,11 @@ Content-Type: application/x-ndjson
 {"size": 500, "_source": ["id", "jobPositionNames", "companyIndustryNames"], "query": {"terms": {"id": [job_id, ...]}}}
 ```
 
-相關模組：`common/job_metadata.py`
+相關模組：`common/job_metadata.py`、`tools/enrich_t1_events.py`
 
 ---
 
-### apply-demographics — core6 Solr
+### T1 enrichment — core6 Solr
 
 apply 事件取出 `user_id`，批次送往 core6 Solr 查詢履歷基本資料，每批 200 筆：
 
@@ -219,7 +246,7 @@ GET http://solr.web.internal:8985/solr/core6/select
 
 回傳標準 Solr JSON（`response.docs`），`sex_i`：1=男、2=女；`birth_dt`：ISO 8601 UTC 格式。
 
-相關模組：`common/resume_metadata.py`
+相關模組：`common/resume_metadata.py`、`tools/enrich_t1_events.py`
 
 ---
 
@@ -274,19 +301,23 @@ uv run python run_all.py --days 30
 uv run python run_all.py --from 2025-01-01 --to 2025-01-31
 ```
 
-`run_all.py` 會依序執行三個階段（`raw` → `report` → `html`）：
+`run_all.py` 會依序執行四個階段（`t0` → `t1` → `report` → `html`）：
 
-| 階段     | 對應目錄              | 動作                              |
-|----------|-----------------------|-----------------------------------|
-| `raw`    | `dataset/raw/`        | 從 Elasticsearch 抽取 T1 原始事件 |
-| `report` | `dataset/report/`     | 建立 T2 day-keyed parquet         |
-| `html`   | `output/`             | 產生 manifest 與 HTML shell       |
+| 階段     | 對應目錄              | 動作                                          |
+|----------|-----------------------|-----------------------------------------------|
+| `t0`     | `dataset/raw/`        | 從 Elasticsearch 抽取純原始事件               |
+| `t1`     | `dataset/t1/`         | 補強 Solr/Matching ES metadata（apply 事件）  |
+| `report` | `dataset/report/`     | 建立 T2 day-keyed parquet                     |
+| `html`   | `output/`             | 產生 manifest 與 HTML shell                   |
 
 ### 指定執行階段
 
 ```bash
-# T1 已抓過，只跑 T2 + HTML
+# T0/T1 已抓過，只跑 T2 + HTML
 uv run python run_all.py --from 2025-01-01 --to 2025-01-31 --steps report,html
+
+# T0 已抓，重跑 T1 補強（例如 Solr 掉線後補跑）
+uv run python run_all.py --from 2025-01-01 --to 2025-01-31 --steps t1,report,html
 
 # 只重新產 HTML（T2 不變）
 uv run python run_all.py --steps html
@@ -295,12 +326,17 @@ uv run python run_all.py --steps html
 ### 分步執行
 
 ```bash
-# Step 1：抽取 T1
+# Step 1：抽取 T0
 uv run python tools/extract_raw_events.py --days 7
 uv run python tools/extract_raw_events.py --from 2025-01-01 --to 2025-01-31
 uv run python tools/extract_raw_events.py --days 7 --keep-existing  # 已存在則跳過
 
-# Step 2：建立 T2（以 traffic-overview 為例）
+# Step 2：補強 T1（需 T0 先存在）
+uv run python tools/enrich_t1_events.py --days 7
+uv run python tools/enrich_t1_events.py --from 2025-01-01 --to 2025-01-31
+uv run python tools/enrich_t1_events.py --days 7 --keep-existing  # 已存在則跳過
+
+# Step 3：建立 T2（以 traffic-overview 為例）
 uv run python builders/build_traffic_overview_t2.py --days 7
 ```
 

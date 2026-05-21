@@ -16,6 +16,7 @@ import pyarrow as pa
 from common.es_client import TW
 
 RAW_SCHEMA_VERSION = 1
+T1_ENRICH_SCHEMA_VERSION = 1
 
 
 @dataclass(frozen=True)
@@ -82,6 +83,45 @@ RAW_EVENT_SCHEMA = pa.schema([
     ("job_id", pa.string()),
     ("company_id", pa.string()),
 ])
+
+
+T1_ENRICH_EVENT_SCHEMA = pa.schema([
+    ("date", pa.string()),
+    ("hour", pa.int8()),
+    ("occurred_at", pa.string()),
+    ("system", pa.string()),
+    ("event_type", pa.string()),
+    ("action", pa.string()),
+    ("session_id", pa.string()),
+    ("anonymous_id", pa.string()),
+    ("user_id", pa.string()),
+    ("client_id", pa.string()),
+    ("locale", pa.string()),
+    ("message_id", pa.string()),
+    ("feature_id", pa.string()),
+    ("feature_name", pa.string()),
+    ("feature_type", pa.string()),
+    ("page_url", pa.string()),
+    ("previous_page_url", pa.string()),
+    ("page_path", pa.string()),
+    ("previous_page_path", pa.string()),
+    ("device_type", pa.string()),
+    ("os", pa.string()),
+    ("browser", pa.string()),
+    ("source", pa.string()),
+    ("category_tab", pa.string()),
+    ("identity_type", pa.string()),
+    ("industry_tab", pa.string()),
+    ("job_id", pa.string()),
+    ("company_id", pa.string()),
+    # T1 enrichment fields (apply events only)
+    ("sex_i", pa.int16()),
+    ("birth_dt", pa.string()),
+    ("job_positions", pa.list_(pa.string())),
+    ("company_industries", pa.list_(pa.string())),
+])
+
+T1_ENRICH_EVENT_FIELDS = tuple(field.name for field in T1_ENRICH_EVENT_SCHEMA)
 
 
 def normalize_url_path(url: str | None) -> str | None:

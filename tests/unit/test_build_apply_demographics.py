@@ -5,16 +5,9 @@ import pytest
 
 from tests.unit.conftest import TEST_DATE, write_t1
 from tests.unit.fixture_data import (
-    APPLY_DEMOGRAPHICS_META,
     APPLY_DEMOGRAPHICS_ROWS,
     EXPECTED_APPLY_DEMOGRAPHICS,
 )
-
-
-@pytest.fixture(autouse=True)
-def _mock_resume_metadata(monkeypatch):
-    import common.resume_metadata as rm
-    monkeypatch.setattr(rm, "fetch_resume_metadata", lambda ids: APPLY_DEMOGRAPHICS_META)
 
 
 def test_daily_summary(patch_dirs):
@@ -30,7 +23,7 @@ def test_daily_summary(patch_dirs):
     row = df.iloc[0]
     assert int(row["total_applies"])         == EXPECTED_APPLY_DEMOGRAPHICS["total_applies"]
     assert int(row["applies_with_metadata"]) == EXPECTED_APPLY_DEMOGRAPHICS["applies_with_metadata"]
-    assert float(row["coverage_rate"])       == pytest.approx(3 / 4, rel=1e-3)
+    assert float(row["coverage_rate"])       == pytest.approx(2 / 4, rel=1e-3)
 
 
 def test_gender_dist(patch_dirs):

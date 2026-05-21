@@ -34,11 +34,22 @@ class TierContract:
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATASET_DIR = ROOT_DIR / "dataset"
 MANIFEST_DIR = DATASET_DIR / "manifest"
-T1_RAW_DIR = DATASET_DIR / "raw"
+
+# T0：純 ES 原始事件（不含外部 metadata）
+T0_RAW_DIR = DATASET_DIR / "raw"
+T0_RAW_MANIFEST_PATH = MANIFEST_DIR / "t0-raw-manifest.json"
+
+# T1：T0 + 外部 metadata 補強（Solr sex_i/birth_dt、Matching ES 職類/產業）
+T1_ENRICH_DIR = DATASET_DIR / "t1"
+T1_ENRICH_MANIFEST_PATH = MANIFEST_DIR / "t1-enrich-manifest.json"
+
+# 向下相容 alias（T2 builder 透過 t1_reader 讀 T1_RAW_DIR，自動指向 T1_ENRICH_DIR）
+T1_RAW_DIR = T1_ENRICH_DIR
+T1_RAW_MANIFEST_PATH = T1_ENRICH_MANIFEST_PATH
+
 T2_REPORT_DIR = DATASET_DIR / "report"
 T3_RENDER_DIR = ROOT_DIR / "output"
 
-T1_RAW_MANIFEST_PATH = MANIFEST_DIR / "t1-raw-manifest.json"
 T2_REPORT_MANIFEST_PATH = MANIFEST_DIR / "t2-report-manifest.json"
 T3_RENDER_MANIFEST_PATH = MANIFEST_DIR / "t3-render-manifest.json"
 
@@ -49,9 +60,9 @@ RENDER_PARTITION_RULE = "render-output/<version-or-latest>"
 TIER_CONTRACTS: dict[DataTier, TierContract] = {
     DataTier.T1_RAW: TierContract(
         tier=DataTier.T1_RAW,
-        root_dir=T1_RAW_DIR,
-        manifest_path=T1_RAW_MANIFEST_PATH,
-        description="從 ES 匯出的標準化原始事件 parquet，供所有報表分析重用。",
+        root_dir=T1_ENRICH_DIR,
+        manifest_path=T1_ENRICH_MANIFEST_PATH,
+        description="T0 + 外部 metadata 補強後的事件 parquet，供所有 T2 builder 使用。",
         partition_rule=RAW_PARTITION_RULE,
     ),
     DataTier.T2_REPORT: TierContract(
@@ -75,7 +86,8 @@ def ensure_pipeline_directories() -> None:
     """建立三層資料管線需要的基礎目錄。"""
 
     MANIFEST_DIR.mkdir(parents=True, exist_ok=True)
-    T1_RAW_DIR.mkdir(parents=True, exist_ok=True)
+    T0_RAW_DIR.mkdir(parents=True, exist_ok=True)
+    T1_ENRICH_DIR.mkdir(parents=True, exist_ok=True)
     T2_REPORT_DIR.mkdir(parents=True, exist_ok=True)
     T3_RENDER_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -86,10 +98,22 @@ def get_tier_contract(tier: DataTier) -> TierContract:
     return TIER_CONTRACTS[tier]
 
 
-def t1_raw_date_dir(target_date: str) -> Path:
-    """回傳 T1 指定日期分區目錄。"""
+def t0_raw_date_dir(target_date: str) -> Path:
+    """回傳 T0 指定日期分區目錄。"""
 
-    return T1_RAW_DIR / f"date={target_date}"
+    return T0_RAW_DIR / f"date={target_date}"
+
+
+def t1_enrich_date_dir(target_date: str) -> Path:
+    """回傳 T1 enriched 指定日期分區目錄。"""
+
+    return T1_ENRICH_DIR / f"date={target_date}"
+
+
+def t1_raw_date_dir(target_date: str) -> Path:
+    """回傳 T1 指定日期分區目錄（向下相容 alias）。"""
+
+    return T1_ENRICH_DIR / f"date={target_date}"
 
 
 def t2_report_date_dir(report_name: str, target_date: str) -> Path:

@@ -2,7 +2,7 @@
 """
 extract_raw_events.py
 ────────────────────
-從 Elasticsearch 抽取 T1 raw 事件資料，寫入本地 parquet。
+從 Elasticsearch 抽取純原始事件，寫入 T0（dataset/raw/）parquet。
 """
 
 from __future__ import annotations
@@ -19,9 +19,9 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 
 from common.data_pipeline import (
-    T1_RAW_MANIFEST_PATH,
+    T0_RAW_MANIFEST_PATH,
     ensure_pipeline_directories,
-    t1_raw_date_dir,
+    t0_raw_date_dir,
 )
 from common.es_client import ES_INDEX, TW, generated_now, msearch
 from common.raw_events import (
@@ -60,7 +60,7 @@ SOURCE_FIELDS = [
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="抽取 T1 raw 事件 parquet")
+    parser = argparse.ArgumentParser(description="抽取 T0 純原始事件 parquet")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--days", type=int, help="抽取最近 N 天（含今天）")
     group.add_argument("--from", dest="date_from", help="起始日期 YYYY-MM-DD")
@@ -136,7 +136,7 @@ def fetch_raw_events(target_date: str) -> list[dict[str, Any]]:
 
 
 def write_daily_parquet(target_date: str, rows: list[dict[str, Any]]) -> Path:
-    output_dir = t1_raw_date_dir(target_date)
+    output_dir = t0_raw_date_dir(target_date)
     output_dir.mkdir(parents=True, exist_ok=True)
     parquet_path = output_dir / PARQUET_FILE_NAME
     data = {
@@ -155,9 +155,9 @@ def write_daily_parquet(target_date: str, rows: list[dict[str, Any]]) -> Path:
 
 def write_manifest(results: dict[str, dict[str, Any]]) -> None:
     existing: dict[str, Any] = {}
-    if T1_RAW_MANIFEST_PATH.exists():
+    if T0_RAW_MANIFEST_PATH.exists():
         try:
-            existing = json.loads(T1_RAW_MANIFEST_PATH.read_text(encoding="utf-8"))
+            existing = json.loads(T0_RAW_MANIFEST_PATH.read_text(encoding="utf-8"))
         except (json.JSONDecodeError, OSError):
             pass
 
@@ -166,8 +166,8 @@ def write_manifest(results: dict[str, dict[str, Any]]) -> None:
 
     manifest = {
         "schema_version": RAW_SCHEMA_VERSION,
-        "tier": "t1-raw",
-        "description": "從 Elasticsearch 匯出的標準化原始事件 parquet。",
+        "tier": "t0-raw",
+        "description": "從 Elasticsearch 匯出的純原始事件 parquet，不含外部 metadata。",
         "source_index": ES_INDEX,
         "source_fields": SOURCE_FIELDS,
         "partition_rule": "date=YYYY-MM-DD",
@@ -177,20 +177,20 @@ def write_manifest(results: dict[str, dict[str, Any]]) -> None:
         "dates": merged_dates,
         "updated_at": generated_now(),
     }
-    T1_RAW_MANIFEST_PATH.write_text(
+    T0_RAW_MANIFEST_PATH.write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
         encoding="utf-8",
     )
 
 
 def extract_raw_events(date_from: str, date_to: str, keep_existing: bool = False) -> dict[str, dict[str, Any]]:
-    """抽取指定日期區間的 T1 raw parquet。"""
+    """抽取指定日期區間的 T0 pure raw parquet。"""
 
     ensure_pipeline_directories()
     results: dict[str, dict[str, Any]] = {}
 
     for target_date in resolve_dates(argparse.Namespace(days=None, date_from=date_from, date_to=date_to)):
-        output_path = t1_raw_date_dir(target_date) / PARQUET_FILE_NAME
+        output_path = t0_raw_date_dir(target_date) / PARQUET_FILE_NAME
         if keep_existing and output_path.exists():
             print(f"[SKIP] {target_date} 已存在：{output_path}")
             results[target_date] = {
@@ -200,7 +200,7 @@ def extract_raw_events(date_from: str, date_to: str, keep_existing: bool = False
             }
             continue
 
-        print(f"[T1] 抽取 {target_date} ...")
+        print(f"[T0] 抽取 {target_date} ...")
         rows = fetch_raw_events(target_date)
         parquet_path = write_daily_parquet(target_date, rows)
         print(f"  → {len(rows):,} 筆：{parquet_path}")
@@ -218,7 +218,7 @@ def main() -> None:
     args = parse_args()
     date_from, date_to = resolve_date_window(args)
     results = extract_raw_events(date_from, date_to, keep_existing=args.keep_existing)
-    print(f"[OK] T1 manifest 已更新：{T1_RAW_MANIFEST_PATH}")
+    print(f"[OK] T0 manifest 已更新：{T0_RAW_MANIFEST_PATH}")
     print(f"[OK] 完成日期：{', '.join(sorted(results))}")
 
 

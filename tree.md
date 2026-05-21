@@ -41,13 +41,13 @@ job-report/
 │   └── build_traffic_overview_t2.py
 ├── common/
 │   ├── __init__.py
-│   ├── data_pipeline.py               # T1/T2/T3 資料管線契約與路徑定義
+│   ├── data_pipeline.py               # T0/T1/T2/T3 資料管線契約與路徑定義
 │   ├── es_client.py                   # Grafana _msearch 共用封裝
 │   ├── frontend_shell.py             # GitHub Pages v1-2 共用前端殼 HTML 模板
-│   ├── job_metadata.py                # 從 search-jobs-v1-* 批次查詢職類/產業 metadata
-│   ├── resume_metadata.py             # 從 core6 Solr 批次查詢應徵者 sex_i/birth_dt
-│   ├── raw_events.py                  # T1 raw 事件欄位契約與正規化工具
-│   ├── t1_reader.py                   # 讀取 T1 raw parquet 的共用工具
+│   ├── job_metadata.py                # 從 search-jobs-v1-* 批次查詢職類/產業 metadata（供 T1 補強用）
+│   ├── resume_metadata.py             # 從 core6 Solr 批次查詢應徵者 sex_i/birth_dt（供 T1 補強用）
+│   ├── raw_events.py                  # T0/T1 事件欄位契約（RAW_EVENT_SCHEMA + T1_ENRICH_EVENT_SCHEMA）
+│   ├── t1_reader.py                   # 讀取 T1 enriched parquet 的共用工具
 │   ├── html_template.py               # HTML header/footer/style 共用模板
 │   └── chart_helpers.py              # Chart.js 輔助函式
 ├── exporters/                         # 資料匯出腳本
@@ -94,7 +94,8 @@ job-report/
 ├── tools/                             # 工具 / 一次性查詢腳本
 │   ├── __init__.py
 │   ├── click_heatmap_discover.py      # 自動探索頁面可點擊元素
-│   ├── extract_raw_events.py          # 從 ES 抽取 T1 raw 事件 parquet
+│   ├── enrich_t1_events.py            # 讀 T0，批次補強 Solr/Matching ES，寫 T1（dataset/t1/）
+│   ├── extract_raw_events.py          # 從 ES 抽取純原始事件，寫 T0（dataset/raw/）
 │   └── query_homepage_blocks.py       # 從 ES 查詢首頁四大區塊每日點擊數
 ├── app.css                            # v1-2 / GitHub Pages 共用前端殼樣式
 ├── app.js                             # v1-2 / GitHub Pages 共用前端殼啟動邏輯

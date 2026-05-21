@@ -205,20 +205,14 @@ EXPECTED_HOMEPAGE_BLOCKS = {
 # user_id 3: 未知 birth_dt  → 未知年齡
 # user_id 4: 無 metadata   → 未知性別, 未知年齡
 APPLY_DEMOGRAPHICS_ROWS = [
-    {"system": "jobbank-web", "action": "apply", "user_id": "1"},
-    {"system": "jobbank-web", "action": "apply", "user_id": "2"},
-    {"system": "jobbank-web", "action": "apply", "user_id": "3"},
-    {"system": "jobbank-web", "action": "apply", "user_id": "4"},
+    {"system": "jobbank-web", "action": "apply", "user_id": "1", "sex_i": 1,    "birth_dt": "1990-01-15"},
+    {"system": "jobbank-web", "action": "apply", "user_id": "2", "sex_i": 2,    "birth_dt": "2000-06-01"},
+    {"system": "jobbank-web", "action": "apply", "user_id": "3", "sex_i": None, "birth_dt": None},
+    {"system": "jobbank-web", "action": "apply", "user_id": "4", "sex_i": None, "birth_dt": None},
 ]
-
-APPLY_DEMOGRAPHICS_META = {
-    "1": {"sex_i": 1,    "birth_dt": "1990-01-15"},
-    "2": {"sex_i": 2,    "birth_dt": "2000-06-01"},
-    "3": {"sex_i": None, "birth_dt": None},
-}
 
 EXPECTED_APPLY_DEMOGRAPHICS = {
     "total_applies":         4,
-    "applies_with_metadata": 3,
+    "applies_with_metadata": 2,  # sex_i notna: user 1 & 2
     "gender_counts": {"男": 1, "女": 1, "未知": 2},
 }

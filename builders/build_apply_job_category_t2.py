@@ -2,7 +2,7 @@
 """
 build_apply_job_category_t2.py
 ──────────────────────────────
-從 T1 apply 事件 job_id JOIN search-jobs-v1-* 取得職類/產業，
+從 T1 apply 事件讀取 job_positions/company_industries（已在 T1 enrichment 階段補強），
 產出 apply-job-category 的 T2 day-keyed parquet。
 """
 
@@ -19,7 +19,6 @@ from common.data_pipeline import (
     t2_report_date_dir,
     update_t2_manifest_dates,
 )
-from common.job_metadata import fetch_job_metadata
 from common.t1_reader import load_t1_raw_dataframe, resolve_date_window
 
 REPORT_NAME = "apply-job-category"
@@ -61,7 +60,7 @@ def _explode_daily(df: pd.DataFrame, col: str, top_names: list[str]) -> pd.DataF
 def build_apply_job_category_t2(date_from: str, date_to: str) -> list[Path]:
     ensure_pipeline_directories()
 
-    columns = ["date", "system", "action", "job_id"]
+    columns = ["date", "system", "action", "job_id", "job_positions", "company_industries"]
     df = load_t1_raw_dataframe(date_from, date_to, columns=columns)
     df = df[df["system"].eq("jobbank-web") & df["action"].eq("apply")].copy()
 
@@ -69,15 +68,13 @@ def build_apply_job_category_t2(date_from: str, date_to: str) -> list[Path]:
         print("[WARN] 無 apply 事件資料")
         return []
 
-    # 批次查詢所有唯一 job_id 的 metadata
-    all_job_ids = df["job_id"].dropna().unique().tolist()
-    print(f"  查詢 {len(all_job_ids):,} 個唯一 job_id ...")
-    meta = fetch_job_metadata(all_job_ids)
-    hit_count = len(meta)
-    print(f"  命中 {hit_count:,} 個（{hit_count/len(all_job_ids):.1%}），未命中可能已下架")
+    # job_positions/company_industries 已由 T1 enrichment 補強，直接使用
+    # None → 空 list，確保 explode 行為一致
+    df["job_positions"] = df["job_positions"].map(lambda v: v if isinstance(v, list) else [])
+    df["company_industries"] = df["company_industries"].map(lambda v: v if isinstance(v, list) else [])
 
-    df["job_positions"] = df["job_id"].map(lambda j: meta.get(str(j), {}).get("job_positions") or [])
-    df["company_industries"] = df["job_id"].map(lambda j: meta.get(str(j), {}).get("company_industries") or [])
+    hit_count = int(df["job_id"].map(lambda j: bool(j)).sum())
+    print(f"  job_positions 覆蓋 {hit_count:,} 筆 apply 事件")
 
     # 計算全區間 TOP N（供日趨勢使用）
     all_top_positions = _explode_and_count(df, "job_positions", TREND_TOP_N)["name"].tolist()
@@ -92,7 +89,7 @@ def build_apply_job_category_t2(date_from: str, date_to: str) -> list[Path]:
         output_dir.mkdir(parents=True, exist_ok=True)
 
         total = len(day_df)
-        with_meta = int(day_df["job_id"].map(lambda j: str(j) in meta).sum())
+        with_meta = int(day_df["job_positions"].map(lambda v: bool(v)).sum())
 
         pd.DataFrame([{
             "date": target_date,
