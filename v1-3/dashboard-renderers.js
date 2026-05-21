@@ -1241,8 +1241,8 @@ function monthlyReportRenderer(runtime) {
 
     const btnHtml = asc.map(r => {
       const d = String(r.period);
-      const dayNum = Number(d.split("-")[2]);
-      return `<button class="daily-date-btn${d === currentDay ? " is-active" : ""}" data-date="${d}" data-loaded="false" type="button">${dayNum}日</button>`;
+      const [, mm, dd] = d.split("-");
+      return `<button class="daily-date-btn${d === currentDay ? " is-active" : ""}" data-date="${d}" data-loaded="false" type="button">${Number(mm)}/${Number(dd)}</button>`;
     }).join("");
 
     container.innerHTML = `<div class="daily-date-tabs">${btnHtml}</div><div id="period-daily-drilldown"></div>`;
