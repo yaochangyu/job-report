@@ -1099,52 +1099,54 @@ async function fetchDailyBreakdown(category, date, runtime) {
 
 function renderDailyDrilldown(container, catCfg, summary, category, runtime) {
   const hasBreakdowns = catCfg.breakdowns.length > 0;
-  const mainLabelIdx  = catCfg.kpiCols.indexOf(catCfg.mainMetric);
-  const mainLabel     = catCfg.kpiLabels[mainLabelIdx] ?? catCfg.mainMetric;
-  const desc = [...summary].sort((a, b) => String(b.period).localeCompare(String(a.period)));
+  const byDate = Object.fromEntries(summary.map(r => [String(r.period), r]));
+  const asc    = [...summary].sort((a, b) => String(a.period).localeCompare(String(b.period)));
 
-  const rowsHtml = desc.map(r => {
-    const [y, m, d] = String(r.period).split("-");
-    const preDetail = !hasBreakdowns
-      ? `<div class="period-kpi-row">${catCfg.kpiCols.map((col, i) =>
-          `<div class="period-kpi-card">
-            <div class="period-kpi-label">${catCfg.kpiLabels[i]}</div>
-            <div class="period-kpi-value">${fmt(n(r[col]))}</div>
-          </div>`).join("")}</div>`
-      : "";
-    return `<div class="daily-drilldown-row" data-date="${r.period}" data-loaded="${!hasBreakdowns}">
-      <div class="daily-drilldown-header">
-        <span class="daily-drilldown-date">${y}/${m}/${d}</span>
-        <span class="daily-drilldown-metric">${mainLabel}：<strong>${fmt(n(r[catCfg.mainMetric]))}</strong></span>
-        <span class="daily-drilldown-arrow">▶</span>
-      </div>
-      <div class="daily-drilldown-detail">${preDetail}</div>
-    </div>`;
+  const btnHtml = asc.map(r => {
+    const [,, d] = String(r.period).split("-");
+    return `<button class="daily-date-btn" data-date="${r.period}" data-loaded="false" type="button">${Number(d)}日</button>`;
   }).join("");
 
   container.innerHTML = `
     <div class="period-breakdown-section">
       <h4 class="period-breakdown-title">各日明細</h4>
-      <div class="daily-drilldown-list">${rowsHtml}</div>
+      <div class="daily-date-tabs">${btnHtml}</div>
+      <div class="daily-date-detail"></div>
     </div>`;
 
-  container.querySelectorAll(".daily-drilldown-header").forEach(header => {
-    header.addEventListener("click", async () => {
-      const row    = header.closest(".daily-drilldown-row");
-      const detail = row.querySelector(".daily-drilldown-detail");
-      const isOpen = row.classList.toggle("is-open");
-      if (!isOpen || row.dataset.loaded !== "false") return;
-      row.dataset.loaded = "loading";
-      detail.innerHTML   = `<p class="monthly-loading">載入中…</p>`;
+  const detailEl = container.querySelector(".daily-date-detail");
+
+  container.querySelectorAll(".daily-date-btn").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      const isActive = btn.classList.contains("is-active");
+      container.querySelectorAll(".daily-date-btn").forEach(b => b.classList.remove("is-active"));
+      if (isActive) { detailEl.innerHTML = ""; return; }
+      btn.classList.add("is-active");
+      const date = btn.dataset.date;
+      const r    = byDate[date];
+
+      if (btn.dataset.loaded === "true") return;
+      if (!hasBreakdowns) {
+        const kpiCards = catCfg.kpiCols.map((col, i) =>
+          `<div class="period-kpi-card">
+            <div class="period-kpi-label">${catCfg.kpiLabels[i]}</div>
+            <div class="period-kpi-value">${fmt(n(r[col]))}</div>
+          </div>`).join("");
+        detailEl.innerHTML = `<div class="period-kpi-row" style="padding:12px 0">${kpiCards}</div>`;
+        btn.dataset.loaded = "true";
+        return;
+      }
+      btn.dataset.loaded = "loading";
+      detailEl.innerHTML = `<p class="monthly-loading">載入中…</p>`;
       try {
-        const breakdowns = await fetchDailyBreakdown(category, row.dataset.date, runtime);
-        detail.innerHTML  = "";
-        renderPeriodBreakdown(detail, category, breakdowns);
-        if (!detail.innerHTML.trim()) detail.innerHTML = `<p class="monthly-empty">無明細資料</p>`;
-        row.dataset.loaded = "true";
+        const breakdowns = await fetchDailyBreakdown(category, date, runtime);
+        detailEl.innerHTML = "";
+        renderPeriodBreakdown(detailEl, category, breakdowns);
+        if (!detailEl.innerHTML.trim()) detailEl.innerHTML = `<p class="monthly-empty">無明細資料</p>`;
+        btn.dataset.loaded = "true";
       } catch (e) {
-        detail.innerHTML   = `<p class="monthly-error">載入失敗：${e.message}</p>`;
-        row.dataset.loaded = "false";
+        detailEl.innerHTML = `<p class="monthly-error">載入失敗：${e.message}</p>`;
+        btn.dataset.loaded = "false";
       }
     });
   });
