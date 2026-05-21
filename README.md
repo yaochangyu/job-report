@@ -12,13 +12,13 @@
 Elasticsearch (operation-logs)
         │
         ▼  extract_raw_events.py
-dataset/raw/date=YYYY-MM-DD/events.parquet       ← T0 純原始事件（僅本機，不可變）
+dataset/t0-raw/date=YYYY-MM-DD/events.parquet       ← T0 純原始事件（僅本機，不可變）
         │
         ▼  enrich_t1_events.py（批次查 Solr + Matching ES）
-dataset/t1/date=YYYY-MM-DD/events.parquet        ← T1 補強事件（僅本機）
+dataset/t1-enrich/date=YYYY-MM-DD/events.parquet        ← T1 補強事件（僅本機）
         │
         ▼  builders/build_*_t2.py  （day-keyed，每天一個分區）
-dataset/report/<報表名>/date=YYYY-MM-DD/
+dataset/t2-report/<報表名>/date=YYYY-MM-DD/
     daily_summary.parquet                        ← 當日 KPI 摘要（一列）
     <detail>.parquet                             ← 各 view 必要明細（分佈/排行等）
         │
@@ -54,7 +54,7 @@ output/<報表名>/index.html                        ← T3 前端殼（空 HTML
 
 **存放位置：**
 ```
-dataset/raw/
+dataset/t0-raw/
   date=2025-01-01/events.parquet
   date=2025-01-02/events.parquet
   ...
@@ -69,34 +69,35 @@ dataset/manifest/t0-raw-manifest.json
 | `event_type` / `action` | 事件種類（view / click / apply…） |
 | `session_id` / `anonymous_id` / `user_id` / `client_id` | 身份識別 |
 | `feature_id` / `feature_name` / `feature_type` | 觸發的功能元件 |
-| `page_path` / `previous_page_path` | 正規化後的頁面路徑（由 pageUrl 抽取） |
+| `page_url` / `previous_page_url` | ES 原始 URL |
 | `device_type` / `os` / `browser` | 裝置資訊 |
 | `source` / `category_tab` / `identity_type` / `industry_tab` | 來自 ES `metadata` 的額外維度 |
 | `job_id` / `company_id` | 來自 ES `metadata.jobId` / `metadata.companyId`，apply 事件帶有職缺與公司 ID |
 
 ### T1 — 補強事件
 
-讀取 T0 Parquet，對 `action=apply` 事件批次查詢外部服務，補入人口屬性與職缺 metadata，寫入 `dataset/t1/`。**僅存於本機**，不部署至 GitHub Pages。T2 builder 統一從 T1 讀取資料。
+讀取 T0 Parquet，對 `action=apply` 事件批次查詢外部服務，補入人口屬性與職缺 metadata，寫入 `dataset/t1-enrich/`。**僅存於本機**，不部署至 GitHub Pages。T2 builder 統一從 T1 讀取資料。
 
 **存放位置：**
 ```
-dataset/t1/
+dataset/t1-enrich/
   date=2025-01-01/events.parquet
   date=2025-01-02/events.parquet
   ...
 dataset/manifest/t1-enrich-manifest.json
 ```
 
-**T1 在 T0 基礎上新增的欄位（apply 事件）：**
+**T1 在 T0 基礎上新增的欄位：**
 
 | 欄位 | 來源 | 說明 |
 |------|------|------|
-| `sex_i` | core6 Solr | 1=男, 2=女, null=查無資料 |
-| `birth_dt` | core6 Solr | ISO 8601 UTC 格式（如 `1990-01-15T16:00:00Z`） |
-| `job_positions` | Matching ES | `list[str]`，職類名稱（如 `["行銷業務"]`） |
-| `company_industries` | Matching ES | `list[str]`，產業名稱（如 `["百貨零售"]`） |
+| `page_path` / `previous_page_path` | T0 page_url 正規化 | 所有事件都有 |
+| `sex_i` | core6 Solr | apply 事件；1=男, 2=女, null=查無資料 |
+| `birth_dt` | core6 Solr | apply 事件；ISO 8601 UTC 格式（如 `1990-01-15T16:00:00Z`） |
+| `job_positions` | Matching ES | apply 事件；`list[str]`，職類名稱 |
+| `company_industries` | Matching ES | apply 事件；`list[str]`，產業名稱 |
 
-非 apply 事件的這四欄皆為 `null`。
+非 apply 事件的 sex_i / birth_dt / job_positions / company_industries 皆為 `null`。
 
 ### T2 — 聚合結果（部署至 GitHub Pages）
 
@@ -106,7 +107,7 @@ dataset/manifest/t1-enrich-manifest.json
 
 **存放位置（每個日期分區內的檔案）：**
 ```
-dataset/report/
+dataset/t2-report/
   traffic-overview/date=YYYY-MM-DD/
     daily_summary.parquet  # date, views, clicks, applies, sessions
     device_type.parquet    # name, count
@@ -196,7 +197,7 @@ output/
   period-report/index.html
 ```
 
-> **注意**：T0/T1 原始事件（`dataset/raw/`、`dataset/t1/`）**不進入** `output/`，不部署至 GitHub Pages。
+> **注意**：T0/T1 原始事件（`dataset/t0-raw/`、`dataset/t1-enrich/`）**不進入** `output/`，不部署至 GitHub Pages。
 
 ## 外部資料來源查詢方式
 
@@ -305,9 +306,9 @@ uv run python run_all.py --from 2025-01-01 --to 2025-01-31
 
 | 階段     | 對應目錄              | 動作                                          |
 |----------|-----------------------|-----------------------------------------------|
-| `t0`     | `dataset/raw/`        | 從 Elasticsearch 抽取純原始事件               |
-| `t1`     | `dataset/t1/`         | 補強 Solr/Matching ES metadata（apply 事件）  |
-| `report` | `dataset/report/`     | 建立 T2 day-keyed parquet                     |
+| `t0`     | `dataset/t0-raw/`        | 從 Elasticsearch 抽取純原始事件               |
+| `t1`     | `dataset/t1-enrich/`         | 補強 Solr/Matching ES metadata（apply 事件）  |
+| `report` | `dataset/t2-report/`     | 建立 T2 day-keyed parquet                     |
 | `html`   | `output/`             | 產生 manifest 與 HTML shell                   |
 
 ### 指定執行階段
@@ -346,7 +347,7 @@ uv run python builders/build_traffic_overview_t2.py --days 7
 uv run python tests/validation/validate_dashboard_data.py --from 2025-01-01 --to 2025-01-31
 ```
 
-比對瀏覽器內 `executeViewQueries()` 的實際查詢結果是否與 `output/dataset/report` 中的 T2 parquet 聚合一致，驗證 `feature`、`device`、`ranking`、`heatmap`、`navigation` 五個 view 的 KPI。
+比對瀏覽器內 `executeViewQueries()` 的實際查詢結果是否與 `output/dataset/t2-report` 中的 T2 parquet 聚合一致，驗證 `feature`、`device`、`ranking`、`heatmap`、`navigation` 五個 view 的 KPI。
 
 ### 部署至 GitHub Pages
 

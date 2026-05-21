@@ -18,6 +18,7 @@ import subprocess
 import sys
 import time
 from pathlib import Path
+from common.data_pipeline import T2_REPORT_DIR
 from common.es_client import generated_now
 from common.frontend_shell import FRONTEND_ASSETS, build_shell_html
 from common.t1_reader import resolve_date_window
@@ -181,7 +182,7 @@ def _get_git_branch() -> str:
 
 def _collect_t2_available_dates(dataset_dir: Path) -> list[str]:
     """掃描 T2 report 目錄，回傳所有 date= 分區日期的聯集。"""
-    report_dir = dataset_dir / "report"
+    report_dir = T2_REPORT_DIR
     if not report_dir.exists():
         return []
     dates: set[str] = set()
@@ -196,7 +197,7 @@ def _collect_t2_available_dates(dataset_dir: Path) -> list[str]:
 
 def _collect_t2_available_periods(dataset_dir: Path) -> dict:
     """掃描所有 report 類別目錄，回傳 monthly/quarterly/yearly 各自的聯集。"""
-    report_dir = dataset_dir / "report"
+    report_dir = T2_REPORT_DIR
     if not report_dir.exists():
         return {"available_months": [], "available_quarters": [], "available_years": []}
     months, quarters, years = set(), set(), set()
@@ -243,8 +244,8 @@ def copy_frontend_bundle(output_dir: Path) -> None:
         encoding="utf-8",
     )
 
-    # Copy only T2 report parquet files — all dashboards read T2, T1 raw is not deployed
-    report_src = DATASET_DIR / "report"
+    # Copy only T2 report parquet files — all dashboards read T2, T0/T1 raw is not deployed
+    report_src = T2_REPORT_DIR
     if report_src.exists():
         report_dst = dataset_output / "report"
         if report_dst.exists():

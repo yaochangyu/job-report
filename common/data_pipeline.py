@@ -36,18 +36,18 @@ DATASET_DIR = ROOT_DIR / "dataset"
 MANIFEST_DIR = DATASET_DIR / "manifest"
 
 # T0：純 ES 原始事件（不含外部 metadata）
-T0_RAW_DIR = DATASET_DIR / "raw"
+T0_RAW_DIR = DATASET_DIR / "t0-raw"
 T0_RAW_MANIFEST_PATH = MANIFEST_DIR / "t0-raw-manifest.json"
 
 # T1：T0 + 外部 metadata 補強（Solr sex_i/birth_dt、Matching ES 職類/產業）
-T1_ENRICH_DIR = DATASET_DIR / "t1"
+T1_ENRICH_DIR = DATASET_DIR / "t1-enrich"
 T1_ENRICH_MANIFEST_PATH = MANIFEST_DIR / "t1-enrich-manifest.json"
 
 # 向下相容 alias（T2 builder 透過 t1_reader 讀 T1_RAW_DIR，自動指向 T1_ENRICH_DIR）
 T1_RAW_DIR = T1_ENRICH_DIR
 T1_RAW_MANIFEST_PATH = T1_ENRICH_MANIFEST_PATH
 
-T2_REPORT_DIR = DATASET_DIR / "report"
+T2_REPORT_DIR = DATASET_DIR / "t2-report"
 T3_RENDER_DIR = ROOT_DIR / "output"
 
 T2_REPORT_MANIFEST_PATH = MANIFEST_DIR / "t2-report-manifest.json"

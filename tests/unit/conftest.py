@@ -48,8 +48,8 @@ def make_t1_events(rows: list[dict]) -> pd.DataFrame:
 
 @pytest.fixture
 def patch_dirs(monkeypatch, tmp_path):
-    t1_dir = tmp_path / "raw"
-    t2_dir = tmp_path / "report"
+    t1_dir = tmp_path / "t1-enrich"
+    t2_dir = tmp_path / "t2-report"
     manifest_dir = tmp_path / "manifest"
     t3_dir = tmp_path / "output"
     for d in (t1_dir, t2_dir, manifest_dir, t3_dir):
