@@ -83,6 +83,7 @@ job-report/
 │   │   ├── test_build_apply_conversion.py
 │   │   ├── test_build_apply_demographics.py
 │   │   ├── test_build_apply_demographics_category.py
+│   │   ├── test_build_apply_job_category.py
 │   │   ├── test_build_apply_journey.py
 │   │   ├── test_build_click_heatmap.py
 │   │   ├── test_build_device_platform.py
@@ -100,6 +101,7 @@ job-report/
 │   ├── enrich_t1_events.py            # 讀 T0，批次補強 Solr/Matching ES，寫 T1（dataset/t1-enrich/）
 │   ├── extract_raw_events.py          # 從 ES 抽取純原始事件，寫 T0（dataset/t0-raw/）
 │   └── query_homepage_blocks.py       # 從 ES 查詢首頁四大區塊每日點擊數
+├── page-navigation-shrink.plan.md     # page-navigation parquet 縮減實作計畫
 ├── app.css                            # v1-2 / GitHub Pages 共用前端殼樣式
 ├── app.js                             # v1-2 / GitHub Pages 共用前端殼啟動邏輯
 ├── click_heatmap_config.json          # 頁面 URL + featureId → 元素位置 對應表

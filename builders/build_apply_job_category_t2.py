@@ -68,10 +68,18 @@ def build_apply_job_category_t2(date_from: str, date_to: str) -> list[Path]:
         print("[WARN] 無 apply 事件資料")
         return []
 
-    # job_positions/company_industries 已由 T1 enrichment 補強，直接使用
-    # None → 空 list，確保 explode 行為一致
-    df["job_positions"] = df["job_positions"].map(lambda v: v if isinstance(v, list) else [])
-    df["company_industries"] = df["company_industries"].map(lambda v: v if isinstance(v, list) else [])
+    def _to_list(v):
+        if v is None:
+            return []
+        if isinstance(v, list):
+            return v
+        try:
+            return list(v)
+        except TypeError:
+            return []
+
+    df["job_positions"]      = df["job_positions"].map(_to_list)
+    df["company_industries"] = df["company_industries"].map(_to_list)
 
     hit_count = int(df["job_id"].map(lambda j: bool(j)).sum())
     print(f"  job_positions 覆蓋 {hit_count:,} 筆 apply 事件")

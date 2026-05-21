@@ -240,3 +240,31 @@ EXPECTED_APPLY_DEMOGRAPHICS_CATEGORY = {
     # gender × job_position: 男×軟體工程師=1, 男×PM=1, 女×軟體工程師=1, 未知×設計師=1
     "gender_job_position_sample": {"男": {"軟體工程師": 1, "PM": 1}, "女": {"軟體工程師": 1}},
 }
+
+# ── apply-job-category ────────────────────────────────────────────────────────
+# row 1: job_positions=["軟體工程師","PM"], company_industries=["科技"]
+# row 2: job_positions=["軟體工程師"],      company_industries=["金融","科技"]
+# row 3: job_positions=["設計師"],          company_industries=["零售"]
+# row 4: job_positions=None,               company_industries=None
+APPLY_JOB_CATEGORY_ROWS = [
+    {"system": "jobbank-web", "action": "apply", "job_id": "j1",
+     "job_positions": ["軟體工程師", "PM"], "company_industries": ["科技"]},
+    {"system": "jobbank-web", "action": "apply", "job_id": "j2",
+     "job_positions": ["軟體工程師"],        "company_industries": ["金融", "科技"]},
+    {"system": "jobbank-web", "action": "apply", "job_id": "j3",
+     "job_positions": ["設計師"],            "company_industries": ["零售"]},
+    {"system": "jobbank-web", "action": "apply", "job_id": None,
+     "job_positions": None,                  "company_industries": None},
+]
+
+EXPECTED_APPLY_JOB_CATEGORY = {
+    "total_applies":          4,
+    "applies_with_metadata":  3,   # job_positions 非空
+    "coverage_rate":          0.75,
+    # job_position_top: 軟體工程師=2, PM=1, 設計師=1
+    "top_job_position":       "軟體工程師",
+    "top_job_position_count": 2,
+    # company_industry_top: 科技=2, 金融=1, 零售=1
+    "top_industry":           "科技",
+    "top_industry_count":     2,
+}
