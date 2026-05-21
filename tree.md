@@ -97,8 +97,8 @@ job-report/
 ├── tools/                             # 工具 / 一次性查詢腳本
 │   ├── __init__.py
 │   ├── click_heatmap_discover.py      # 自動探索頁面可點擊元素
-│   ├── enrich_t1_events.py            # 讀 T0，批次補強 Solr/Matching ES，寫 T1（pipeline/t1-enrich/）
-│   ├── extract_raw_events.py          # 從 ES 抽取純原始事件，寫 T0（pipeline/t0-raw/）
+│   ├── enrich_t1_events.py            # 讀 T0，批次補強 Solr/Matching ES，寫 T1（dataset/t1-enrich/）
+│   ├── extract_raw_events.py          # 從 ES 抽取純原始事件，寫 T0（dataset/t0-raw/）
 │   └── query_homepage_blocks.py       # 從 ES 查詢首頁四大區塊每日點擊數
 ├── app.css                            # v1-2 / GitHub Pages 共用前端殼樣式
 ├── app.js                             # v1-2 / GitHub Pages 共用前端殼啟動邏輯

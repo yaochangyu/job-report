@@ -3,7 +3,7 @@
 enrich_t1_events.py
 ────────────────────
 讀取 T0 純原始事件，批次查 Solr（sex_i/birth_dt）與 Matching ES（職類/產業），
-寫入 T1 enriched parquet（pipeline/t1-enrich/）。
+寫入 T1 enriched parquet（dataset/t1-enrich/）。
 
 只對 action=apply 事件補強；其他事件的 sex_i/birth_dt/job_positions/company_industries 為 null。
 """

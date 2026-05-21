@@ -32,7 +32,7 @@ class TierContract:
 
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
-DATASET_DIR = ROOT_DIR / "pipeline"
+DATASET_DIR = ROOT_DIR / "dataset"
 MANIFEST_DIR = DATASET_DIR / "manifest"
 
 # T0：純 ES 原始事件（不含外部 metadata）

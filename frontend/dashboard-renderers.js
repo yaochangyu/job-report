@@ -1580,12 +1580,36 @@ function applyDemographicsCategoryRenderer(data) {
   // 表格 1 — 性別 × 職類
   buildTableHead("table1-head", ["#", "性別", "職類", "應徵次數", "", "佔比"]);
   const gjpTotal = gjp.reduce((s, r) => s + n(r.count), 0);
-  buildTableBody("table1-body", gjp, (r, i) => rankRow(i, r.gender, n(r.count), gjpTotal, r.category));
+  buildTableBody("table1-body", gjp, (r, i) => {
+    const val = n(r.count);
+    const barPct = gjpTotal ? ((val / gjpTotal) * 100).toFixed(1) : "0";
+    const pctStr = gjpTotal ? `${((val / gjpTotal) * 100).toFixed(1)}%` : "—";
+    return `<tr>
+      <td class="rank">${i + 1}</td>
+      <td>${r.gender ?? "—"}</td>
+      <td>${r.category ?? "—"}</td>
+      <td>${fmt(val)}</td>
+      <td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:${barPct}%"></div></div></td>
+      <td class="pct">${pctStr}</td>
+    </tr>`;
+  });
 
   // 表格 2 — 年齡層 × 職類
   buildTableHead("table2-head", ["#", "年齡層", "職類", "應徵次數", "", "佔比"]);
   const ajpTotal = ajp.reduce((s, r) => s + n(r.count), 0);
-  buildTableBody("table2-body", ajp, (r, i) => rankRow(i, r.age_group, n(r.count), ajpTotal, r.category));
+  buildTableBody("table2-body", ajp, (r, i) => {
+    const val = n(r.count);
+    const barPct = ajpTotal ? ((val / ajpTotal) * 100).toFixed(1) : "0";
+    const pctStr = ajpTotal ? `${((val / ajpTotal) * 100).toFixed(1)}%` : "—";
+    return `<tr>
+      <td class="rank">${i + 1}</td>
+      <td>${r.age_group ?? "—"}</td>
+      <td>${r.category ?? "—"}</td>
+      <td>${fmt(val)}</td>
+      <td class="bar-cell"><div class="bar-bg"><div class="bar-fill" style="width:${barPct}%"></div></div></td>
+      <td class="pct">${pctStr}</td>
+    </tr>`;
+  });
 }
 
 // ── 路由 ────────────────────────────────────────────────────────
