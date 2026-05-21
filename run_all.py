@@ -139,6 +139,16 @@ REPORTS = [
         "view_mode": "apply-job-category",
     },
     {
+        "script": "builders/build_apply_demographics_t2.py",
+        "title": "應徵者性別／年齡",
+        "subtitle": "Apply Demographics",
+        "desc": "應徵者性別分佈、年齡層分佈與每日趨勢",
+        "path": "report/apply-demographics/index.html",
+        "icon": "👥",
+        "color": "#10b981",
+        "view_mode": "apply-demographics",
+    },
+    {
         "script": "builders/build_homepage_blocks_t2.py",
         "title": "週期報表",
         "subtitle": "Period Report",

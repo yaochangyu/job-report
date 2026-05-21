@@ -198,3 +198,27 @@ EXPECTED_HOMEPAGE_BLOCKS = {
     "top_feature_id": "identify-student",
     "top_count":     2,
 }
+
+# ── apply-demographics ────────────────────────────────────────────────────────
+# user_id 1: 男, 1990-01-15 → 36歲 → 35-39
+# user_id 2: 女, 2000-06-01 → 25歲 → 25-29
+# user_id 3: 未知 birth_dt  → 未知年齡
+# user_id 4: 無 metadata   → 未知性別, 未知年齡
+APPLY_DEMOGRAPHICS_ROWS = [
+    {"system": "jobbank-web", "action": "apply", "user_id": "1"},
+    {"system": "jobbank-web", "action": "apply", "user_id": "2"},
+    {"system": "jobbank-web", "action": "apply", "user_id": "3"},
+    {"system": "jobbank-web", "action": "apply", "user_id": "4"},
+]
+
+APPLY_DEMOGRAPHICS_META = {
+    "1": {"sex_i": 1,    "birth_dt": "1990-01-15"},
+    "2": {"sex_i": 2,    "birth_dt": "2000-06-01"},
+    "3": {"sex_i": None, "birth_dt": None},
+}
+
+EXPECTED_APPLY_DEMOGRAPHICS = {
+    "total_applies":         4,
+    "applies_with_metadata": 3,
+    "gender_counts": {"男": 1, "女": 1, "未知": 2},
+}

@@ -143,6 +143,13 @@ def build_shell_html(asset_prefix: str = ".", initial_view: str = "overview") ->
            <small>Apply Job Category</small>
          </span>
        </button>
+       <button class="sidebar__nav-item" type="button" data-view-mode="apply-demographics">
+         <span class="sidebar__icon">👥</span>
+         <span>
+           <strong>應徵者性別／年齡</strong>
+           <small>Apply Demographics</small>
+         </span>
+       </button>
        <button class="sidebar__nav-item" type="button" data-view-mode="period-report">
          <span class="sidebar__icon">📅</span>
          <span>

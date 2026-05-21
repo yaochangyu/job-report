@@ -11,6 +11,7 @@ T1_COLUMNS = [
     "date", "system", "event_type", "action", "session_id", "occurred_at",
     "feature_id", "feature_name", "device_type", "os", "browser",
     "source", "page_path", "previous_page_path", "category_tab", "identity_type",
+    "user_id", "job_id",
 ]
 
 _DEFAULTS: dict = {
@@ -30,6 +31,8 @@ _DEFAULTS: dict = {
     "previous_page_path": None,
     "category_tab": None,
     "identity_type": None,
+    "user_id": None,
+    "job_id": None,
 }
 
 

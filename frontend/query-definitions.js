@@ -603,6 +603,60 @@ function applyJobCategoryPlan(f) {
   };
 }
 
+// ════════════════════════════════════════════════════════════════
+// 12. 應徵者性別／年齡分析 — apply-demographics
+// ════════════════════════════════════════════════════════════════
+function applyDemographicsPlan(f) {
+  const roles = {
+    daily_summary:    "daily_summary.parquet",
+    gender:           "gender.parquet",
+    age_groups:       "age_groups.parquet",
+    gender_daily:     "gender_daily.parquet",
+    age_groups_daily: "age_groups_daily.parquet",
+  };
+  return {
+    summary: `應徵者性別／年齡分析（T2）：${f.dateFrom} ~ ${f.dateTo}`,
+    registerFiles: f.fetchDates.flatMap(d => dayFiles("apply-demographics", d, roles, f.datasetRoot)),
+    buildQueries(loaded) {
+      const ds  = fileList(loaded.daily_summary    || []);
+      const gd  = fileList(loaded.gender           || []);
+      const ag  = fileList(loaded.age_groups       || []);
+      const gdd = fileList(loaded.gender_daily     || []);
+      const agd = fileList(loaded.age_groups_daily || []);
+      if (!ds) return {};
+      return {
+        kpi: `
+          SELECT
+            SUM(total_applies)           AS total_applies,
+            SUM(applies_with_metadata)   AS applies_with_metadata,
+            ROUND(AVG(coverage_rate), 4) AS avg_coverage_rate
+          FROM read_parquet([${ds}])
+        `,
+        gender_dist: gd ? `
+          SELECT gender, SUM(count) AS count
+          FROM read_parquet([${gd}])
+          GROUP BY gender ORDER BY count DESC
+        ` : null,
+        age_groups_dist: ag ? `
+          SELECT age_group, SUM(count) AS count
+          FROM read_parquet([${ag}])
+          GROUP BY age_group ORDER BY count DESC
+        ` : null,
+        gender_daily: gdd ? `
+          SELECT date, gender, SUM(count) AS count
+          FROM read_parquet([${gdd}])
+          GROUP BY date, gender ORDER BY date, gender
+        ` : null,
+        age_groups_daily: agd ? `
+          SELECT date, age_group, SUM(count) AS count
+          FROM read_parquet([${agd}])
+          GROUP BY date, age_group ORDER BY date, age_group
+        ` : null,
+      };
+    },
+  };
+}
+
 // ── 路由 ────────────────────────────────────────────────────────
 const planBuilders = {
   overview:   overviewPlan,
@@ -616,6 +670,7 @@ const planBuilders = {
   heatmap:          heatmapPlan,
   "homepage-blocks":     homepageBlocksPlan,
   "apply-job-category":  applyJobCategoryPlan,
+  "apply-demographics":  applyDemographicsPlan,
   "period-report":       () => ({ registerFiles: [], buildQueries: () => [] }),
   "monthly-report":      () => ({ registerFiles: [], buildQueries: () => [] }),
 };
