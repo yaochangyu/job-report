@@ -46,6 +46,8 @@ class RawEventRecord:
     category_tab: str | None
     identity_type: str | None
     industry_tab: str | None
+    job_id: str | None
+    company_id: str | None
 
 
 RAW_EVENT_FIELDS = tuple(field.name for field in RawEventRecord.__dataclass_fields__.values())
@@ -77,6 +79,8 @@ RAW_EVENT_SCHEMA = pa.schema([
     ("category_tab", pa.string()),
     ("identity_type", pa.string()),
     ("industry_tab", pa.string()),
+    ("job_id", pa.string()),
+    ("company_id", pa.string()),
 ])
 
 
@@ -134,4 +138,6 @@ def normalize_raw_event(source: dict[str, Any]) -> dict[str, Any]:
         "category_tab": metadata.get("categoryTab"),
         "identity_type": metadata.get("identityType"),
         "industry_tab": metadata.get("industryTab"),
+        "job_id": str(metadata["jobId"]) if metadata.get("jobId") is not None else None,
+        "company_id": str(metadata["companyId"]) if metadata.get("companyId") is not None else None,
     }
