@@ -490,6 +490,7 @@ function homepageBlocksPlan(f) {
   const roles = {
     daily_summary:  "daily_summary.parquet",
     feature_counts: "feature_counts.parquet",
+    heatmap_counts: "heatmap_counts.parquet",
   };
   return {
     summary: `首頁區塊點擊／瀏覽（T2）：${f.dateFrom} ~ ${f.dateTo}`,
@@ -497,6 +498,7 @@ function homepageBlocksPlan(f) {
     buildQueries(loaded) {
       const ds = fileList(loaded.daily_summary  || []);
       const fc = fileList(loaded.feature_counts || []);
+      const hm = fileList(loaded.heatmap_counts || []);
       if (!fc) return {};
       const searchIn   = inList(HB_SEARCH_IDS);
       const identityIn = inList(HB_IDENTITY_IDS);
@@ -547,6 +549,14 @@ function homepageBlocksPlan(f) {
           FROM read_parquet([${fc}])
           GROUP BY feature_id, event_type ORDER BY event_type, count DESC
         `,
+        ...(hm ? {
+          heatmap_clicks: `
+            SELECT date, page_path, feature_id, feature_name, SUM(count) AS count
+            FROM read_parquet([${hm}])
+            GROUP BY date, page_path, feature_id, feature_name
+            ORDER BY date, page_path, count DESC
+          `,
+        } : {}),
       };
     },
   };
