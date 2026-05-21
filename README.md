@@ -347,7 +347,7 @@ uv run python builders/build_traffic_overview_t2.py --days 7
 uv run python tests/validation/validate_dashboard_data.py --from 2025-01-01 --to 2025-01-31
 ```
 
-比對瀏覽器內 `executeViewQueries()` 的實際查詢結果是否與 `output/dataset/t2-report` 中的 T2 parquet 聚合一致，驗證 `feature`、`device`、`ranking`、`heatmap`、`navigation` 五個 view 的 KPI。
+比對瀏覽器內 `executeViewQueries()` 的實際查詢結果是否與 `output/dataset/report` 中的 T2 parquet 聚合一致，驗證 `feature`、`device`、`ranking`、`heatmap`、`navigation` 五個 view 的 KPI。
 
 ### 部署至 GitHub Pages
 
