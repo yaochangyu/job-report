@@ -707,17 +707,33 @@ html[data-theme="dark"] .pct { color: var(--accent); }
   .cat-content { padding: 0; }
 }
 
-/* ── Daily drill-down ── */
-.daily-day-selector {
+/* ── Sub-view tabs (月報 / 日報) ── */
+.sub-view-tabs {
   display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  padding: 10px 0 4px;
+  gap: 4px;
+  padding: 8px 0 4px;
   border-top: 1px solid var(--border);
   margin-top: 8px;
 }
-.daily-day-selector:empty { display: none; }
+.sub-view-tab {
+  padding: 5px 16px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--panel-soft);
+  color: var(--text);
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.sub-view-tab:hover { background: var(--bg-accent); border-color: var(--accent); }
+.sub-view-tab.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 600;
+}
 
+/* ── Daily drill-down ── */
 .daily-date-tabs {
   display: flex;
   flex-wrap: wrap;
