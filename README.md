@@ -171,6 +171,58 @@ output/
 
 > **注意**：T1 原始事件（`dataset/events/`）**不進入** `output/`，不部署至 GitHub Pages。
 
+## 外部資料來源查詢方式
+
+### T1 — operation-logs（Elasticsearch）
+
+透過內部 Grafana Datasource Proxy 發送 `_msearch` 請求，以 `search_after` 分頁抽取，每批 5,000 筆：
+
+```
+POST https://grafana.web.internal/api/datasources/proxy/uid/{DATASOURCE_UID}/_msearch
+Content-Type: application/x-ndjson
+
+{"index": "operation-logs"}
+{"query": {"bool": {"filter": [{"term": {"system": "jobbank-web"}}, {"range": {"@timestamp": {...}}}]}}, "size": 5000, "sort": [...], "search_after": [...]}
+```
+
+相關模組：`common/es_client.py`、`tools/extract_raw_events.py`
+
+---
+
+### apply-job-category — Matching ES（search-jobs-v1-*）
+
+apply 事件取出 `job_id`，批次送往 Matching ES 查詢職類與產業，同樣透過 Grafana Proxy，每批 500 筆：
+
+```
+POST https://grafana.web.internal/api/datasources/proxy/uid/{MATCHING_ES_UID}/_msearch
+Content-Type: application/x-ndjson
+
+{"index": "search-jobs-v1-*"}
+{"size": 500, "_source": ["id", "jobPositionNames", "companyIndustryNames"], "query": {"terms": {"id": [job_id, ...]}}}
+```
+
+相關模組：`common/job_metadata.py`
+
+---
+
+### apply-demographics — core6 Solr
+
+apply 事件取出 `user_id`，批次送往 core6 Solr 查詢履歷基本資料，每批 200 筆：
+
+```
+GET http://solr.web.internal:8985/solr/core6/select
+  ?q=talentNo_l:(id1 OR id2 OR ...)
+  &fl=talentNo_l,sex_i,birth_dt
+  &rows=200
+  &wt=json
+```
+
+回傳標準 Solr JSON（`response.docs`），`sex_i`：1=男、2=女；`birth_dt`：ISO 8601 UTC 格式。
+
+相關模組：`common/resume_metadata.py`
+
+---
+
 ## 前端查詢策略
 
 `query-definitions.js` 以 `f.fetchDates` 陣列驅動，每個視角的 plan 函式返回：
