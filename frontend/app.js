@@ -50,6 +50,7 @@ const VIEW_FILTER_FIELDS = {
   heatmap:           { pagePath: true  },
   "homepage-blocks":    { pagePath: false },
   "apply-demographics": { pagePath: false },
+  "apply-demographics-category": { pagePath: false },
   "period-report":      { pagePath: false },
 };
 
@@ -108,6 +109,11 @@ const VIEW_META = {
     title: "應徵者性別／年齡",
     subtitle: "Apply Demographics",
     desc: "分析應徵者的性別分佈與年齡層，了解求職者輪廓。",
+  },
+  "apply-demographics-category": {
+    title: "性別／年齡 × 職類／產業",
+    subtitle: "Demographics × Category",
+    desc: "交叉分析應徵者性別、年齡層與職類、產業的組合分佈。",
   },
   "period-report": {
     title: "週期報表",

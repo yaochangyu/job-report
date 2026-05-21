@@ -29,18 +29,18 @@ apply-demographics-category/date=YYYY-MM-DD/
 
 ## 實作步驟
 
-- [ ] **步驟 1：建立 T2 builder**
+- [x] **步驟 1：建立 T2 builder**
   - 新增 `builders/build_apply_demographics_category_t2.py`
   - 同時呼叫 `fetch_resume_metadata`（Solr）與 `fetch_job_metadata`（Matching ES）
   - 交叉聚合輸出 5 個 parquet
   - **為什麼**：兩個資料來源都需要，且交叉計算在 Python 端做比在前端 DuckDB 做更簡單
 
-- [ ] **步驟 2：更新前端查詢定義**
+- [x] **步驟 2：更新前端查詢定義**
   - 修改 `frontend/query-definitions.js`
   - 新增 `applyDemographicsCategoryPlan`，定義 5 個 parquet 的 DuckDB 查詢
   - **為什麼**：前端需要對應的 registerFiles 與 SQL 才能載入新 parquet
 
-- [ ] **步驟 3：新增前端 renderer 與報表入口**
+- [x] **步驟 3：新增前端 renderer 與報表入口**
   - 修改 `frontend/dashboard-renderers.js`：新增 renderer，規劃圖表
     - chart1：性別 × TOP 職類（grouped bar）
     - chart2：年齡層 × TOP 職類（grouped bar）
@@ -52,7 +52,7 @@ apply-demographics-category/date=YYYY-MM-DD/
   - 修改 `run_all.py`：REPORTS 新增報表入口
   - **為什麼**：資料完成後需接到現有導覽殼
 
-- [ ] **步驟 4：單元測試與文件更新**
+- [x] **步驟 4：單元測試與文件更新**
   - 新增 `tests/unit/test_build_apply_demographics_category.py`
   - 更新 `tree.md`、`README.md`
   - **為什麼**：跨來源 JOIN 邏輯是重點，需要測試保護

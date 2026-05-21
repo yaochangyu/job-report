@@ -151,6 +151,16 @@ REPORTS = [
         "view_mode": "apply-demographics",
     },
     {
+        "script": "builders/build_apply_demographics_category_t2.py",
+        "title": "性別／年齡 × 職類／產業",
+        "subtitle": "Demographics × Category",
+        "desc": "性別、年齡層與職類、產業的交叉聚合分析 TOP 30",
+        "path": "report/apply-demographics-category/index.html",
+        "icon": "🔬",
+        "color": "#8b5cf6",
+        "view_mode": "apply-demographics-category",
+    },
+    {
         "script": "builders/build_homepage_blocks_t2.py",
         "title": "週期報表",
         "subtitle": "Period Report",

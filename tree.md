@@ -29,6 +29,7 @@ job-report/
 │   ├── build_apply_conversion_t2.py
 │   ├── build_apply_job_category_t2.py # 應徵職類／產業 TOP N 分析
 │   ├── build_apply_demographics_t2.py # 應徵者性別／年齡層分析
+│   ├── build_apply_demographics_category_t2.py # 性別／年齡層 × 職類／產業交叉分析
 │   ├── build_apply_journey_t2.py      # 應徵路徑分析
 │   ├── build_click_heatmap_t2.py
 │   ├── build_device_platform_t2.py
@@ -72,7 +73,8 @@ job-report/
 │       ├── homepage-blocks/index.html     # Dashboard 10 報告產出
 │       ├── apply-job-category/index.html  # Dashboard 11 應徵職類／產業報告產出
 │       ├── apply-demographics/index.html  # Dashboard 12 應徵者性別／年齡報告產出
-│       ├── period-report/index.html       # Dashboard 12 週期報表頁面
+│       ├── apply-demographics-category/index.html  # Dashboard 13 性別／年齡 × 職類／產業交叉分析
+│       ├── period-report/index.html       # Dashboard 13 週期報表頁面
 │       └── monthly-report/index.html      # 舊網址相容轉址頁
 ├── tests/
 │   ├── unit/                           # T2 builder 單元測試
@@ -80,6 +82,7 @@ job-report/
 │   │   ├── fixture_data.py             # 各 builder 合成 T1 rows 與預期輸出值
 │   │   ├── test_build_apply_conversion.py
 │   │   ├── test_build_apply_demographics.py
+│   │   ├── test_build_apply_demographics_category.py
 │   │   ├── test_build_apply_journey.py
 │   │   ├── test_build_click_heatmap.py
 │   │   ├── test_build_device_platform.py

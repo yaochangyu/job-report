@@ -124,7 +124,7 @@ T1_ENRICH_EVENT_FIELDS = tuple(field.name for field in T1_ENRICH_EVENT_SCHEMA)
 def normalize_url_path(url: str | None) -> str | None:
     """將完整 URL 正規化為 path。"""
 
-    if not url:
+    if not url or not isinstance(url, str):
         return None
     parsed = urlparse(url)
     path = parsed.path or "/"

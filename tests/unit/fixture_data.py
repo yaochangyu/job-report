@@ -216,3 +216,27 @@ EXPECTED_APPLY_DEMOGRAPHICS = {
     "applies_with_metadata": 2,  # sex_i notna: user 1 & 2
     "gender_counts": {"男": 1, "女": 1, "未知": 2},
 }
+
+# ── apply-demographics-category ───────────────────────────────────────────────
+# user 1: 男, job_positions=["軟體工程師","PM"], company_industries=["科技"]
+# user 2: 女, job_positions=["軟體工程師"],       company_industries=["金融","科技"]
+# user 3: 未知 sex, job_positions=["設計師"],      company_industries=["零售"]
+# user 4: 未知 sex, job_positions=None,            company_industries=None
+APPLY_DEMOGRAPHICS_CATEGORY_ROWS = [
+    {"system": "jobbank-web", "action": "apply", "user_id": "1", "sex_i": 1,    "birth_dt": "1990-01-15",
+     "job_id": "j1", "job_positions": ["軟體工程師", "PM"], "company_industries": ["科技"]},
+    {"system": "jobbank-web", "action": "apply", "user_id": "2", "sex_i": 2,    "birth_dt": "2000-06-01",
+     "job_id": "j2", "job_positions": ["軟體工程師"],         "company_industries": ["金融", "科技"]},
+    {"system": "jobbank-web", "action": "apply", "user_id": "3", "sex_i": None, "birth_dt": None,
+     "job_id": "j3", "job_positions": ["設計師"],              "company_industries": ["零售"]},
+    {"system": "jobbank-web", "action": "apply", "user_id": "4", "sex_i": None, "birth_dt": None,
+     "job_id": None, "job_positions": None,                    "company_industries": None},
+]
+
+EXPECTED_APPLY_DEMOGRAPHICS_CATEGORY = {
+    "total_applies": 4,
+    "coverage_demo": 2,  # sex_i notna
+    "coverage_job":  3,  # job_positions not empty
+    # gender × job_position: 男×軟體工程師=1, 男×PM=1, 女×軟體工程師=1, 未知×設計師=1
+    "gender_job_position_sample": {"男": {"軟體工程師": 1, "PM": 1}, "女": {"軟體工程師": 1}},
+}

@@ -103,8 +103,12 @@ def _enrich_one_date(target_date: str) -> dict[str, Any] | None:
     output_path = t1_enrich_date_dir(target_date) / PARQUET_FILE_NAME
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
+    def _safe_tolist(series: pd.Series) -> list:
+        vals = series.tolist()
+        return [None if isinstance(v, float) and pd.isna(v) else v for v in vals]
+
     data = {
-        field: df[field].tolist() if field in df.columns else [None] * len(df)
+        field: _safe_tolist(df[field]) if field in df.columns else [None] * len(df)
         for field in T1_ENRICH_EVENT_FIELDS
     }
     table = pa.Table.from_pydict(data, schema=T1_ENRICH_EVENT_SCHEMA)
