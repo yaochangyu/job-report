@@ -48,8 +48,9 @@ const VIEW_FILTER_FIELDS = {
   ranking:    { pagePath: false },
   navigation:        { pagePath: true  },
   heatmap:           { pagePath: true  },
-  "homepage-blocks":   { pagePath: false },
-  "period-report":     { pagePath: false },
+  "homepage-blocks":    { pagePath: false },
+  "apply-demographics": { pagePath: false },
+  "period-report":      { pagePath: false },
 };
 
 const VIEW_META = {
@@ -102,6 +103,11 @@ const VIEW_META = {
     title: "首頁區塊點擊",
     subtitle: "Homepage Blocks",
     desc: "搜尋、身分類別、探索工作、探索企業各區塊每日點擊數。",
+  },
+  "apply-demographics": {
+    title: "應徵者性別／年齡",
+    subtitle: "Apply Demographics",
+    desc: "分析應徵者的性別分佈與年齡層，了解求職者輪廓。",
   },
   "period-report": {
     title: "週期報表",

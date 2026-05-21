@@ -208,6 +208,13 @@ const VIEW_PANEL_TEXT = {
     table1: ["職類排行（TOP 30）", ""],
     table2: ["產業排行（TOP 30）", ""],
   },
+  "apply-demographics": {
+    chart1: ["性別分佈", "應徵者性別佔比"],
+    chart2: ["年齡層分佈", "應徵者年齡層佔比"],
+    chart3: ["性別每日趨勢", "各性別每日應徵次數變化"],
+    table1: ["性別統計", ""],
+    table2: ["年齡層統計", ""],
+  },
 };
 
 // ── panel title 更新 ─────────────────────────────────────────────
@@ -238,7 +245,7 @@ function showPanels(viewMode) {
   }
 
   // chart panels
-  const charts3 = ["overview","search","apply","apply-journey","feature","device","homepage-blocks","apply-job-category"];
+  const charts3 = ["overview","search","apply","apply-journey","feature","device","homepage-blocks","apply-job-category","apply-demographics"];
   const charts2 = ["ranking","navigation","heatmap"];
   document.getElementById("chart3-panel")?.classList.toggle("hidden", charts2.includes(viewMode));
 
@@ -246,7 +253,7 @@ function showPanels(viewMode) {
   const tableCount = {
     overview: 2, search: 1, apply: 3, "apply-journey": 1, feature: 2,
     device: 4, ranking: 1, navigation: 3, heatmap: 1,
-    "homepage-blocks": 1, "apply-job-category": 2,
+    "homepage-blocks": 1, "apply-job-category": 2, "apply-demographics": 2,
   };
   const count = tableCount[viewMode] ?? 1;
   for (let i = 1; i <= 4; i++) {
@@ -783,6 +790,58 @@ function applyJobCategoryRenderer(data) {
   const ciTotal = ciAll.reduce((s, r) => s + n(r.count), 0);
   buildTableHead("table2-head", ["#", "產業", "應徵次數", "", "佔比"]);
   buildTableBody("table2-body", ciAll, (r, i) => rankRow(i, r.name, n(r.count), ciTotal));
+}
+
+// ════════════════════════════════════════════════════════════════
+// 12. 應徵者性別／年齡分析
+// ════════════════════════════════════════════════════════════════
+function applyDemographicsRenderer(data) {
+  const kpi      = data.kpi?.[0] ?? {};
+  const total    = n(kpi.total_applies);
+  const withMeta = n(kpi.applies_with_metadata);
+  const coverage = kpi.avg_coverage_rate != null ? (kpi.avg_coverage_rate * 100).toFixed(1) + "%" : "—";
+
+  setKpiCard("1", "總應徵數",   fmt(total),    "action=apply 事件數");
+  setKpiCard("2", "有履歷資料", fmt(withMeta), "成功對應到應徵者資料");
+  setKpiCard("3", "覆蓋率",     coverage,      "有履歷資料 / 總應徵數");
+  setKpiCard("4", "—", "—", "");
+  setKpiCard("5", "—", "—", "");
+  setKpiCard("6", "—", "—", "");
+  setKpiCard("7", "—", "—", "");
+  setKpiCard("8", "—", "—", "");
+
+  // 圖表 1 — 性別分佈 (doughnut)
+  doughnutChart("chart1", data.gender_dist ?? []);
+
+  // 圖表 2 — 年齡層分佈 (doughnut)
+  doughnutChart("chart2", data.age_groups_dist ?? [], "age_group");
+
+  // 圖表 3 — 性別每日趨勢 (line)
+  const gd = data.gender_daily ?? [];
+  const gdDates = [...new Set(gd.map(r => r.date))].sort();
+  const genders = [...new Set(gd.map(r => r.gender))];
+  const gdMap = {};
+  gd.forEach(r => { gdMap[`${r.date}__${r.gender}`] = n(r.count); });
+  const colorMap = { "男": C.blue, "女": C.pink, "未知": C.orange };
+  lineChart("chart3", gdDates, genders.map(g => ({
+    label: g,
+    data: gdDates.map(d => gdMap[`${d}__${g}`] ?? 0),
+    borderColor: colorMap[g] ?? C.green,
+    tension: 0.3,
+    fill: false,
+  })));
+
+  // 表格 1 — 性別統計
+  const genderRows = data.gender_dist ?? [];
+  const genderTotal = genderRows.reduce((s, r) => s + n(r.count), 0);
+  buildTableHead("table1-head", ["#", "性別", "應徵次數", "", "佔比"]);
+  buildTableBody("table1-body", genderRows, (r, i) => rankRow(i, r.gender, n(r.count), genderTotal));
+
+  // 表格 2 — 年齡層統計
+  const ageRows = data.age_groups_dist ?? [];
+  const ageTotal = ageRows.reduce((s, r) => s + n(r.count), 0);
+  buildTableHead("table2-head", ["#", "年齡層", "應徵次數", "", "佔比"]);
+  buildTableBody("table2-body", ageRows, (r, i) => rankRow(i, r.age_group, n(r.count), ageTotal));
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -1482,6 +1541,7 @@ const renderers = {
   heatmap:             heatmapRenderer,
   "homepage-blocks":     homepageBlocksRenderer,
   "apply-job-category":  applyJobCategoryRenderer,
+  "apply-demographics":  applyDemographicsRenderer,
 };
 
 export function renderDashboard(viewMode, outputs, runtime = null) {
