@@ -41,11 +41,11 @@ AGE_GROUP_LABELS = ["<25", "25-29", "30-34", "35-39", "40-44", "45-49", "50+"]
 
 
 def _age_from_birth_dt(birth_dt: str | None, event_date: str) -> int | None:
-    """從 birth_dt（ISO 8601 或 YYYY-MM-DD）計算整數年齡；無法解析時回傳 None。"""
+    """從 birth_dt 計算整數年齡；支援 YYYY-MM-DD 與 YYYY/MM/DD HH:MM:SS 格式。"""
     if not birth_dt:
         return None
     try:
-        bd_str = str(birth_dt)[:10]
+        bd_str = str(birth_dt)[:10].replace("/", "-")
         bd = date.fromisoformat(bd_str)
         ed = date.fromisoformat(event_date)
         age = ed.year - bd.year - ((ed.month, ed.day) < (bd.month, bd.day))

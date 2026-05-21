@@ -12,14 +12,14 @@ import urllib.parse
 import urllib.request
 from typing import Any
 
-SOLR_BASE_URL = "http://solr.web.internal:8983/solr"
+SOLR_BASE_URL = "http://solr.web.internal:8985/solr"
 SOLR_CORE = "core6"
 BATCH_SIZE = 200
 
 
 def _solr_query(params: dict[str, Any]) -> dict[str, Any]:
-    url = f"{SOLR_BASE_URL}/{SOLR_CORE}/select?" + urllib.parse.urlencode(
-        {**params, "wt": "json"}, doseq=True
+    url = f"{SOLR_BASE_URL}/{SOLR_CORE}/wise/query?" + urllib.parse.urlencode(
+        {**params, "format": "json", "d": "1"}, doseq=True
     )
     req = urllib.request.Request(url)
     ctx = ssl.create_default_context()
@@ -55,7 +55,9 @@ def fetch_resume_metadata(user_ids: list[int | str]) -> dict[str, dict[str, Any]
             print(f"[WARN] Solr 查詢失敗（batch {i}）：{e}")
             continue
 
-        for doc in data.get("response", {}).get("docs", []):
+        pages = data.get("page", [])
+        docs = pages[0].get("docs", []) if pages else []
+        for doc in docs:
             uid = str(doc.get("talentNo_l", ""))
             if uid:
                 results[uid] = {
