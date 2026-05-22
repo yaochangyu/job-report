@@ -34,3 +34,4 @@
 
 - 嘗試直接沿用 `deploy.sh` 的 `gh-pages` branch 推送模式到 GitLab Pages：不可行。原因：GitLab Pages 必須由 `.gitlab-ci.yml` 產出 `public/` artifact，不能直接重用 GitHub Pages 的部署方式。
 - 嘗試只依賴 repo checkout 內既有檔案部署 GitLab Pages：不可行。原因：`dataset/` 與 `output/` 被 `.gitignore` 排除，GitLab CI checkout 不會帶出現成產物，因此改採在 CI 內重新執行 `run_all.py` 產生部署內容。
+- 嘗試在 `.gitlab-ci.yml` 的 shell block 內直接嵌入未縮排的 HTML heredoc：不可行。原因：GitLab 會先以 YAML 解析整份 CI 檔，未正確縮排的 heredoc 內容會在解析階段報錯，導致 pipeline 連 job 都無法建立。

@@ -41,22 +41,22 @@ pages:
       if [ -n "${PAGES_VERSION}" ]; then
         mkdir -p "public/${PAGES_VERSION}"
         cp -r output/. "public/${PAGES_VERSION}/"
-        cat > public/index.html <<EOF
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Redirecting...</title>
-  <link rel="canonical" href="./${PAGES_VERSION}/" />
-  <script>location.href="./${PAGES_VERSION}/"</script>
-  <meta http-equiv="refresh" content="0; url=./${PAGES_VERSION}/" />
-</head>
-<body>
-  <p>Redirecting to <a href="./${PAGES_VERSION}/">${PAGES_VERSION}</a></p>
-</body>
-</html>
-EOF
+        printf '%s\n' \
+          '<!DOCTYPE html>' \
+          '<html lang="zh-TW">' \
+          '<head>' \
+          '  <meta charset="UTF-8" />' \
+          '  <meta name="viewport" content="width=device-width, initial-scale=1.0" />' \
+          '  <title>Redirecting...</title>' \
+          "  <link rel=\"canonical\" href=\"./${PAGES_VERSION}/\" />" \
+          "  <script>location.href=\"./${PAGES_VERSION}/\"</script>" \
+          "  <meta http-equiv=\"refresh\" content=\"0; url=./${PAGES_VERSION}/\" />" \
+          '</head>' \
+          '<body>' \
+          "  <p>Redirecting to <a href=\"./${PAGES_VERSION}/\">${PAGES_VERSION}</a></p>" \
+          '</body>' \
+          '</html>' \
+          > public/index.html
       else
         cp -r output/. public/
       fi
