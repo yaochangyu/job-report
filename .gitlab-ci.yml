@@ -1,0 +1,70 @@
+image: python:3.12
+
+stages:
+  - deploy
+
+variables:
+  PIP_DISABLE_PIP_VERSION_CHECK: "1"
+  UV_CACHE_DIR: ".uv-cache"
+  RUN_ALL_STEPS: "t0,t1,report,html"
+  REPORT_DAYS: "7"
+  REPORT_DATE_FROM: ""
+  REPORT_DATE_TO: ""
+  PAGES_VERSION: "v1-3"
+
+cache:
+  key: "${CI_JOB_NAME}"
+  paths:
+    - .uv-cache/
+
+pages:
+  stage: deploy
+  before_script:
+    - python -m pip install --upgrade pip uv
+    - uv sync
+  script:
+    - |
+      set -euo pipefail
+
+      if [ -n "${REPORT_DATE_FROM}" ]; then
+        REPORT_DATE_TO="${REPORT_DATE_TO:-$REPORT_DATE_FROM}"
+        uv run python run_all.py --from "$REPORT_DATE_FROM" --to "$REPORT_DATE_TO" --steps "$RUN_ALL_STEPS"
+      else
+        uv run python run_all.py --days "${REPORT_DAYS}" --steps "$RUN_ALL_STEPS"
+      fi
+    - |
+      set -euo pipefail
+
+      rm -rf public
+      mkdir -p public
+
+      if [ -n "${PAGES_VERSION}" ]; then
+        mkdir -p "public/${PAGES_VERSION}"
+        cp -r output/. "public/${PAGES_VERSION}/"
+        cat > public/index.html <<EOF
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redirecting...</title>
+  <link rel="canonical" href="./${PAGES_VERSION}/" />
+  <script>location.href="./${PAGES_VERSION}/"</script>
+  <meta http-equiv="refresh" content="0; url=./${PAGES_VERSION}/" />
+</head>
+<body>
+  <p>Redirecting to <a href="./${PAGES_VERSION}/">${PAGES_VERSION}</a></p>
+</body>
+</html>
+EOF
+      else
+        cp -r output/. public/
+      fi
+  artifacts:
+    paths:
+      - public
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "v1-3"'
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+      when: manual
+    - when: never

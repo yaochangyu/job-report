@@ -363,6 +363,32 @@ bash deploy.sh 7 v1-3
 - 根目錄：`https://yaochangyu.github.io/job-report/`
 - 版本目錄：`https://yaochangyu.github.io/job-report/v1-3/`
 
+### 部署至 GitLab Pages
+
+專案已提供 `.gitlab-ci.yml` 的 `pages` job，可在 GitLab 直接產生並發佈靜態網站。
+
+**預設行為：**
+- 在 `v1-3` branch push 時執行 Pages pipeline
+- 預設執行 `uv run python run_all.py --days 7 --steps t0,t1,report,html`
+- 產出的 `output/` 會被複製到 `public/v1-3/`
+- `public/index.html` 會自動轉址到 `./v1-3/`
+
+**可調整的 GitLab CI Variables：**
+
+| 變數 | 預設值 | 說明 |
+|---|---|---|
+| `RUN_ALL_STEPS` | `t0,t1,report,html` | 要執行的 `run_all.py` 階段 |
+| `REPORT_DAYS` | `7` | 未指定日期區間時，重跑最近 N 天 |
+| `REPORT_DATE_FROM` | 空字串 | 指定起始日期後，改用固定日期區間 |
+| `REPORT_DATE_TO` | 空字串 | 固定日期區間的結束日期；未填時等於 `REPORT_DATE_FROM` |
+| `PAGES_VERSION` | `v1-3` | 發佈到 Pages 的子目錄；留空可直接部署到根目錄 |
+
+**注意事項：**
+- GitLab 專案必須先啟用 **GitLab Pages** 與可用的 **Runner**
+- `dataset/` 與 `output/` 都被 `.gitignore` 排除，GitLab CI checkout 時不會自帶既有產物；因此 Pages pipeline 會在 CI 內重新執行 `run_all.py`
+- 若 GitLab Runner 無法連到內部資料來源，請改用可存取內網的 Runner，或調整 `RUN_ALL_STEPS` 與資料準備流程
+- 部署後網址通常會是 GitLab Pages 專案網址再加上 `/v1-3/`
+
 ## 專案結構
 
 ```

@@ -2,6 +2,7 @@
 
 ```
 job-report/
+├── .gitlab-ci.yml                     # GitLab Pages CI/CD 設定
 ├── .archive/
 │   ├── apply-journey.plan.md          # ✅ 已完成：應徵路徑分析實作計畫
 │   ├── grafana-dashboard.plan.md      # ✅ 已完成：原始 Dashboard 規劃總計畫
@@ -27,7 +28,8 @@ job-report/
 │   ├── apply-demographics.plan.md           # ✅ 已完成：應徵者性別／年齡分析實作計畫
 │   ├── page-navigation-lazy-load.plan.md   # ✅ 已完成：page-navigation lazy load / conditional fetch 實作計畫
 │   ├── page-navigation-shrink.plan.md      # ✅ 已完成：page-navigation parquet 縮減評估（決定不實作）
-│   └── homepage-blocks-heatmap.plan.md    # ✅ 已完成：homepage-blocks 熱點疊圖實作計畫
+│   ├── homepage-blocks-heatmap.plan.md    # ✅ 已完成：homepage-blocks 熱點疊圖實作計畫
+│   └── gitlab-pages.plan.md                # ✅ 已完成：GitLab Pages 部署實作計畫
 ├── builders/                          # 從 T1 產出 T2 parquet 的建置腳本
 │   ├── build_apply_conversion_t2.py
 │   ├── build_apply_job_category_t2.py # 應徵職類／產業 TOP N 分析
