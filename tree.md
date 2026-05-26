@@ -18,6 +18,7 @@ job-report/
 │   ├── remove-session-ids.plan.md     # ✅ 已完成：移除 session_ids.parquet 計畫
 │   ├── fix-apply-journey-page-path.plan.md  # ✅ 已完成：apply 事件補入當前頁面修正計畫
 │   ├── backfill-apply-journey.plan.md       # ✅ 已完成：apply-journey 45 天歷史資料補跑計畫
+│   ├── backfill-missing-days.plan.md        # ✅ 已完成：補齊缺少資料計畫
 │   ├── monthly-report-day-nav.plan.md       # ✅ 已完成：月報表日期導覽與側邊類別欄實作計畫
 │   ├── period-summary-report.plan.md        # ✅ 已完成：月報/季報/年報聚合 + period-type tabs 實作計畫
 │   ├── period-report-rename.plan.md         # ✅ 已完成：月報表改名為週期報表與 URL 調整計畫
@@ -112,6 +113,8 @@ job-report/
 ├── click_heatmap_config.json          # 頁面 URL + featureId → 元素位置 對應表
 ├── dashboard-renderers.js             # 各 dashboard 視角的前端 renderer
 ├── deploy.sh                          # 一鍵產生報告並部署到 GitHub Pages
+├── job-report-k8s-standalone.plan.md  # job-report 獨立 k8s 站台實作計畫
+├── push-deploy.plan.md                # 推送 v1-3 並部署 GitHub Pages 計畫
 ├── query-definitions.js               # DuckDB 前端查詢定義
 ├── run_all.py                         # 一鍵執行所有報告 + 產生導覽頁
 ├── site-manifest.json                 # 前端站點資產與資料集 manifest
